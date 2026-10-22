@@ -1,0 +1,352 @@
+{
+  "captured_at": "2026-10-20T22:10:44.639Z",
+  "source": {
+    "retailer": "zur",
+    "external_id": "13",
+    "name": "ДРАЧЕВО",
+    "url": "https://ceni.zur.mk/",
+    "scope": "branch",
+    "meta": {}
+  },
+  "sources": 21,
+  "total": null,
+  "next": "2",
+  "rows": [
+    {
+      "key": "024124",
+      "name": "СТР8 КУПКА АХЕАД 400МЛ",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "price": "185.00",
+      "regular_price": "299.00",
+      "promo_price": null,
+      "unit_price": "46.25 100 МЛ",
+      "available": true,
+      "promotion": "Промоција | Важи до:31.10.2026",
+      "source_updated_at": null,
+      "raw": {
+        "cells": [
+          "024124",
+          "СТР8 КУПКА АХЕАД 400МЛ",
+          "185.00",
+          "46.25 100 МЛ",
+          "/",
+          "Да",
+          "299.00",
+          "185,00 Попуст: 38.13%",
+          "Промоција",
+          "Важи до:31.10.2026"
+        ]
+      }
+    },
+    {
+      "key": "011021",
+      "name": "ДОРИНА ПУНЧ 100Г",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "price": "89.00",
+      "regular_price": "99.00",
+      "promo_price": null,
+      "unit_price": null,
+      "available": true,
+      "promotion": "Промоција | Важи до:31.10.2026",
+      "source_updated_at": null,
+      "raw": {
+        "cells": [
+          "011021",
+          "ДОРИНА ПУНЧ 100Г",
+          "89.00",
+          "",
+          "/",
+          "Да",
+          "99.00",
+          "89,00 Попуст: 10.1%",
+          "Промоција",
+          "Важи до:31.10.2026"
+        ]
+      }
+    },
+    {
+      "key": "032043",
+      "name": "БИ ЈУ ДЕО СПРЕЈ ФЕЈРИ СИКРЕТ 150МЛ",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "price": "145.00",
+      "regular_price": "239.00",
+      "promo_price": null,
+      "unit_price": "96.67 100МЛ",
+      "available": true,
+      "promotion": "Промоција | Важи до:31.10.2026",
+      "source_updated_at": null,
+      "raw": {
+        "cells": [
+          "032043",
+          "БИ ЈУ ДЕО СПРЕЈ ФЕЈРИ СИКРЕТ 150МЛ",
+          "145.00",
+          "96.67 100МЛ",
+          "/",
+          "Да",
+          "239.00",
+          "145,00 Попуст: 39.33%",
+          "Промоција",
+          "Важи до:31.10.2026"
+        ]
+      }
+    },
+    {
+      "key": "029395",
+      "name": "ДОРИНА ЛЕШНИК 80ГР.",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "price": "79.00",
+      "regular_price": "89.00",
+      "promo_price": null,
+      "unit_price": "98.75 100ГР",
+      "available": true,
+      "promotion": "Промоција | Важи до:31.10.2026",
+      "source_updated_at": null,
+      "raw": {
+        "cells": [
+          "029395",
+          "ДОРИНА ЛЕШНИК 80ГР.",
+          "79.00",
+          "98.75 100ГР",
+          "/",
+          "Да",
+          "89.00",
+          "79,00 Попуст: 11.24%",
+          "Промоција",
+          "Важи до:31.10.2026"
+        ]
+      }
+    },
+    {
+      "key": "010626",
+      "name": "МИС МЕЏИК 709 2/1",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "price": "157.00",
+      "regular_price": "175.00",
+      "promo_price": null,
+      "unit_price": "78.50 ПАРЧЕ",
+      "available": true,
+      "promotion": "Промоција | Важи до:31.10.2026",
+      "source_updated_at": null,
+      "raw": {
+        "cells": [
+          "010626",
+          "МИС МЕЏИК 709 2/1",
+          "157.00",
+          "78.50 ПАРЧЕ",
+          "/",
+          "Да",
+          "175.00",
+          "157,00 Попуст: 10.29%",
+          "Промоција",
+          "Важи до:31.10.2026"
+        ]
+      }
+    },
+    {
+      "key": "010620",
+      "name": "МИС МЕЏИК 701 2/1",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "price": "157.00",
+      "regular_price": "175.00",
+      "promo_price": null,
+      "unit_price": "78.50 ПАРЧЕ",
+      "available": true,
+      "promotion": "Промоција | Важи до:31.10.2026",
+      "source_updated_at": null,
+      "raw": {
+        "cells": [
+          "010620",
+          "МИС МЕЏИК 701 2/1",
+          "157.00",
+          "78.50 ПАРЧЕ",
+          "/",
+          "Да",
+          "175.00",
+          "157,00 Попуст: 10.29%",
+          "Промоција",
+          "Важи до:31.10.2026"
+        ]
+      }
+    },
+    {
+      "key": "035248",
+      "name": "ПЛАЗМА МИНИ МИНИ ЧОКО 45Г",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "price": "29.00",
+      "regular_price": "35.00",
+      "promo_price": null,
+      "unit_price": null,
+      "available": true,
+      "promotion": "Промоција | Важи до:31.10.2026",
+      "source_updated_at": null,
+      "raw": {
+        "cells": [
+          "035248",
+          "ПЛАЗМА МИНИ МИНИ ЧОКО 45Г",
+          "29.00",
+          "",
+          "/",
+          "Да",
+          "35.00",
+          "29,00 Попуст: 17.14%",
+          "Промоција",
+          "Важи до:31.10.2026"
+        ]
+      }
+    },
+    {
+      "key": "035210",
+      "name": "КРПА МИКРОФИБЕР КОЛОР 4/1 ВИЛЕДА",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "price": "375.00",
+      "regular_price": "440.00",
+      "promo_price": null,
+      "unit_price": "93.75 ПАРЧЕ",
+      "available": true,
+      "promotion": "Промоција | Важи до:31.10.2026",
+      "source_updated_at": null,
+      "raw": {
+        "cells": [
+          "035210",
+          "КРПА МИКРОФИБЕР КОЛОР 4/1 ВИЛЕДА",
+          "375.00",
+          "93.75 ПАРЧЕ",
+          "/",
+          "Да",
+          "440.00",
+          "375,00 Попуст: 14.77%",
+          "Промоција",
+          "Важи до:31.10.2026"
+        ]
+      }
+    },
+    {
+      "key": "023087",
+      "name": "ПЛАЗМА!! КЕКС 600ГР.",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "price": "219.00",
+      "regular_price": "259.00",
+      "promo_price": null,
+      "unit_price": "36.50 100ГР",
+      "available": true,
+      "promotion": "Промоција | Важи до:31.10.2026",
+      "source_updated_at": null,
+      "raw": {
+        "cells": [
+          "023087",
+          "ПЛАЗМА!! КЕКС 600ГР.",
+          "219.00",
+          "36.50 100ГР",
+          "/",
+          "Да",
+          "259.00",
+          "219,00 Попуст: 15.44%",
+          "Промоција",
+          "Важи до:31.10.2026"
+        ]
+      }
+    },
+    {
+      "key": "011032",
+      "name": "ДОРИНА ЛЕДЕНА 100Г",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "price": "89.00",
+      "regular_price": "99.00",
+      "promo_price": null,
+      "unit_price": null,
+      "available": true,
+      "promotion": "Промоција | Важи до:31.10.2026",
+      "source_updated_at": null,
+      "raw": {
+        "cells": [
+          "011032",
+          "ДОРИНА ЛЕДЕНА 100Г",
+          "89.00",
+          "",
+          "/",
+          "Да",
+          "99.00",
+          "89,00 Попуст: 10.1%",
+          "Промоција",
+          "Важи до:31.10.2026"
+        ]
+      }
+    },
+    {
+      "key": "032027",
+      "name": "СТР 8 ДЕО РЕД КОДЕ 150МЛ",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "price": "155.00",
+      "regular_price": "259.00",
+      "promo_price": null,
+      "unit_price": "143.33 100 МЛ",
+      "available": true,
+      "promotion": "Промоција | Важи до:31.10.2026",
+      "source_updated_at": null,
+      "raw": {
+        "cells": [
+          "032027",
+          "СТР 8 ДЕО РЕД КОДЕ 150МЛ",
+          "155.00",
+          "143.33 100 МЛ",
+          "/",
+          "Да",
+          "259.00",
+          "155,00 Попуст: 40.15%",
+          "Промоција",
+          "Важи до:31.10.2026"
+        ]
+      }
+    },
+    {
+      "key": "011042",
+      "name": "ГРИОТЕ КРАШ 204ГР.",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "price": "275.00",
+      "regular_price": "295.00",
+      "promo_price": null,
+      "unit_price": "134.80 100ГР",
+      "available": true,
+      "promotion": "Промоција | Важи до:31.10.2026",
+      "source_updated_at": null,
+      "raw": {
+        "cells": [
+          "011042",
+          "ГРИОТЕ КРАШ 204ГР.",
+          "275.00",
+          "134.80 100ГР",
+          "/",
+          "Да",
+          "295.00",
+          "275,00 Попуст: 6.78%",
+          "Промоција",
+          "Важи до:31.10.2026"
+        ]
+      }
+    }
+  ]
+}

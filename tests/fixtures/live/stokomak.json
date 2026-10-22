@@ -1,0 +1,319 @@
+{
+  "captured_at": "2026-10-20T22:52:21.570Z",
+  "source": {
+    "retailer": "stokomak",
+    "external_id": "1",
+    "name": "КИСЕЛА ВОДА",
+    "url": "https://stokomak.proverkanaceni.mk/",
+    "scope": "branch",
+    "meta": {}
+  },
+  "sources": 81,
+  "total": 2998,
+  "next": "2",
+  "rows": [
+    {
+      "key": "07bb520a055e83a4c9d069d9febabdc4a5380ac3ff7d9defbbcdee9a2e14ed9c",
+      "name": "КОРИ ЗА ПИТА И БАКЛАВА 500гр. ДОМАШНИ",
+      "description": "СВЕЖИ КОРИ",
+      "category": "СВЕЖИ КОРИ",
+      "gtin": null,
+      "price": "71.00",
+      "regular_price": "71.00",
+      "promo_price": null,
+      "unit_price": "1кгр = 142.00 ден.",
+      "available": true,
+      "promotion": null,
+      "source_updated_at": "2026-10-20T22:52:00.000Z",
+      "raw": {
+        "cells": [
+          "КОРИ ЗА ПИТА И БАКЛАВА 500гр. ДОМАШНИ",
+          "71 ден.",
+          "1кгр = 142.00 ден.",
+          "СВЕЖИ КОРИ",
+          "Да",
+          "71 ден."
+        ],
+        "price_parse_error": false
+      }
+    },
+    {
+      "key": "dfc8a142fc9118491d6ac81dfc6a137a277c108f88902eafca1eac00e371d615",
+      "name": "ЛЕБ СУСАМКА ЦВЕТ ДАЛ ФОРНО",
+      "description": "ЛЕБОВИ",
+      "category": "ЛЕБОВИ",
+      "gtin": null,
+      "price": "45.00",
+      "regular_price": "45.00",
+      "promo_price": null,
+      "unit_price": "1кгр = 112.50 ден.",
+      "available": true,
+      "promotion": null,
+      "source_updated_at": "2026-10-20T22:52:00.000Z",
+      "raw": {
+        "cells": [
+          "ЛЕБ СУСАМКА ЦВЕТ ДАЛ ФОРНО",
+          "45 ден.",
+          "1кгр = 112.50 ден.",
+          "ЛЕБОВИ",
+          "Да",
+          "45 ден."
+        ],
+        "price_parse_error": false
+      }
+    },
+    {
+      "key": "622f23658c9cbb207b468a7939285be3fa89b22ca72c53840aefcc2fb73e67d4",
+      "name": "БИОЛОШКИ ЛЕБ 400гр",
+      "description": "ЛЕБОВИ",
+      "category": "ЛЕБОВИ",
+      "gtin": null,
+      "price": "37.00",
+      "regular_price": "37.00",
+      "promo_price": null,
+      "unit_price": "1кгр = 92.50 ден.",
+      "available": true,
+      "promotion": null,
+      "source_updated_at": "2026-10-20T22:52:00.000Z",
+      "raw": {
+        "cells": [
+          "БИОЛОШКИ ЛЕБ 400гр",
+          "37 ден.",
+          "1кгр = 92.50 ден.",
+          "ЛЕБОВИ",
+          "Да",
+          "37 ден."
+        ],
+        "price_parse_error": false
+      }
+    },
+    {
+      "key": "cef03861464b93cda2fbecba7abd0c773bca9339d2691bd54de577c49b21f7bb",
+      "name": "РЖАН ЛЕБ 400гр",
+      "description": "ЛЕБОВИ",
+      "category": "ЛЕБОВИ",
+      "gtin": null,
+      "price": "37.00",
+      "regular_price": "37.00",
+      "promo_price": null,
+      "unit_price": "1кгр = 92.50 ден.",
+      "available": true,
+      "promotion": null,
+      "source_updated_at": "2026-10-20T22:52:00.000Z",
+      "raw": {
+        "cells": [
+          "РЖАН ЛЕБ 400гр",
+          "37 ден.",
+          "1кгр = 92.50 ден.",
+          "ЛЕБОВИ",
+          "Да",
+          "37 ден."
+        ],
+        "price_parse_error": false
+      }
+    },
+    {
+      "key": "6ac741d817ebb2633e4cf5b290da04a38072a3826a24813022446573bb012181",
+      "name": "ИНТЕГРАЛЕН ЛЕБ 400гр",
+      "description": "ЛЕБОВИ",
+      "category": "ЛЕБОВИ",
+      "gtin": null,
+      "price": "37.00",
+      "regular_price": "37.00",
+      "promo_price": null,
+      "unit_price": "1кгр = 92.50 ден.",
+      "available": true,
+      "promotion": null,
+      "source_updated_at": "2026-10-20T22:52:00.000Z",
+      "raw": {
+        "cells": [
+          "ИНТЕГРАЛЕН ЛЕБ 400гр",
+          "37 ден.",
+          "1кгр = 92.50 ден.",
+          "ЛЕБОВИ",
+          "Да",
+          "37 ден."
+        ],
+        "price_parse_error": false
+      }
+    },
+    {
+      "key": "ced7cbf7724047e0e636b5ecd8ddc2f753fb58767c799deb31a8aa648ed3a2cd",
+      "name": "БАГЕТ БЕЛ 320гр",
+      "description": "ЛЕБОВИ",
+      "category": "ЛЕБОВИ",
+      "gtin": null,
+      "price": "38.00",
+      "regular_price": "38.00",
+      "promo_price": null,
+      "unit_price": "1кгр = 118.75 ден.",
+      "available": true,
+      "promotion": null,
+      "source_updated_at": "2026-10-20T22:52:00.000Z",
+      "raw": {
+        "cells": [
+          "БАГЕТ БЕЛ 320гр",
+          "38 ден.",
+          "1кгр = 118.75 ден.",
+          "ЛЕБОВИ",
+          "Да",
+          "38 ден."
+        ],
+        "price_parse_error": false
+      }
+    },
+    {
+      "key": "0915bf3d9fcd763146ffe1bdae9290aa67d6d15472c1c5efabc76d6d39e79bfb",
+      "name": "ДОМАШЕН ЛЕБ ПЕЧЕН НА ДРВА 420гр.",
+      "description": "ЛЕБОВИ",
+      "category": "ЛЕБОВИ",
+      "gtin": null,
+      "price": "38.00",
+      "regular_price": "38.00",
+      "promo_price": null,
+      "unit_price": "1кгр = 84.44 ден.",
+      "available": true,
+      "promotion": null,
+      "source_updated_at": "2026-10-20T22:52:00.000Z",
+      "raw": {
+        "cells": [
+          "ДОМАШЕН ЛЕБ ПЕЧЕН НА ДРВА 420гр.",
+          "38 ден.",
+          "1кгр = 84.44 ден.",
+          "ЛЕБОВИ",
+          "Да",
+          "38 ден."
+        ],
+        "price_parse_error": false
+      }
+    },
+    {
+      "key": "b1ebb43a4039cd95de0ee3d0406eda9d12025112305fbe564fb2ac060993edae",
+      "name": "ПРЕМИУМ ДИЕТ 100% Р‘ЖАН ЛЕБ 400Г",
+      "description": "ЛЕБОВИ",
+      "category": "ЛЕБОВИ",
+      "gtin": null,
+      "price": "50.00",
+      "regular_price": "55.00",
+      "promo_price": null,
+      "unit_price": "1кгр = 125.00 ден.",
+      "available": true,
+      "promotion": "акциска цена | 19.10.2026 до 22.10.2026",
+      "source_updated_at": "2026-10-20T22:52:00.000Z",
+      "raw": {
+        "cells": [
+          "ПРЕМИУМ ДИЕТ 100% Р‘ЖАН ЛЕБ 400Г",
+          "50 ден.",
+          "1кгр = 125.00 ден.",
+          "ЛЕБОВИ",
+          "Да",
+          "55 ден.",
+          "50 ден. Попуст:9%",
+          "акциска цена",
+          "19.10.2026 до 22.10.2026"
+        ],
+        "price_parse_error": false
+      }
+    },
+    {
+      "key": "629f9c4ba6005dca8d6760f62469f92f6fbda6d05d01f56e9a697b6faabdc866",
+      "name": "ВАНИЛИЦИ СО ЏЕМ ОД ШУМСКО ОВОШЈЕ 350ГР",
+      "description": "ПЕЦИВА ЧАЈНИ",
+      "category": "ПЕЦИВА ЧАЈНИ",
+      "gtin": null,
+      "price": "82.00",
+      "regular_price": "82.00",
+      "promo_price": null,
+      "unit_price": "1кгр = 234.29 ден.",
+      "available": true,
+      "promotion": null,
+      "source_updated_at": "2026-10-20T22:52:00.000Z",
+      "raw": {
+        "cells": [
+          "ВАНИЛИЦИ СО ЏЕМ ОД ШУМСКО ОВОШЈЕ 350ГР",
+          "82 ден.",
+          "1кгр = 234.29 ден.",
+          "ПЕЦИВА ЧАЈНИ",
+          "Да",
+          "82 ден."
+        ],
+        "price_parse_error": false
+      }
+    },
+    {
+      "key": "c1caa5e22b05f2f283df52c946088994cc12e51e718f4c04ccfad8a72c339530",
+      "name": "КРУША /кгр сорта: ВИЛЈАМОВКА",
+      "description": "СВЕЖО ОВОШЈЕ",
+      "category": "СВЕЖО ОВОШЈЕ",
+      "gtin": null,
+      "price": "89.00",
+      "regular_price": "89.00",
+      "promo_price": null,
+      "unit_price": "1кгр = 89.00 ден.",
+      "available": true,
+      "promotion": null,
+      "source_updated_at": "2026-10-20T22:52:00.000Z",
+      "raw": {
+        "cells": [
+          "КРУША /кгр сорта: ВИЛЈАМОВКА",
+          "89 ден.",
+          "1кгр = 89.00 ден.",
+          "СВЕЖО ОВОШЈЕ",
+          "Да",
+          "89 ден."
+        ],
+        "price_parse_error": false
+      }
+    },
+    {
+      "key": "a771001f0fb9323eb56067f52c363a422033fea50405d1178e4268ebe37d663e",
+      "name": "ЈАБОЛКО СОРТА ГРЕНИ СМИТ кгр",
+      "description": "СВЕЖО ОВОШЈЕ",
+      "category": "СВЕЖО ОВОШЈЕ",
+      "gtin": null,
+      "price": "55.00",
+      "regular_price": "55.00",
+      "promo_price": null,
+      "unit_price": "1кгр = 55.00 ден.",
+      "available": true,
+      "promotion": null,
+      "source_updated_at": "2026-10-20T22:52:00.000Z",
+      "raw": {
+        "cells": [
+          "ЈАБОЛКО СОРТА ГРЕНИ СМИТ кгр",
+          "55 ден.",
+          "1кгр = 55.00 ден.",
+          "СВЕЖО ОВОШЈЕ",
+          "Да",
+          "55 ден."
+        ],
+        "price_parse_error": false
+      }
+    },
+    {
+      "key": "6080c3f2b81c74b189ef330de605aa0e4882694fb32642303b2b2c34a6921a90",
+      "name": "ЈАБОЛКА ПАКУВАНИ 2-ра класа 1,5кгр",
+      "description": "СВЕЖО ОВОШЈЕ",
+      "category": "СВЕЖО ОВОШЈЕ",
+      "gtin": null,
+      "price": "35.00",
+      "regular_price": "35.00",
+      "promo_price": null,
+      "unit_price": "1кгр = 23.33 ден.",
+      "available": true,
+      "promotion": null,
+      "source_updated_at": "2026-10-20T22:52:00.000Z",
+      "raw": {
+        "cells": [
+          "ЈАБОЛКА ПАКУВАНИ 2-ра класа 1,5кгр",
+          "35 ден.",
+          "1кгр = 23.33 ден.",
+          "СВЕЖО ОВОШЈЕ",
+          "Да",
+          "35 ден."
+        ],
+        "price_parse_error": false
+      }
+    }
+  ]
+}

@@ -1,0 +1,352 @@
+{
+  "captured_at": "2026-10-20T22:10:45.570Z",
+  "source": {
+    "retailer": "dim",
+    "external_id": "17",
+    "name": "СТАЈКОВЦИ",
+    "url": "https://dim.marketceni.mk/",
+    "scope": "branch",
+    "meta": {}
+  },
+  "sources": 25,
+  "total": null,
+  "next": "2",
+  "rows": [
+    {
+      "key": "044460",
+      "name": "ЛИНО КАШИЧКА БИО ЈАБОЛ/КРУША/БАНАНА100ГР",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "price": "52.00",
+      "regular_price": "63.00",
+      "promo_price": null,
+      "unit_price": null,
+      "available": true,
+      "promotion": "Промоција | Важи до:31.10.2026",
+      "source_updated_at": null,
+      "raw": {
+        "cells": [
+          "044460",
+          "ЛИНО КАШИЧКА БИО ЈАБОЛ/КРУША/БАНАНА100ГР",
+          "52.00",
+          "",
+          "/",
+          "Да",
+          "63.00",
+          "52,00 Попуст: 17.46%",
+          "Промоција",
+          "Важи до:31.10.2026"
+        ]
+      }
+    },
+    {
+      "key": "050509",
+      "name": "БЕБИЛИНО? СЕНЗИТИВ БР.6 13-18КГ 38/1",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "price": "539.00",
+      "regular_price": "599.00",
+      "promo_price": null,
+      "unit_price": "14.18 ПАРЧЕ",
+      "available": true,
+      "promotion": "Промоција | Важи до:31.10.2026",
+      "source_updated_at": null,
+      "raw": {
+        "cells": [
+          "050509",
+          "БЕБИЛИНО? СЕНЗИТИВ БР.6 13-18КГ 38/1",
+          "539.00",
+          "14.18 ПАРЧЕ",
+          "/",
+          "Да",
+          "599.00",
+          "539,00 Попуст: 10.02%",
+          "Промоција",
+          "Важи до:31.10.2026"
+        ]
+      }
+    },
+    {
+      "key": "053537",
+      "name": "ГЕЛАТИСИМО СЛАДОЛЕД ФОРЕСТ ФРУИТ 1500МЛ",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "price": "125.00",
+      "regular_price": "195.00",
+      "promo_price": null,
+      "unit_price": "8.33 100МЛ",
+      "available": true,
+      "promotion": "Промоција | Важи до:31.10.2026",
+      "source_updated_at": null,
+      "raw": {
+        "cells": [
+          "053537",
+          "ГЕЛАТИСИМО СЛАДОЛЕД ФОРЕСТ ФРУИТ 1500МЛ",
+          "125.00",
+          "8.33 100МЛ",
+          "/",
+          "Да",
+          "195.00",
+          "125,00 Попуст: 35.9%",
+          "Промоција",
+          "Важи до:31.10.2026"
+        ]
+      }
+    },
+    {
+      "key": "012817",
+      "name": "БИ ЈУ ДЕО ХАРТБИТ 150МЛ",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "price": "139.00",
+      "regular_price": "229.00",
+      "promo_price": null,
+      "unit_price": "92.67 100МЛ",
+      "available": true,
+      "promotion": "Промоција | Важи до:31.10.2026",
+      "source_updated_at": null,
+      "raw": {
+        "cells": [
+          "012817",
+          "БИ ЈУ ДЕО ХАРТБИТ 150МЛ",
+          "139.00",
+          "92.67 100МЛ",
+          "/",
+          "Да",
+          "229.00",
+          "139,00 Попуст: 39.3%",
+          "Промоција",
+          "Важи до:31.10.2026"
+        ]
+      }
+    },
+    {
+      "key": "010282",
+      "name": "АСТЕРА ПАСТА ТОТАЛ 100МЛ",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "price": "78.00",
+      "regular_price": "95.00",
+      "promo_price": null,
+      "unit_price": "68.18 100МЛ",
+      "available": true,
+      "promotion": "Промоција | Важи до:31.10.2026",
+      "source_updated_at": null,
+      "raw": {
+        "cells": [
+          "010282",
+          "АСТЕРА ПАСТА ТОТАЛ 100МЛ",
+          "78.00",
+          "68.18 100МЛ",
+          "/",
+          "Да",
+          "95.00",
+          "78,00 Попуст: 17.89%",
+          "Промоција",
+          "Важи до:31.10.2026"
+        ]
+      }
+    },
+    {
+      "key": "049574",
+      "name": "ПИНК СТАФ ЗА ЧИСТЕЊЕ ПОДОВИ 1Л",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "price": "239.00",
+      "regular_price": "280.00",
+      "promo_price": null,
+      "unit_price": "23.90 100МЛ",
+      "available": true,
+      "promotion": "Промоција | Важи до:31.10.2026",
+      "source_updated_at": null,
+      "raw": {
+        "cells": [
+          "049574",
+          "ПИНК СТАФ ЗА ЧИСТЕЊЕ ПОДОВИ 1Л",
+          "239.00",
+          "23.90 100МЛ",
+          "/",
+          "Да",
+          "280.00",
+          "239,00 Попуст: 14.64%",
+          "Промоција",
+          "Важи до:31.10.2026"
+        ]
+      }
+    },
+    {
+      "key": "048782",
+      "name": "ЕМОТИОН ДЕО ВИОЛЕТ 150МЛ `",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "price": "88.00",
+      "regular_price": "99.00",
+      "promo_price": null,
+      "unit_price": "63.33 100МЛ",
+      "available": true,
+      "promotion": "Промоција | Важи до:31.10.2026",
+      "source_updated_at": null,
+      "raw": {
+        "cells": [
+          "048782",
+          "ЕМОТИОН ДЕО ВИОЛЕТ 150МЛ `",
+          "88.00",
+          "63.33 100МЛ",
+          "/",
+          "Да",
+          "99.00",
+          "88,00 Попуст: 11.11%",
+          "Промоција",
+          "Важи до:31.10.2026"
+        ]
+      }
+    },
+    {
+      "key": "010620",
+      "name": "МИС МЕЏИК 701 2/1",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "price": "135.00",
+      "regular_price": "155.00",
+      "promo_price": null,
+      "unit_price": "78.50 ПАРЧЕ",
+      "available": true,
+      "promotion": "Промоција | Важи до:31.10.2026",
+      "source_updated_at": null,
+      "raw": {
+        "cells": [
+          "010620",
+          "МИС МЕЏИК 701 2/1",
+          "135.00",
+          "78.50 ПАРЧЕ",
+          "/",
+          "Да",
+          "155.00",
+          "135,00 Попуст: 12.9%",
+          "Промоција",
+          "Важи до:31.10.2026"
+        ]
+      }
+    },
+    {
+      "key": "045362",
+      "name": "СТР 8 ГЕЛ ЗА ТУШИРАЊЕ РЕД КОДЕ 400МЛ",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "price": "175.00",
+      "regular_price": "289.00",
+      "promo_price": null,
+      "unit_price": "46.25 100 МЛ",
+      "available": true,
+      "promotion": "Промоција | Важи до:31.10.2026",
+      "source_updated_at": null,
+      "raw": {
+        "cells": [
+          "045362",
+          "СТР 8 ГЕЛ ЗА ТУШИРАЊЕ РЕД КОДЕ 400МЛ",
+          "175.00",
+          "46.25 100 МЛ",
+          "/",
+          "Да",
+          "289.00",
+          "175,00 Попуст: 39.45%",
+          "Промоција",
+          "Важи до:31.10.2026"
+        ]
+      }
+    },
+    {
+      "key": "017115",
+      "name": "ДИЈАМАНТ КЛАСИК 250ГР. МАРГАРИН",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "price": "44.00",
+      "regular_price": "50.00",
+      "promo_price": null,
+      "unit_price": "17.60 100 ГР",
+      "available": true,
+      "promotion": "Промоција | Важи до:31.10.2026",
+      "source_updated_at": null,
+      "raw": {
+        "cells": [
+          "017115",
+          "ДИЈАМАНТ КЛАСИК 250ГР. МАРГАРИН",
+          "44.00",
+          "17.60 100 ГР",
+          "/",
+          "Да",
+          "50.00",
+          "44,00 Попуст: 12%",
+          "Промоција",
+          "Важи до:31.10.2026"
+        ]
+      }
+    },
+    {
+      "key": "045291",
+      "name": "ПАРАДОНТ АКТИВ СО ЈАГЛЕН ПАСТА 75МЛ",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "price": "176.00",
+      "regular_price": "199.00",
+      "promo_price": null,
+      "unit_price": "238.67 100МЛ",
+      "available": true,
+      "promotion": "Промоција | Важи до:31.10.2026",
+      "source_updated_at": null,
+      "raw": {
+        "cells": [
+          "045291",
+          "ПАРАДОНТ АКТИВ СО ЈАГЛЕН ПАСТА 75МЛ",
+          "176.00",
+          "238.67 100МЛ",
+          "/",
+          "Да",
+          "199.00",
+          "176,00 Попуст: 11.56%",
+          "Промоција",
+          "Важи до:31.10.2026"
+        ]
+      }
+    },
+    {
+      "key": "010623",
+      "name": "МИС МЕЏИК 702/2",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "price": "135.00",
+      "regular_price": "155.00",
+      "promo_price": null,
+      "unit_price": "78.50 ПАРЧЕ",
+      "available": true,
+      "promotion": "Промоција | Важи до:31.10.2026",
+      "source_updated_at": null,
+      "raw": {
+        "cells": [
+          "010623",
+          "МИС МЕЏИК 702/2",
+          "135.00",
+          "78.50 ПАРЧЕ",
+          "/",
+          "Да",
+          "155.00",
+          "135,00 Попуст: 12.9%",
+          "Промоција",
+          "Важи до:31.10.2026"
+        ]
+      }
+    }
+  ]
+}

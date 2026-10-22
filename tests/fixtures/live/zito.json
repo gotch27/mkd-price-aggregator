@@ -1,0 +1,316 @@
+{
+  "captured_at": "2026-10-20T22:52:26.447Z",
+  "source": {
+    "retailer": "zito",
+    "external_id": "2",
+    "name": "2 Трговски - Велес",
+    "url": "https://zito.proverkanaceni.mk/",
+    "scope": "branch",
+    "meta": {}
+  },
+  "sources": 94,
+  "total": 5009,
+  "next": "2",
+  "rows": [
+    {
+      "key": "cdf57e460df7148b945990608cd02d2d9c38a9d71ec0a41e72142d795d930871",
+      "name": "МАИЦА М НА КРАТОК РАКАВ",
+      "description": "Маица м пролет-лето",
+      "category": "Маица м пролет-лето",
+      "gtin": null,
+      "price": "299.00",
+      "regular_price": "299.00",
+      "promo_price": null,
+      "unit_price": "1par = 299.00 ден.",
+      "available": true,
+      "promotion": null,
+      "source_updated_at": "2026-10-20T22:52:00.000Z",
+      "raw": {
+        "cells": [
+          "МАИЦА М НА КРАТОК РАКАВ",
+          "299 ден.",
+          "1par = 299.00 ден.",
+          "Маица м пролет-лето",
+          "Да",
+          "299 ден."
+        ],
+        "price_parse_error": false
+      }
+    },
+    {
+      "key": "3e2ec2a1cc5f2ec62d3354dea7b0afaff6e20b3fc3bc3eb5e26d95c01c18c03e",
+      "name": "МАИЦА ПОЛО Ж НА КРАТОК РАКАВ",
+      "description": "Маица ж пролет-лето",
+      "category": "Маица ж пролет-лето",
+      "gtin": null,
+      "price": "499.00",
+      "regular_price": "499.00",
+      "promo_price": null,
+      "unit_price": "1par = 499.00 ден.",
+      "available": true,
+      "promotion": null,
+      "source_updated_at": "2026-10-20T22:52:00.000Z",
+      "raw": {
+        "cells": [
+          "МАИЦА ПОЛО Ж НА КРАТОК РАКАВ",
+          "499 ден.",
+          "1par = 499.00 ден.",
+          "Маица ж пролет-лето",
+          "Да",
+          "499 ден."
+        ],
+        "price_parse_error": false
+      }
+    },
+    {
+      "key": "84d8c0e227428674263bb61dc8bba564448f1f097a2b16bcc85395f1b04fc90b",
+      "name": "КОСТИМ ЗА КАПЕЊЕ ЕДНОДЕЛЕН",
+      "description": "Акцесоари ж пролет-лето",
+      "category": "Акцесоари ж пролет-лето",
+      "gtin": null,
+      "price": "499.00",
+      "regular_price": "499.00",
+      "promo_price": null,
+      "unit_price": "1par = 499.00 ден.",
+      "available": true,
+      "promotion": null,
+      "source_updated_at": "2026-10-20T22:52:00.000Z",
+      "raw": {
+        "cells": [
+          "КОСТИМ ЗА КАПЕЊЕ ЕДНОДЕЛЕН",
+          "499 ден.",
+          "1par = 499.00 ден.",
+          "Акцесоари ж пролет-лето",
+          "Да",
+          "499 ден."
+        ],
+        "price_parse_error": false
+      }
+    },
+    {
+      "key": "ea472a6c6d94578c6dbe7938ba2181ded48bff86cae38e536e6b012d4cf90a7e",
+      "name": "МАИЦА Ж НА КРАТОК РАКАВ",
+      "description": "Маица ж пролет-лето",
+      "category": "Маица ж пролет-лето",
+      "gtin": null,
+      "price": "299.00",
+      "regular_price": "299.00",
+      "promo_price": null,
+      "unit_price": "1par = 299.00 ден.",
+      "available": true,
+      "promotion": null,
+      "source_updated_at": "2026-10-20T22:52:00.000Z",
+      "raw": {
+        "cells": [
+          "МАИЦА Ж НА КРАТОК РАКАВ",
+          "299 ден.",
+          "1par = 299.00 ден.",
+          "Маица ж пролет-лето",
+          "Да",
+          "299 ден."
+        ],
+        "price_parse_error": false
+      }
+    },
+    {
+      "key": "18dc3864845e51a5198800f1c53a7fe45f91dc393e86556caad3328ad2802421",
+      "name": "НАМЕТКИ ЗА ПЛАЖА ПОЛТАН",
+      "description": "Акцесоари ж пролет-лето",
+      "category": "Акцесоари ж пролет-лето",
+      "gtin": null,
+      "price": "499.00",
+      "regular_price": "499.00",
+      "promo_price": null,
+      "unit_price": "1par = 499.00 ден.",
+      "available": true,
+      "promotion": null,
+      "source_updated_at": "2026-10-20T22:52:00.000Z",
+      "raw": {
+        "cells": [
+          "НАМЕТКИ ЗА ПЛАЖА ПОЛТАН",
+          "499 ден.",
+          "1par = 499.00 ден.",
+          "Акцесоари ж пролет-лето",
+          "Да",
+          "499 ден."
+        ],
+        "price_parse_error": false
+      }
+    },
+    {
+      "key": "6f0ce285486be8c4cdf4e2e2d81b68d5c82b2d475e69534d04fbbf185f1ba72f",
+      "name": "КОСТИМ ЗА КАПЕЊЕ Д.ДЕЛ",
+      "description": "Акцесоари ж пролет-лето",
+      "category": "Акцесоари ж пролет-лето",
+      "gtin": null,
+      "price": "199.00",
+      "regular_price": "199.00",
+      "promo_price": null,
+      "unit_price": null,
+      "available": true,
+      "promotion": null,
+      "source_updated_at": "2026-10-20T22:52:00.000Z",
+      "raw": {
+        "cells": [
+          "КОСТИМ ЗА КАПЕЊЕ Д.ДЕЛ",
+          "199 ден.",
+          "",
+          "Акцесоари ж пролет-лето",
+          "Да",
+          "199 ден."
+        ],
+        "price_parse_error": false
+      }
+    },
+    {
+      "key": "908d1067577f1fccdbeb4f4a56618ddb980250ba3a9b301d194a1bee0e3dad08",
+      "name": "КОСТИМ ЗА КАПЕЊЕ ДВОДЕЛЕН",
+      "description": "Акцесоари ж пролет-лето",
+      "category": "Акцесоари ж пролет-лето",
+      "gtin": null,
+      "price": "399.00",
+      "regular_price": "399.00",
+      "promo_price": null,
+      "unit_price": "1par = 399.00 ден.",
+      "available": true,
+      "promotion": null,
+      "source_updated_at": "2026-10-20T22:52:00.000Z",
+      "raw": {
+        "cells": [
+          "КОСТИМ ЗА КАПЕЊЕ ДВОДЕЛЕН",
+          "399 ден.",
+          "1par = 399.00 ден.",
+          "Акцесоари ж пролет-лето",
+          "Да",
+          "399 ден."
+        ],
+        "price_parse_error": false
+      }
+    },
+    {
+      "key": "8c5a0eeb55fb27089d44e2ea57d182a155a7d43e8a3f392a2e1f697d4307e1d4",
+      "name": "КОСТИМ ЗА КАПЕЊЕ Г.ДЕЛ",
+      "description": "Акцесоари ж пролет-лето",
+      "category": "Акцесоари ж пролет-лето",
+      "gtin": null,
+      "price": "199.00",
+      "regular_price": "199.00",
+      "promo_price": null,
+      "unit_price": "1par = 199.00 ден.",
+      "available": true,
+      "promotion": null,
+      "source_updated_at": "2026-10-20T22:52:00.000Z",
+      "raw": {
+        "cells": [
+          "КОСТИМ ЗА КАПЕЊЕ Г.ДЕЛ",
+          "199 ден.",
+          "1par = 199.00 ден.",
+          "Акцесоари ж пролет-лето",
+          "Да",
+          "199 ден."
+        ],
+        "price_parse_error": false
+      }
+    },
+    {
+      "key": "a24308df3e592ed9226b42ea8db36b5435b098ef1173b9f212a7b07502eb439e",
+      "name": "КЕСА ХАРТИЕНА ЖИТО",
+      "description": "Материјали за маркети",
+      "category": "Материјали за маркети",
+      "gtin": null,
+      "price": "9.00",
+      "regular_price": "9.00",
+      "promo_price": null,
+      "unit_price": null,
+      "available": true,
+      "promotion": null,
+      "source_updated_at": "2026-10-20T22:52:00.000Z",
+      "raw": {
+        "cells": [
+          "КЕСА ХАРТИЕНА ЖИТО",
+          "9 ден.",
+          "",
+          "Материјали за маркети",
+          "Да",
+          "9 ден."
+        ],
+        "price_parse_error": false
+      }
+    },
+    {
+      "key": "63bd8887f707243ea463bd9c443a5a90392aefd5e641598f3c507b926de2b1ae",
+      "name": "КЕСИ ЖИТО ШТАМПАНИ 50МИК.БИО",
+      "description": "Материјали за маркети",
+      "category": "Материјали за маркети",
+      "gtin": null,
+      "price": "5.00",
+      "regular_price": "5.00",
+      "promo_price": null,
+      "unit_price": null,
+      "available": true,
+      "promotion": null,
+      "source_updated_at": "2026-10-20T22:52:00.000Z",
+      "raw": {
+        "cells": [
+          "КЕСИ ЖИТО ШТАМПАНИ 50МИК.БИО",
+          "5 ден.",
+          "",
+          "Материјали за маркети",
+          "Да",
+          "5 ден."
+        ],
+        "price_parse_error": false
+      }
+    },
+    {
+      "key": "1db8780bdc9e2180d3b7c53299fb2e5324404ea0eabf97eafa858d8612b34acd",
+      "name": "ДЕПОЗИТ ЗА ШИШИЊА ОД ПИВО",
+      "description": "Материјали за маркети",
+      "category": "Материјали за маркети",
+      "gtin": null,
+      "price": "10.00",
+      "regular_price": "10.00",
+      "promo_price": null,
+      "unit_price": null,
+      "available": true,
+      "promotion": null,
+      "source_updated_at": "2026-10-20T22:52:00.000Z",
+      "raw": {
+        "cells": [
+          "ДЕПОЗИТ ЗА ШИШИЊА ОД ПИВО",
+          "10 ден.",
+          "",
+          "Материјали за маркети",
+          "Да",
+          "10 ден."
+        ],
+        "price_parse_error": false
+      }
+    },
+    {
+      "key": "89a3df16197d1c34d4ef26861a0344d24103dfe7305217af9aff4a086946c567",
+      "name": "ТОРБА ЖИТО ЗА ПАЗАРЕЊЕ",
+      "description": "Материјали за маркети",
+      "category": "Материјали за маркети",
+      "gtin": null,
+      "price": "29.00",
+      "regular_price": "29.00",
+      "promo_price": null,
+      "unit_price": null,
+      "available": true,
+      "promotion": null,
+      "source_updated_at": "2026-10-20T22:52:00.000Z",
+      "raw": {
+        "cells": [
+          "ТОРБА ЖИТО ЗА ПАЗАРЕЊЕ",
+          "29 ден.",
+          "",
+          "Материјали за маркети",
+          "Да",
+          "29 ден."
+        ],
+        "price_parse_error": false
+      }
+    }
+  ]
+}

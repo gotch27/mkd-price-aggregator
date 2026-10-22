@@ -1,0 +1,33 @@
+{
+  "captured_at": "2026-10-20T23:15:00Z",
+  "source_url": "https://api.prod.spar.mk/api/pricelists-web/12/products?per_page=500&search=TOALET%20VIOLETA%2010%2F1%203SL%20PRASKA",
+  "total": 2,
+  "rows": [
+    {
+      "id": 41191,
+      "name": "TOALET VIOLETA 10/1 3SL PRASKA",
+      "category": "Toilet Paper with three layers of flavor",
+      "available": "0",
+      "unit": "149",
+      "sale": "109",
+      "regular": "149",
+      "discount_price": "109",
+      "discount": "27",
+      "action": "Katalog",
+      "date": "2026-10-19 - 2026-10-21"
+    },
+    {
+      "id": 41191,
+      "name": "TOALET VIOLETA 10/1 3SL PRASKA",
+      "category": "Toilet Paper with three layers of flavor",
+      "available": "0",
+      "unit": "149",
+      "sale": "149",
+      "regular": "149",
+      "discount_price": "149",
+      "discount": "0",
+      "action": "Katalog",
+      "date": "2026-10-19 - 2026-10-21"
+    }
+  ]
+}

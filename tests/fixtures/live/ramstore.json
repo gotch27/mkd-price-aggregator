@@ -1,0 +1,352 @@
+{
+  "captured_at": "2026-10-20T22:10:50.232Z",
+  "source": {
+    "retailer": "ramstore",
+    "external_id": "/marketi/ramstore-vardar/",
+    "name": "/marketi/ramstore-vardar/",
+    "url": "https://ramstore.com.mk/marketi/ramstore-vardar/",
+    "scope": "branch",
+    "meta": {}
+  },
+  "sources": 36,
+  "total": null,
+  "next": null,
+  "rows": [
+    {
+      "key": "56e5397a16550eb82d34d377bf701abbccec17760b67c7cd535ed4a2408e49d9",
+      "name": "СОНЧЕВА ДОЛИНА ОРИЗ 900 ГР",
+      "description": "ОРИЗ",
+      "category": "ОРИЗ",
+      "gtin": null,
+      "price": "145.00",
+      "regular_price": null,
+      "promo_price": null,
+      "unit_price": "100 ГР: =16.11ДЕН",
+      "available": true,
+      "promotion": " |  | ",
+      "source_updated_at": null,
+      "raw": {
+        "cells": [
+          "СОНЧЕВА ДОЛИНА ОРИЗ 900 ГР",
+          "145.00",
+          "100 ГР: =16.11ДЕН",
+          "ОРИЗ",
+          "ДА",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      }
+    },
+    {
+      "key": "783599a6df3a8cc2cf7e1fdfb2e9d80df268ca6cdf14c86967a73abcce7d5f80",
+      "name": "СОНЧЕВА ДОЛИНА ОРИЗ 500 ГР",
+      "description": "ОРИЗ",
+      "category": "ОРИЗ",
+      "gtin": null,
+      "price": "82.00",
+      "regular_price": null,
+      "promo_price": null,
+      "unit_price": "1 ПАРЧЕ =82ДЕН",
+      "available": true,
+      "promotion": " |  | ",
+      "source_updated_at": null,
+      "raw": {
+        "cells": [
+          "СОНЧЕВА ДОЛИНА ОРИЗ 500 ГР",
+          "82.00",
+          "1 ПАРЧЕ =82ДЕН",
+          "ОРИЗ",
+          "ДА",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      }
+    },
+    {
+      "key": "07889e874f9619158667b284019bbe5b9a85a9b8ed84ffd701a99030af490b7c",
+      "name": "СОНЧЕВА ДОЛИНА ОРИЗ КРУПЕН 900ГР",
+      "description": "ОРИЗ",
+      "category": "ОРИЗ",
+      "gtin": null,
+      "price": "149.00",
+      "regular_price": null,
+      "promo_price": null,
+      "unit_price": "100 ГР: =16.56ДЕН",
+      "available": true,
+      "promotion": " |  | ",
+      "source_updated_at": null,
+      "raw": {
+        "cells": [
+          "СОНЧЕВА ДОЛИНА ОРИЗ КРУПЕН 900ГР",
+          "149.00",
+          "100 ГР: =16.56ДЕН",
+          "ОРИЗ",
+          "ДА",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      }
+    },
+    {
+      "key": "68956df663fc2100019955d17a015b1dd621b8092e3bbcd2234e819c21085097",
+      "name": "СОНЧЕВА ДОЛИНА ОРИЗ ИНТЕГРАЛЕН 900 ГР",
+      "description": "ИНТЕГРАЛЕН ОРИЗ",
+      "category": "ИНТЕГРАЛЕН ОРИЗ",
+      "gtin": null,
+      "price": "122.00",
+      "regular_price": null,
+      "promo_price": null,
+      "unit_price": "100 ГР: =13.56ДЕН",
+      "available": true,
+      "promotion": " |  | ",
+      "source_updated_at": null,
+      "raw": {
+        "cells": [
+          "СОНЧЕВА ДОЛИНА ОРИЗ ИНТЕГРАЛЕН 900 ГР",
+          "122.00",
+          "100 ГР: =13.56ДЕН",
+          "ИНТЕГРАЛЕН ОРИЗ",
+          "ДА",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      }
+    },
+    {
+      "key": "c5a059cbf2ac9ee60e18358286c65e7b54f0120024c782a256d9418dd6fa655f",
+      "name": "МАКС ОРИЗ 400 Г",
+      "description": "ОРИЗ",
+      "category": "ОРИЗ",
+      "gtin": null,
+      "price": "49.00",
+      "regular_price": null,
+      "promo_price": null,
+      "unit_price": "100 ГР: =12.25ДЕН",
+      "available": true,
+      "promotion": " |  | ",
+      "source_updated_at": null,
+      "raw": {
+        "cells": [
+          "МАКС ОРИЗ 400 Г",
+          "49.00",
+          "100 ГР: =12.25ДЕН",
+          "ОРИЗ",
+          "ДА",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      }
+    },
+    {
+      "key": "2bc3203063e835f06a61f12e6b646a4185f3a9304b15ee233923178da35851a4",
+      "name": "РИСО СКОТИ ОРИЗ РИЖОТО 500Г",
+      "description": "ОРИЗ",
+      "category": "ОРИЗ",
+      "gtin": null,
+      "price": "279.00",
+      "regular_price": null,
+      "promo_price": null,
+      "unit_price": "100 ГР: =55.8ДЕН",
+      "available": true,
+      "promotion": " |  | ",
+      "source_updated_at": null,
+      "raw": {
+        "cells": [
+          "РИСО СКОТИ ОРИЗ РИЖОТО 500Г",
+          "279.00",
+          "100 ГР: =55.8ДЕН",
+          "ОРИЗ",
+          "ДА",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      }
+    },
+    {
+      "key": "9f20513f1a1269a4ebef6fb08389c35ceaf57519ed44941777259ff079863ac1",
+      "name": "РИСО СКОТИ ОРИЗ ИНТЕГРАЛЕН 1КГ",
+      "description": "ОРИЗ",
+      "category": "ОРИЗ",
+      "gtin": null,
+      "price": "285.00",
+      "regular_price": null,
+      "promo_price": null,
+      "unit_price": "100 ГР: =28.5ДЕН",
+      "available": true,
+      "promotion": " |  | ",
+      "source_updated_at": null,
+      "raw": {
+        "cells": [
+          "РИСО СКОТИ ОРИЗ ИНТЕГРАЛЕН 1КГ",
+          "285.00",
+          "100 ГР: =28.5ДЕН",
+          "ОРИЗ",
+          "ДА",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      }
+    },
+    {
+      "key": "b71f1116205a7cee6a12da9560a0bb35fc972a2a72f8c1a0cdef75acc8ccedf8",
+      "name": "МОРСКИ АЛГИ ЗА СУШИ 25 ГР",
+      "description": "МОРСКИ АЛГИ",
+      "category": "МОРСКИ АЛГИ",
+      "gtin": null,
+      "price": "179.00",
+      "regular_price": null,
+      "promo_price": null,
+      "unit_price": "100 ГР: =716ДЕН",
+      "available": true,
+      "promotion": " |  | ",
+      "source_updated_at": null,
+      "raw": {
+        "cells": [
+          "МОРСКИ АЛГИ ЗА СУШИ 25 ГР",
+          "179.00",
+          "100 ГР: =716ДЕН",
+          "МОРСКИ АЛГИ",
+          "ДА",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      }
+    },
+    {
+      "key": "e005ca91d20acd0ba88863ccc406e72c128970d63fefc1ea97babe2f03d1591b",
+      "name": "РИСО ГАЛО ОРИЗ БАСМАТИ 500ГР",
+      "description": "ОРИЗ",
+      "category": "ОРИЗ",
+      "gtin": null,
+      "price": "277.00",
+      "regular_price": null,
+      "promo_price": null,
+      "unit_price": "100 ГР: =55.4ДЕН",
+      "available": true,
+      "promotion": " |  | ",
+      "source_updated_at": null,
+      "raw": {
+        "cells": [
+          "РИСО ГАЛО ОРИЗ БАСМАТИ 500ГР",
+          "277.00",
+          "100 ГР: =55.4ДЕН",
+          "ОРИЗ",
+          "ДА",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      }
+    },
+    {
+      "key": "d8214102f17ae05b5616a8a98463d89c77d8150fe0bb178935ee2ad5acaa96b9",
+      "name": "ОРИЗ СУПЕР ДАУТИ 900ГР",
+      "description": "ОРИЗ",
+      "category": "ОРИЗ",
+      "gtin": null,
+      "price": "104.00",
+      "regular_price": null,
+      "promo_price": null,
+      "unit_price": "100 ГР: =11,56ДЕН",
+      "available": true,
+      "promotion": " |  | ",
+      "source_updated_at": null,
+      "raw": {
+        "cells": [
+          "ОРИЗ СУПЕР ДАУТИ 900ГР",
+          "104.00",
+          "100 ГР: =11,56ДЕН",
+          "ОРИЗ",
+          "ДА",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      }
+    },
+    {
+      "key": "73b3a6047e9b85e908c43f01272bc7a672a7647ca2f2701fb9b78725e91844f9",
+      "name": "ДАУТИ ОРИЗ ЕКСТРА 900ГР",
+      "description": "ОРИЗ",
+      "category": "ОРИЗ",
+      "gtin": null,
+      "price": "104.00",
+      "regular_price": null,
+      "promo_price": null,
+      "unit_price": "100 ГР: =11.56ДЕН",
+      "available": true,
+      "promotion": " |  | ",
+      "source_updated_at": null,
+      "raw": {
+        "cells": [
+          "ДАУТИ ОРИЗ ЕКСТРА 900ГР",
+          "104.00",
+          "100 ГР: =11.56ДЕН",
+          "ОРИЗ",
+          "ДА",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      }
+    },
+    {
+      "key": "2222a33220f49de79ead662e5e0013b183fdcd1a945fc18df3cc59317973b01b",
+      "name": "ОРИЗ ЕКСТРА 400ГР ДАУТИ",
+      "description": "ОРИЗ",
+      "category": "ОРИЗ",
+      "gtin": null,
+      "price": "55.00",
+      "regular_price": null,
+      "promo_price": null,
+      "unit_price": "100 ГР: =13.75ДЕН",
+      "available": true,
+      "promotion": " |  | ",
+      "source_updated_at": null,
+      "raw": {
+        "cells": [
+          "ОРИЗ ЕКСТРА 400ГР ДАУТИ",
+          "55.00",
+          "100 ГР: =13.75ДЕН",
+          "ОРИЗ",
+          "ДА",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      }
+    }
+  ]
+}

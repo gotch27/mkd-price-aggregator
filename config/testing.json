@@ -1,0 +1,11 @@
+{
+  "database_name": "catalog_test",
+  "timeout_ms": 120000,
+  "file_parallelism": false,
+  "web_url": "http://127.0.0.1:3000",
+  "ai_enabled": false,
+  "log_spool_dir": ".data/test-log-spool",
+  "restore_database_name": "catalog_restore_test",
+  "backup_path": ".data/catalog-smoke.dump",
+  "dashboard_response_budget_ms": 5000
+}

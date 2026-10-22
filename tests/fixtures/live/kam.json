@@ -1,0 +1,225 @@
+{
+  "captured_at": "2026-10-20T22:11:43.593Z",
+  "source": {
+    "retailer": "kam",
+    "external_id": "73",
+    "name": "Радовиш",
+    "url": "https://kam.com.mk/2026/10/20/73.pdf",
+    "scope": "branch",
+    "meta": {
+      "address": "бул. Александар Македонски бр.34 А",
+      "unavailable": false
+    }
+  },
+  "sources": 86,
+  "total": null,
+  "next": null,
+  "rows": [
+    {
+      "key": "0524f838b003babfcaf68ac16672d1e1c956ea820b44c4cc9142ed3ad1a2fca1",
+      "name": "ЛАЈБИЦИ СЛИБО",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "price": "25.00",
+      "regular_price": "25.00",
+      "promo_price": null,
+      "unit_price": "100 гр = 10.00",
+      "available": true,
+      "promotion": null,
+      "source_updated_at": null,
+      "raw": {
+        "line": "   ЛАЈБИЦИ СЛИБО         25ден.          100 гр = 10.00      СИЛБО ЛАЈБИЦИ          Да           25ден."
+      }
+    },
+    {
+      "key": "50e808c70df3b9f179bb58e3373f9c0147aaea703bc029590d4094f4f9849601",
+      "name": "БОНБОНИ ЕВРОПА",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "price": "24.00",
+      "regular_price": "24.00",
+      "promo_price": null,
+      "unit_price": "EVROPA БОНБОНИ",
+      "available": true,
+      "promotion": null,
+      "source_updated_at": null,
+      "raw": {
+        "line": "  БОНБОНИ ЕВРОПА         24ден.                              EVROPA БОНБОНИ         Да           24ден."
+      }
+    },
+    {
+      "key": "8c97137e04709f61ec8617eb0bca874be2c4aeb22c7e81a8742973d22637c85d",
+      "name": "ТОРТ. ДОРА",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "price": "89.00",
+      "regular_price": "89.00",
+      "promo_price": null,
+      "unit_price": "100 гр = 31.78",
+      "available": true,
+      "promotion": null,
+      "source_updated_at": null,
+      "raw": {
+        "line": "    ТОРТ. ДОРА           89ден.          100 гр = 31.78      MIDI ТОРТИЧКИ          Да           89ден."
+      }
+    },
+    {
+      "key": "956029eae013e8a2d8cc132ee3c501b5a02555d6c6c73770c0b2d21f3b007cc8",
+      "name": "ТОРТ. ДОРА КАСАЛ",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "price": "129.00",
+      "regular_price": "129.00",
+      "promo_price": null,
+      "unit_price": "100 гр = 36.85",
+      "available": true,
+      "promotion": null,
+      "source_updated_at": null,
+      "raw": {
+        "line": "  ТОРТ. ДОРА КАСАЛ       129ден.         100 гр = 36.85      MIDI ТОРТИЧКИ          Да           129ден."
+      }
+    },
+    {
+      "key": "9f83e7ddebb393f5509a2c5fa9c71a45b926e7b883c4ffd868182fc1c7ba3893",
+      "name": "ЛЕБ ТОНУС 450 Г",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "price": "75.00",
+      "regular_price": "75.00",
+      "promo_price": null,
+      "unit_price": "100 гр = 16.66",
+      "available": true,
+      "promotion": null,
+      "source_updated_at": null,
+      "raw": {
+        "line": "   ЛЕБ ТОНУС 450 Г       75ден.          100 гр = 16.66        TONUS ЛЕБ            Да           75ден."
+      }
+    },
+    {
+      "key": "e5235752f7b01b453f829ed41d102ebcccefc7633cf541c2e8ae4d2d7cd8c635",
+      "name": "ЛЕБ ТОНУС БЕЗ",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "price": "82.00",
+      "regular_price": "82.00",
+      "promo_price": null,
+      "unit_price": "100 гр = 18.22",
+      "available": true,
+      "promotion": null,
+      "source_updated_at": null,
+      "raw": {
+        "line": "   ЛЕБ ТОНУС БЕЗ         82ден.          100 гр = 18.22        TONUS ЛЕБ            Да           82ден."
+      }
+    },
+    {
+      "key": "a58c30906fde7773cf224caed65e8caa92d7e76cbecc9a1190d10a7ce65017b2",
+      "name": "ЛЕБ ПЕЧЕНКАРЕН",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "price": "50.00",
+      "regular_price": "50.00",
+      "promo_price": null,
+      "unit_price": "1 гр = 100.00",
+      "available": true,
+      "promotion": null,
+      "source_updated_at": null,
+      "raw": {
+        "line": "  ЛЕБ ПЕЧЕНКАРЕН         50ден.           1 гр = 100.00       DEMETRA ЛЕБ           Да           50ден."
+      }
+    },
+    {
+      "key": "8d6165d1baa529ed2e9bb7ff6c5709395844d9a0e5ae6d5bd388f9720ce3a5b2",
+      "name": "ЖЕЛЕ 200 ГР",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "price": "46.00",
+      "regular_price": "46.00",
+      "promo_price": null,
+      "unit_price": "100 гр = 23.00",
+      "available": true,
+      "promotion": null,
+      "source_updated_at": null,
+      "raw": {
+        "line": "    ЖЕЛЕ 200 ГР          46ден.          100 гр = 23.00       MILORD ЖЕЛЕ           Да           46ден."
+      }
+    },
+    {
+      "key": "8a0399847513b6da553b886318461f5639df7e063640abbebb95531c3ea6e594",
+      "name": "ЧОКОЛ.ЈУСМБ СО",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "price": "69.00",
+      "regular_price": "69.00",
+      "promo_price": null,
+      "unit_price": "100 гр = 46.00",
+      "available": true,
+      "promotion": null,
+      "source_updated_at": null,
+      "raw": {
+        "line": "   ЧОКОЛ.ЈУСМБ СО        69ден.          100 гр = 46.00     MONY КАКАО ТАБЛА        Да           69ден."
+      }
+    },
+    {
+      "key": "8f68589adbee85b452a72f011eae79d73806c7a48f3b20e6e04c64a4b5d21fd4",
+      "name": "ЖИТАРКИ СО 40%",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "price": "55.00",
+      "regular_price": "55.00",
+      "promo_price": null,
+      "unit_price": "100 гр = 31.42",
+      "available": true,
+      "promotion": null,
+      "source_updated_at": null,
+      "raw": {
+        "line": "  ЖИТАРКИ СО 40%         55ден.          100 гр = 31.42       OHO ЖИТАРКИ           Да           55ден."
+      }
+    },
+    {
+      "key": "c494e27df959ae53750875079f8678707a7ecd76fe81ea5dbeddeffe32b45480",
+      "name": "ЖИТАРКИ ПРСТЕНИ",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "price": "52.00",
+      "regular_price": "52.00",
+      "promo_price": null,
+      "unit_price": "100 гр = 29.71",
+      "available": true,
+      "promotion": null,
+      "source_updated_at": null,
+      "raw": {
+        "line": "  ЖИТАРКИ ПРСТЕНИ        52ден.          100 гр = 29.71       OHO ЖИТАРКИ           Да           52ден."
+      }
+    },
+    {
+      "key": "8e596fadec9763eccba76b4bfb8e9834b41160c10be305394083b826ad05bb38",
+      "name": "ЖИТАРКИ СО",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "price": "45.00",
+      "regular_price": "45.00",
+      "promo_price": null,
+      "unit_price": "100 гр = 30.00",
+      "available": true,
+      "promotion": null,
+      "source_updated_at": null,
+      "raw": {
+        "line": "    ЖИТАРКИ СО           45ден.          100 гр = 30.00      ОHO ЖИТАРКИ            Да           45ден."
+      }
+    }
+  ],
+  "pdf_header": "Датум и време на последно ажурирање на цените: 20.10.2026 6:10:06AM\n\n Назив на            Продажна          Единична            Опис на             Достапност    Редовна                   Промотивна или попустна цена\n стока-              цена              цена                стока               во продажен   цена\n                                                                                                           Цена со        Вид на          Времетраење\n производ                                                                      објект\n                                                                                                           попуст         продажно        на промоција\n                                                                                                                          поттикнување    или попуст\n                                                                                                           Попуст(%)",
+  "pdf_excerpt": "Датум и време на последно ажурирање на цените: 20.10.2026 6:10:06AM\n\n Назив на            Продажна          Единична            Опис на             Достапност    Редовна                   Промотивна или попустна цена\n стока-              цена              цена                стока               во продажен   цена\n                                                                                                           Цена со        Вид на          Времетраење\n производ                                                                      објект\n                                                                                                           попуст         продажно        на промоција\n                                                                                                                          поттикнување    или попуст\n                                                                                                           Попуст(%)\n\n   ЛАЈБИЦИ СЛИБО         25ден.          100 гр = 10.00      СИЛБО ЛАЈБИЦИ          Да           25ден.\n     ДИЕТ 250Г                                                   ДИЕТ\n                                              ден.\n\n  БОНБОНИ ЕВРОПА         24ден.                              EVROPA БОНБОНИ         Да           24ден.\n    НОИР 100ГР                                                    NOIRE\n\n\n\n    ТОРТ. ДОРА           89ден.          100 гр = 31.78      MIDI ТОРТИЧКИ          Да           89ден.\n   КАКАО ФИЛ280                                               СО КАКАО ФИЛ\n                                              ден.\n                                                             10 Х 28 ГР 25 %\n\n  ТОРТ. ДОРА КАСАЛ       129ден.         100 гр = 36.85      MIDI ТОРТИЧКИ          Да           129ден.\n      ЧОКО 350                                               СО ЧОКОЛАДЕН\n                                              ден.\n                                                                  КРЕМ\n\n   ЛЕБ ТОНУС 450 Г       75ден.          100 гр = 16.66        TONUS ЛЕБ            Да           75ден.\n      СТАНДАРД                                                  СТАНДАРД\n                                              ден.\n                                                            ОД ИЗРТЕНО ЗРНО\n\n   ЛЕБ ТОНУС БЕЗ         82ден.          100 гр = 18.22        TONUS ЛЕБ            Да           82ден.\n     КАВАСЕЦ И                                                БЕЗ КВАСЕЦ И\n                                              ден.\n    БРАШНО 450Г                                               БРАШНО ОД\n\n  ЛЕБ ПЕЧЕНКАРЕН         50ден.           1 гр = 100.00       DEMETRA ЛЕБ           Да           50ден.\n   500Г ХАРТИЈА                                                ПЧЕНКАРЕН\n                                               ден.\n                                                               ВО ХАРТИЈА\n\n    ЖЕЛЕ 200 ГР          46ден.          100 гр = 23.00       MILORD ЖЕЛЕ           Да           46ден.\n                                              ден.              БОНБОНИ\n\n\n\n   ЧОКОЛ.ЈУСМБ СО        69ден.          100 гр = 46.00     MONY КАКАО ТАБЛА        Да           69ден.\n     ОРИЗ МОНИ                                                  СО ОРИЗ\n                                              ден.\n\n  ЖИТАРКИ СО 40%         55ден.          100 гр = 31.42       OHO ЖИТАРКИ           Да           55ден.\n   ФИЛ ЧОК.175ГР                                               ПЕРНИЧИЊА\n                                              ден.\n       ОХО                                                   40% ФИЛ СО ВКУС\n\n  ЖИТАРКИ ПРСТЕНИ        52ден.          100 гр = 29.71       OHO ЖИТАРКИ           Да           52ден.\n   СО МЕД 175 ГР                                                ПРСТЕНИ\n                                              ден.\n                                                             СО МЕД 4% МЕД\n\nДатум и време на последно ажурирање на цените: 20.10.2026 6:10:06AM\n\n Назив на            Продажна          Единична            Опис на             Достапност    Редовна                   Промотивна или попустна цена\n стока-              цена              цена                стока               во продажен   цена\n                                                                                                           Цена со        Вид на          Времетраење\n производ                                                                      објект\n                                                                                                           попуст         продажно        на промоција"
+}

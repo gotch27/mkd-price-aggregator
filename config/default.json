@@ -1,0 +1,336 @@
+{
+  "app": {
+    "name": "MKD Catalog",
+    "timezone": "Europe/Skopje"
+  },
+  "database": {
+    "pool_size": 28,
+    "connection_timeout_ms": 10000,
+    "idle_timeout_ms": 30000
+  },
+  "auth": {
+    "username": "admin",
+    "session_hours": 12,
+    "secure_cookie": false,
+    "login_window_ms": 900000,
+    "login_attempts": 10,
+    "allowed_origins": ["http://localhost:3000", "http://127.0.0.1:3000"]
+  },
+  "scheduler": {
+    "cron": "0 12 * * 1",
+    "tick_ms": 60000,
+    "catch_up": true,
+    "run_on_start": true,
+    "tick_cron": "* * * * *"
+  },
+  "queue": {
+    "concurrency": {
+      "catalog.job": 1,
+      "catalog.match": 1,
+      "catalog.kam.job": 1,
+      "catalog.ramstore.job": 1,
+      "catalog.stokomak.job": 1,
+      "catalog.spar.job": 1,
+      "catalog.zito.job": 1,
+      "catalog.vero.job": 1,
+      "catalog.zur.job": 1,
+      "catalog.dim.job": 1,
+      "catalog.reptil.job": 1
+    },
+    "poll_seconds": 10,
+    "retry_limit": 5,
+    "retry_delay_seconds": 60,
+    "expire_seconds": 14400,
+    "retention_seconds": 604800,
+    "dispatch_batch": 100,
+    "retry_backoff": true,
+    "heartbeat_seconds": 30,
+    "heartbeat_refresh_seconds": 10,
+    "stop_ms": 30000,
+    "recover_orphans": true,
+    "scheduler_concurrency": 1,
+    "database_pool_size": 4
+  },
+  "http": {
+    "timeout_ms": 60000,
+    "max_pages": 10000,
+    "max_bytes": 52428800,
+    "user_agent": "MKDCatalog/0.1 (+private price catalog research)",
+    "host_intervals_ms": {
+      "kam.com.mk": 1000,
+      "ramstore.com.mk": 1000,
+      "stokomak.proverkanaceni.mk": 500,
+      "spar.mk": 1000,
+      "api.prod.spar.mk": 200,
+      "zito.proverkanaceni.mk": 500,
+      "pricelist.vero.com.mk": 1000,
+      "ceni.zur.mk": 1000,
+      "dim.marketceni.mk": 1000,
+      "www.reptilmarketi.mk": 1000,
+      "cms.reptilmarketi.mk": 1000,
+      "marketonline.mk": 1000
+    }
+  },
+  "ingestion": {
+    "reduction_ratio": 0.7,
+    "artifact_hours": 24,
+    "staging_hours": 48,
+    "invalid_price_policy": "preserve_unknown",
+    "freshness_hours": 168
+  },
+  "matching": {
+    "enabled": true,
+    "batch_size": 50,
+    "candidate_limit": 10,
+    "threshold": 0.99,
+    "retry_hours": 168,
+    "prompt_version": "exact-product-v1",
+    "ai": {
+      "enabled": false,
+      "api_key": "disabled",
+      "base_url": "https://api.openai.com/v1/",
+      "model": "gpt-6-luna",
+      "extraction": true,
+      "reasoning_effort": "high",
+      "max_output_tokens": 4096,
+      "timeout_ms": 120000,
+      "run_budget_usd": null,
+      "monthly_budget_usd": null,
+      "input_per_million": 0.1,
+      "output_per_million": 0.5,
+      "max_requests_per_run": 10,
+      "max_requests_per_month": 100
+    },
+    "candidate_similarity": 0.3,
+    "ambiguity_batch_size": 10000,
+    "local": {
+      "enabled": true,
+      "version": "exact-names-v1",
+      "index_batch_size": 10000,
+      "brands": [
+        {
+          "canonical": "coca-cola",
+          "aliases": ["coca cola", "koka kola", "cocacola", "kokakola"]
+        },
+        {
+          "canonical": "pepsi",
+          "aliases": ["pepsi"]
+        },
+        {
+          "canonical": "fanta",
+          "aliases": ["fanta"]
+        },
+        {
+          "canonical": "schweppes",
+          "aliases": ["schweppes", "shveps"]
+        },
+        {
+          "canonical": "sinalco",
+          "aliases": ["sinalco", "sinalko"]
+        },
+        {
+          "canonical": "bimilk",
+          "aliases": ["bimilk"]
+        },
+        {
+          "canonical": "imlek",
+          "aliases": ["imlek"]
+        },
+        {
+          "canonical": "dukat",
+          "aliases": ["dukat"]
+        },
+        {
+          "canonical": "alpsko",
+          "aliases": ["alpsko"]
+        },
+        {
+          "canonical": "milka",
+          "aliases": ["milka"]
+        },
+        {
+          "canonical": "nestle",
+          "aliases": ["nestle"]
+        },
+        {
+          "canonical": "nescafe",
+          "aliases": ["nescafe", "neskafe"]
+        },
+        {
+          "canonical": "jacobs",
+          "aliases": ["jacobs", "jakobs"]
+        },
+        {
+          "canonical": "podravka",
+          "aliases": ["podravka"]
+        },
+        {
+          "canonical": "vitalia",
+          "aliases": ["vitalia", "vitalija"]
+        },
+        {
+          "canonical": "vitaminka",
+          "aliases": ["vitaminka"]
+        },
+        {
+          "canonical": "skopsko",
+          "aliases": ["skopsko"]
+        },
+        {
+          "canonical": "zlaten-dab",
+          "aliases": ["zlaten dab"]
+        },
+        {
+          "canonical": "heineken",
+          "aliases": ["heineken", "hajneken"]
+        }
+      ],
+      "token_aliases": {
+        "can": ["limenka", "can"],
+        "pet": ["pet", "plasticno shishe", "plastic bottle"],
+        "zero": ["zero sugar", "zero shekjer", "zero"],
+        "classic": ["klasik", "classic", "original"]
+      },
+      "ignored_tokens": ["sok", "gaziran", "gazirano"]
+    }
+  },
+  "logging": {
+    "level": "info",
+    "spool_dir": ".data/log-spool",
+    "operational_days": 90,
+    "debug_days": 7,
+    "replay_batch": 100
+  },
+  "dashboard": {
+    "page_size": 30,
+    "max_page_size": 100,
+    "refresh_ms": 60000,
+    "search_debounce_ms": 350,
+    "auto_refresh_views": ["summary", "runs", "logs"],
+    "product_name_quality": "named",
+    "summary_cache_ms": 60000
+  },
+  "sources": {
+    "kam": {
+      "enabled": true,
+      "name": "KAM",
+      "url": "https://kam.com.mk/ceni-vo-marketi.nspx",
+      "cron": null,
+      "api_url": "https://kam.com.mk/ShopsWeb/LoadShopList",
+      "action": null,
+      "notice": null,
+      "page_size": 500,
+      "identity_policy": "occurrence",
+      "catalog_api_url": null,
+      "timestamp_policy": "snapshot"
+    },
+    "ramstore": {
+      "enabled": true,
+      "name": "Ramstore",
+      "url": "https://ramstore.com.mk/marketi/",
+      "cron": null,
+      "api_url": null,
+      "action": null,
+      "notice": null,
+      "page_size": 500,
+      "identity_policy": "occurrence",
+      "catalog_api_url": null,
+      "timestamp_policy": "snapshot"
+    },
+    "stokomak": {
+      "enabled": true,
+      "name": "Stokomak",
+      "url": "https://stokomak.proverkanaceni.mk/",
+      "cron": null,
+      "api_url": null,
+      "action": null,
+      "notice": "The published update label advances with page rendering; it is retained as reported and is not a stable snapshot version.",
+      "page_size": 100,
+      "identity_policy": "occurrence",
+      "catalog_api_url": null,
+      "timestamp_policy": "observed"
+    },
+    "spar": {
+      "enabled": true,
+      "name": "SPAR",
+      "url": "https://spar.mk/pricelist",
+      "cron": null,
+      "api_url": "https://api.prod.spar.mk/api/pricelists-web/",
+      "action": null,
+      "notice": "The published API repeats some article codes, including different prices for the same code. Every row is retained; repeated identities are flagged ambiguous and excluded from automatic linking.",
+      "page_size": 500,
+      "identity_policy": "occurrence",
+      "catalog_api_url": null,
+      "timestamp_policy": "snapshot"
+    },
+    "zito": {
+      "enabled": true,
+      "name": "Žito",
+      "url": "https://zito.proverkanaceni.mk/",
+      "cron": null,
+      "api_url": null,
+      "action": null,
+      "notice": "The published update label advances with page rendering; it is retained as reported and is not a stable snapshot version.",
+      "page_size": 100,
+      "identity_policy": "occurrence",
+      "catalog_api_url": null,
+      "timestamp_policy": "observed"
+    },
+    "vero": {
+      "enabled": true,
+      "name": "Vero",
+      "url": "https://pricelist.vero.com.mk/",
+      "cron": null,
+      "api_url": null,
+      "action": null,
+      "notice": null,
+      "page_size": 500,
+      "identity_policy": "occurrence",
+      "catalog_api_url": null,
+      "timestamp_policy": "snapshot"
+    },
+    "zur": {
+      "enabled": true,
+      "name": "Žur",
+      "url": "https://ceni.zur.mk/",
+      "cron": null,
+      "api_url": "https://ceni.zur.mk/wp-admin/admin-ajax.php",
+      "action": "load_prices_data",
+      "notice": null,
+      "page_size": 20000,
+      "identity_policy": "strict",
+      "catalog_api_url": null,
+      "timestamp_policy": "snapshot"
+    },
+    "dim": {
+      "enabled": true,
+      "name": "Dim",
+      "url": "https://dim.marketceni.mk/",
+      "cron": null,
+      "api_url": "https://ceni.zur.mk/wp-admin/admin-ajax.php",
+      "action": "load_dimceni_prices_data",
+      "notice": null,
+      "page_size": 20000,
+      "identity_policy": "strict",
+      "catalog_api_url": null,
+      "timestamp_policy": "snapshot"
+    },
+    "reptil": {
+      "enabled": true,
+      "name": "Reptil",
+      "url": "https://www.reptilmarketi.mk/mk/pricelists",
+      "cron": null,
+      "api_url": "https://cms.reptilmarketi.mk/wp-json/wp/v2/pages/8",
+      "action": null,
+      "notice": "Published reuse-with-consent notice; current branch links point to the same webshop. Branch pricing unverified.",
+      "page_size": 100,
+      "identity_policy": "strict",
+      "catalog_api_url": "https://marketonline.mk/wp-json/wc/store/v1/products",
+      "timestamp_policy": "snapshot"
+    }
+  },
+  "worker": {
+    "heartbeat_max_age_ms": 180000,
+    "heartbeat_file": ".data/worker-heartbeat"
+  }
+}

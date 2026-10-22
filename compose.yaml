@@ -1,0 +1,93 @@
+services:
+  postgres:
+    image: postgres:17-bookworm
+    mem_limit: ${POSTGRES_MEMORY_LIMIT:?required}
+    cpus: ${POSTGRES_CPUS:?required}
+    shm_size: 1gb
+    command:
+      - postgres
+      - -c
+      - shared_buffers=${POSTGRES_SHARED_BUFFERS:?required}
+      - -c
+      - work_mem=${POSTGRES_WORK_MEM:?required}
+      - -c
+      - maintenance_work_mem=${POSTGRES_MAINTENANCE_WORK_MEM:?required}
+      - -c
+      - max_connections=${POSTGRES_MAX_CONNECTIONS:?required}
+      - -c
+      - max_wal_size=${POSTGRES_MAX_WAL_SIZE:?required}
+      - -c
+      - min_wal_size=${POSTGRES_MIN_WAL_SIZE:?required}
+      - -c
+      - checkpoint_timeout=${POSTGRES_CHECKPOINT_TIMEOUT:?required}
+      - -c
+      - wal_compression=${POSTGRES_WAL_COMPRESSION:?required}
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?required}
+      POSTGRES_DB: ${POSTGRES_DB:?required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?required}
+    ports: ["127.0.0.1:${POSTGRES_PORT:?required}:5432"]
+    volumes: ["postgres-data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+  migrate:
+    mem_limit: ${MIGRATE_MEMORY_LIMIT:?required}
+    cpus: ${MIGRATE_CPUS:?required}
+    build: { context: ., target: worker }
+    env_file: ${APP_ENV_FILE:?required}
+    environment:
+      NEXTSIGNAL_DATABASE__URL: ${DATABASE_DOCKER_URL:?required}
+      NEXTSIGNAL_LOGGING__SPOOL_DIR: /data/log-spool
+      NEXTSIGNAL_WORKER__HEARTBEAT_FILE: /data/worker-heartbeat
+    command: ["npm", "run", "migrate"]
+    depends_on: { postgres: { condition: service_healthy } }
+  web:
+    mem_limit: ${WEB_MEMORY_LIMIT:?required}
+    cpus: ${WEB_CPUS:?required}
+    build: { context: ., target: web }
+    env_file: ${APP_ENV_FILE:?required}
+    environment:
+      NEXTSIGNAL_DATABASE__URL: ${DATABASE_DOCKER_URL:?required}
+      NEXTSIGNAL_LOGGING__SPOOL_DIR: /data/log-spool
+      NEXTSIGNAL_WORKER__HEARTBEAT_FILE: /data/worker-heartbeat
+    ports: ["127.0.0.1:${WEB_PORT:?required}:3000"]
+    volumes: ["web-logs:/data"]
+    depends_on: { migrate: { condition: service_completed_successfully } }
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+  worker:
+    mem_limit: ${WORKER_MEMORY_LIMIT:?required}
+    cpus: ${WORKER_CPUS:?required}
+    stop_grace_period: 45s
+    build: { context: ., target: worker }
+    env_file: ${APP_ENV_FILE:?required}
+    environment:
+      NEXTSIGNAL_DATABASE__URL: ${DATABASE_DOCKER_URL:?required}
+      NEXTSIGNAL_LOGGING__SPOOL_DIR: /data/log-spool
+      NEXTSIGNAL_WORKER__HEARTBEAT_FILE: /data/worker-heartbeat
+    volumes: ["worker-logs:/data"]
+    depends_on: { migrate: { condition: service_completed_successfully } }
+    healthcheck:
+      test: ["CMD", "node", "scripts/worker-health.mjs"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+volumes:
+  postgres-data:
+  web-logs:
+  worker-logs:

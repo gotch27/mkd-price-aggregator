@@ -1,0 +1,5 @@
+{
+  "NEXTSIGNAL_DATABASE__URL": "postgresql://build:build@localhost/build",
+  "NEXTSIGNAL_AUTH__PASSWORD": "build-validation-only",
+  "NEXTSIGNAL_AUTH__SESSION_SECRET": "build-validation-only-not-a-runtime-secret"
+}
