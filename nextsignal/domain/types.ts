@@ -50,6 +50,9 @@ export type CatalogPage = {
   artifact: string | null;
 };
 export type Run = {
+  dispatch_phase?: "download" | "publish" | null;
+  downloaded_at?: Date | null;
+  task_id?: string | null;
   id: string;
   kind: "discover" | "catalog" | "match";
   retailer: Retailer | null;
@@ -59,13 +62,27 @@ export type Run = {
   checkpoint: Record<string, unknown>;
   created_at: Date;
   attempts: number;
+  retry_failures: number;
 };
 export class SourceError extends Error {
+  diagnostics?: Record<string, unknown>;
   constructor(
     message: string,
     public retryable: boolean,
   ) {
     super(message);
+  }
+}
+export class SourceDeferred extends SourceError {
+  constructor(
+    public host: string,
+    public until: string,
+  ) {
+    super(
+      `Downloads from ${host} are waiting until ${until} after repeated failures`,
+      true,
+    );
+    this.name = "SourceDeferred";
   }
 }
 export class CatalogRestartRequired extends SourceError {

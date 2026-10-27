@@ -53,6 +53,9 @@ export function Login({
                   id="username"
                   name="username"
                   autoComplete="username"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
                   required
                 />
               </Field>
@@ -63,6 +66,9 @@ export function Login({
                   name="password"
                   type="password"
                   autoComplete="current-password"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
                   required
                 />
               </Field>

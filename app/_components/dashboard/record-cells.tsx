@@ -1,5 +1,8 @@
 import { TableCell } from "@/components/ui/table";
+import { ProductName } from "./product-name";
+import { readableProductCategory } from "@/nextsignal/domain/product-text";
 import { StoreLogo } from "@/app/_components/dashboard/store-logo";
+import { AvailabilityBadge } from "./availability-badge";
 import { Status } from "@/app/_components/dashboard/status";
 import {
   priceRange,
@@ -25,9 +28,15 @@ export function RecordCells({
       return (
         <>
           <TableCell>
-            <div className="cell-title">{text(row.name)}</div>
+            <div className="cell-title">
+              <ProductName name={row.name} retailer={row.retailer} />
+            </div>
+            <AvailabilityBadge value={row.availability} />
             <div className="cell-note">
-              {text(row.category, "Uncategorized")}
+              {readableProductCategory(
+                text(row.category, "Uncategorized"),
+                text(row.retailer),
+              )}
             </div>
           </TableCell>
           <TableCell>
@@ -49,7 +58,11 @@ export function RecordCells({
           <TableCell>
             <Status
               value={
-                Number(row.connected_retailers) > 1 ? "matched" : "separate"
+                row.match_status === "legacy_conflict"
+                  ? "legacy_conflict"
+                  : Number(row.connected_retailers) > 1
+                    ? "matched"
+                    : (row.match_status ?? "separate")
               }
             />
             <div className="cell-note">
@@ -63,7 +76,10 @@ export function RecordCells({
       return (
         <>
           <TableCell>
-            <div className="cell-title">{text(row.name)}</div>
+            <div className="cell-title">
+              <ProductName name={row.name} retailer={row.name_retailer} />
+            </div>
+            <AvailabilityBadge value={row.availability} />
             <div className="cell-note">
               {number(row.listing_count)} connected store products
             </div>
@@ -83,7 +99,11 @@ export function RecordCells({
           <TableCell>
             <Status
               value={
-                Number(row.connected_retailers) > 1 ? "matched" : "separate"
+                row.group_needs_attention
+                  ? "legacy_conflict"
+                  : Number(row.connected_retailers) > 1
+                    ? "matched"
+                    : "separate"
               }
             />
           </TableCell>
@@ -149,7 +169,14 @@ export function RecordCells({
           <TableCell>
             <span className="cell-date">{date(row.created_at)}</span>
           </TableCell>
-          <TableCell>{number(row.attempts)}</TableCell>
+          <TableCell>
+            {number(row.attempts)}
+            <div className="cell-note">
+              {Number(row.attempts) === 0
+                ? "Waiting for first turn"
+                : `${number((row.checkpoint as Row | undefined)?.pages_saved)} pages saved`}
+            </div>
+          </TableCell>
         </>
       );
     case "logs":

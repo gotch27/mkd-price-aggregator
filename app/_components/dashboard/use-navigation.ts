@@ -3,119 +3,72 @@ import type {
   DashboardQuery,
   NameQuality,
 } from "@/nextsignal/domain/dashboard";
-import type { Screen } from "@/app/_components/dashboard/types";
-export type NavigationState = Omit<DashboardQuery, "view" | "size"> & {
-  screen: Screen;
-  mode: "stores" | "all";
-  source_name?: string;
-};
-export function useNavigation(initialNameQuality: NameQuality) {
-  const initial: NavigationState = {
-    screen: "overview",
-    mode: "stores",
-    search: "",
-    page: 1,
-    name_quality: initialNameQuality,
-    retailer: undefined,
-    source_id: undefined,
-    source_name: undefined,
-    run_id: undefined,
-    level: undefined,
-    match_filter: undefined,
-    kind: undefined,
-    status: undefined,
-    correlation_id: undefined,
-  };
+import type { Screen } from "./types";
+import {
+  initialNavigation,
+  navigationKey,
+  navigationUrl,
+  readNavigation,
+  type NavigationState,
+  type ObservabilityTab,
+} from "./navigation-state";
+export type { NavigationState } from "./navigation-state";
+
+export function useNavigation(
+  initialNameQuality: NameQuality,
+  initialAvailability: NonNullable<DashboardQuery["availability"]>,
+) {
+  const initial = initialNavigation(initialNameQuality, initialAvailability);
   const [state, setState] = useState<NavigationState>(initial);
   const stateRef = useRef(state);
   stateRef.current = state;
-  const saved = useRef<Partial<Record<Screen, NavigationState>>>({});
+  const saved = useRef(new Map<string, NavigationState>());
+  const lastObservability = useRef<ObservabilityTab>("updates");
+  function remember(next: NavigationState) {
+    if (navigationKey(stateRef.current) !== navigationKey(next))
+      saved.current.set(navigationKey(stateRef.current), stateRef.current);
+    if (next.screen === "observability")
+      lastObservability.current = next.tab ?? "updates";
+    stateRef.current = next;
+    setState(next);
+  }
   useEffect(() => {
     function read() {
       const p = new URLSearchParams(window.location.search);
-      const screen = p.get("screen"),
-        mode = p.get("mode");
-      const next: NavigationState = {
-        ...initial,
-        screen: (["overview", "products", "updates", "tasks", "logs"].includes(
-          screen ?? "",
-        )
-          ? screen
-          : "overview") as Screen,
-        mode: mode === "all" ? "all" : "stores",
-        search: p.get("search") ?? "",
-        page: Math.max(1, Number(p.get("page")) || 1),
-      };
-      for (const k of [
-        "retailer",
-        "source_id",
-        "source_name",
-        "run_id",
-        "level",
-        "name_quality",
-        "match_filter",
-        "status",
-        "kind",
-      ] as const) {
-        const v = p.get(k);
-        if (v) Object.assign(next, { [k]: v });
+      const next = readNavigation(
+        p,
+        initialNavigation(initialNameQuality, initialAvailability),
+      );
+      if (p.get("screen") === "updates" || p.get("screen") === "logs") {
+        p.set("screen", "observability");
+        p.set("tab", next.tab!);
+        window.history.replaceState(null, "", `?${p}`);
       }
-      // Only accept typed choices from a shareable URL.
-      if (!["named", "invalid", "all"].includes(next.name_quality ?? ""))
-        next.name_quality = initialNameQuality;
-      if (
-        next.match_filter &&
-        !["all", "matched", "unmatched"].includes(next.match_filter)
-      )
-        next.match_filter = undefined;
-      if (next.source_id && !/^[0-9a-f-]{36}$/i.test(next.source_id))
-        next.source_id = undefined;
-      if (next.run_id && !/^[0-9a-f-]{36}$/i.test(next.run_id))
-        next.run_id = undefined;
-      if (next.kind && !["discover", "catalog", "match"].includes(next.kind))
-        next.kind = undefined;
-      if (
-        next.level &&
-        !["debug", "info", "warn", "error"].includes(next.level)
-      )
-        next.level = undefined;
-      if (
-        next.status &&
-        ![
-          "pending",
-          "queued",
-          "running",
-          "success",
-          "failed",
-          "quarantined",
-          "superseded",
-        ].includes(next.status)
-      )
-        next.status = undefined;
-      setState(next);
+      remember(next);
     }
     read();
     window.addEventListener("popstate", read);
     return () => window.removeEventListener("popstate", read);
-    // Initial values come from server configuration and remain fixed for this mount.
-  }, [initialNameQuality]);
+  }, [initialNameQuality, initialAvailability]);
   function go(patch: Partial<NavigationState>, replace = false) {
     const next = { ...stateRef.current, ...patch };
-    stateRef.current = next;
-    setState(next);
-    const p = new URLSearchParams();
-    for (const [key, value] of Object.entries(next))
-      if (
-        value !== undefined &&
-        value !== "" &&
-        !(key === "page" && value === 1)
-      )
-        p.set(key, String(value));
-    window.history[replace ? "replaceState" : "pushState"](null, "", `?${p}`);
+    if (next.screen !== "observability") next.tab = undefined;
+    else next.tab = next.tab ?? "updates";
+    const url = navigationUrl(next);
+    // Tabs can report the same choice from both pointer and focus events.
+    // Only meaningful navigation should add a browser-history entry.
+    if (url === navigationUrl(stateRef.current)) return;
+    remember(next);
+    window.history[replace ? "replaceState" : "pushState"](null, "", url);
   }
-  function navigate(screen: Screen) {
-    saved.current[state.screen] = state;
-    go(saved.current[screen] ?? { ...initial, screen });
+  function navigate(screen: Screen, tab?: ObservabilityTab) {
+    saved.current.set(navigationKey(stateRef.current), stateRef.current);
+    const targetTab =
+      screen === "observability"
+        ? (tab ?? lastObservability.current)
+        : undefined;
+    const target = { ...initial, screen, tab: targetTab };
+    go(saved.current.get(navigationKey(target)) ?? target);
   }
   return { state, go, navigate };
 }

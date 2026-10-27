@@ -14,6 +14,7 @@
     "secure_cookie": false,
     "login_window_ms": 900000,
     "login_attempts": 10,
+    "login_client_header": "cf-connecting-ip",
     "allowed_origins": ["http://localhost:3000", "http://127.0.0.1:3000"]
   },
   "scheduler": {
@@ -25,19 +26,11 @@
   },
   "queue": {
     "concurrency": {
-      "catalog.job": 1,
-      "catalog.match": 1,
-      "catalog.kam.job": 1,
-      "catalog.ramstore.job": 1,
-      "catalog.stokomak.job": 1,
-      "catalog.spar.job": 1,
-      "catalog.zito.job": 1,
-      "catalog.vero.job": 1,
-      "catalog.zur.job": 1,
-      "catalog.dim.job": 1,
-      "catalog.reptil.job": 1
+      "catalog.download": 4,
+      "catalog.publish": 1,
+      "tasks.job": 1
     },
-    "poll_seconds": 10,
+    "poll_seconds": 1,
     "retry_limit": 5,
     "retry_delay_seconds": 60,
     "expire_seconds": 14400,
@@ -49,10 +42,12 @@
     "stop_ms": 30000,
     "recover_orphans": true,
     "scheduler_concurrency": 1,
-    "database_pool_size": 4
+    "database_pool_size": 4,
+    "dispatch_lease_seconds": 120
   },
   "http": {
     "timeout_ms": 60000,
+    "connect_timeout_ms": 30000,
     "max_pages": 10000,
     "max_bytes": 52428800,
     "user_agent": "MKDCatalog/0.1 (+private price catalog research)",
@@ -69,6 +64,26 @@
       "www.reptilmarketi.mk": 1000,
       "cms.reptilmarketi.mk": 1000,
       "marketonline.mk": 1000
+    },
+    "response_idle_timeout_ms": 20000,
+    "host_timeout_ms": {
+      "kam.com.mk": 90000,
+      "ramstore.com.mk": 60000,
+      "stokomak.proverkanaceni.mk": 120000,
+      "spar.mk": 60000,
+      "api.prod.spar.mk": 60000,
+      "zito.proverkanaceni.mk": 60000,
+      "pricelist.vero.com.mk": 60000,
+      "ceni.zur.mk": 60000,
+      "dim.marketceni.mk": 60000,
+      "www.reptilmarketi.mk": 60000,
+      "cms.reptilmarketi.mk": 60000,
+      "marketonline.mk": 60000
+    },
+    "cooldown": {
+      "failure_threshold": 3,
+      "base_ms": 300000,
+      "max_ms": 1800000
     }
   },
   "ingestion": {
@@ -76,15 +91,19 @@
     "artifact_hours": 24,
     "staging_hours": 48,
     "invalid_price_policy": "preserve_unknown",
-    "freshness_hours": 168
+    "freshness_hours": 168,
+    "pages_per_turn": 25,
+    "turn_duration_ms": 30000,
+    "parallel_publications": 1,
+    "max_ready_catalogs": 4
   },
   "matching": {
     "enabled": true,
     "batch_size": 50,
-    "candidate_limit": 10,
-    "threshold": 0.99,
+    "candidate_limit": 20,
+    "threshold": 0.75,
     "retry_hours": 168,
-    "prompt_version": "exact-product-v1",
+    "prompt_version": "category-first-v1",
     "ai": {
       "enabled": false,
       "api_key": "disabled",
@@ -105,7 +124,7 @@
     "ambiguity_batch_size": 10000,
     "local": {
       "enabled": true,
-      "version": "exact-names-v1",
+      "version": "exact-names-v3",
       "index_batch_size": 10000,
       "brands": [
         {
@@ -183,15 +202,285 @@
         {
           "canonical": "heineken",
           "aliases": ["heineken", "hajneken"]
+        },
+        {
+          "canonical": "babylino",
+          "aliases": ["babylino", "bebilino", "bebylino"]
+        },
+        {
+          "canonical": "dorina",
+          "aliases": ["dorina"]
+        },
+        {
+          "canonical": "koral",
+          "aliases": ["koral"]
+        },
+        {
+          "canonical": "amalfi",
+          "aliases": ["amalfi"]
+        },
+        {
+          "canonical": "vileda",
+          "aliases": ["vileda"]
+        },
+        {
+          "canonical": "astera",
+          "aliases": ["astera"]
+        },
+        {
+          "canonical": "kras",
+          "aliases": ["kras"]
+        },
+        {
+          "canonical": "str8",
+          "aliases": ["str8", "str 8"]
+        },
+        {
+          "canonical": "ideal-shipka",
+          "aliases": ["ideal shipka"]
+        },
+        {
+          "canonical": "nutella",
+          "aliases": ["nutella", "nutela"]
+        },
+        {
+          "canonical": "plazma",
+          "aliases": ["bambi plazma", "plazma bambi", "plazma"]
+        },
+        {
+          "canonical": "nivea",
+          "aliases": ["nivea", "niveja"]
+        },
+        {
+          "canonical": "fairy",
+          "aliases": ["fairy", "feri"]
+        },
+        {
+          "canonical": "malena",
+          "aliases": ["malena"]
+        },
+        {
+          "canonical": "vincini",
+          "aliases": ["vincini", "vinchini"]
+        },
+        {
+          "canonical": "happy-day",
+          "aliases": ["happy day", "hepi dej"]
+        },
+        {
+          "canonical": "bio-zen",
+          "aliases": ["bio zen"]
+        },
+        {
+          "canonical": "garden",
+          "aliases": ["garden"]
+        },
+        {
+          "canonical": "hipp",
+          "aliases": ["hipp", "hip"]
+        },
+        {
+          "canonical": "yumis",
+          "aliases": ["yumis", "jumis"]
+        },
+        {
+          "canonical": "pfanner",
+          "aliases": ["pfanner", "faner"]
+        },
+        {
+          "canonical": "dr benner",
+          "aliases": ["ДР БЕННЕР", "DR BENNER"]
+        },
+        {
+          "canonical": "kosili",
+          "aliases": ["КОСИЛИ", "KOSILI"]
+        },
+        {
+          "canonical": "stark",
+          "aliases": ["ШТАРК", "STARK"]
+        },
+        {
+          "canonical": "hit",
+          "aliases": ["ХИТ", "HIT"]
+        },
+        {
+          "canonical": "vochna dolina",
+          "aliases": ["ВОЧНА ДОЛИНА", "VOCNA DOLINA", "VOCHNA DOLINA"]
+        },
+        {
+          "canonical": "kan bebe",
+          "aliases": ["КАН БЕБЕ", "KAN BEBE", "KANBEBE"]
+        },
+        {
+          "canonical": "viva",
+          "aliases": ["ВИВА", "VIVA"]
         }
       ],
       "token_aliases": {
-        "can": ["limenka", "can"],
+        "can": ["limenka", "limenki", "can", "cans"],
         "pet": ["pet", "plasticno shishe", "plastic bottle"],
         "zero": ["zero sugar", "zero shekjer", "zero"],
-        "classic": ["klasik", "classic", "original"]
+        "classic": ["klasik", "classic", "original"],
+        "biscuit": [
+          "biskviti",
+          "biskvit",
+          "biscuits",
+          "biscuit",
+          "keks",
+          "bisk"
+        ],
+        "spread": [
+          "kakao krem",
+          "eurokrem",
+          "chokoladen krem",
+          "chocolate cream",
+          "krem"
+        ],
+        "shower-gel": ["gel za tushiranje", "gel za tush", "shower gel"],
+        "creme-care": ["krem kear", "krem ker", "creme care"],
+        "creme-soft": ["krem soft", "creme soft"],
+        "ground": ["meleni", "melena", "melen", "mlevena", "ground"],
+        "family": ["femili", "family"],
+        "refill-bag": ["kesa", "sachet", "refill bag"]
       },
-      "ignored_tokens": ["sok", "gaziran", "gazirano"]
+      "ignored_tokens": [
+        "sok",
+        "gaziran",
+        "gazirano",
+        "pijalok",
+        "set",
+        "multipak"
+      ]
+    },
+    "automatic_enabled": false,
+    "candidate_batch_size": 5,
+    "category_threshold": 0.8,
+    "backfill_batch_size": 10000,
+    "lease_seconds": 300,
+    "rules_version": "cross-store-v7-dimensional-packs",
+    "gateway": {
+      "enabled": false,
+      "api_key": "disabled",
+      "base_url": "https://ai-gateway.vercel.sh/v1/",
+      "decision_endpoint": "evaluate",
+      "extraction_endpoint": "chat/completions",
+      "decision_model": "perplexity/pplx-decider-v1.2",
+      "extraction_model": "alibaba/qwen3.7-flash",
+      "decision_input_per_million": 0.02,
+      "decision_output_per_million": 0,
+      "extraction_input_per_million": 0.03,
+      "extraction_output_per_million": 0.13,
+      "initial_budget_usd": 25,
+      "monthly_budget_usd": 2,
+      "evaluation_budget_usd": 0.25,
+      "timeout_ms": 45000,
+      "max_input_bytes": 32000,
+      "token_overhead_allowance": 2048,
+      "max_output_tokens": 512,
+      "max_requests_per_campaign": 3000000,
+      "max_requests_per_month": 50000,
+      "reasoning_enabled": false,
+      "retry_attempts": 3,
+      "retry_delay_ms": 1000,
+      "retry_max_delay_ms": 5000,
+      "consecutive_failure_limit": 3,
+      "cooldown_initial_seconds": 60,
+      "cooldown_max_seconds": 900,
+      "cooldown_probe_lease_seconds": 120
+    },
+    "category_mappings_version": "store-categories-v1",
+    "category_mappings": [
+      {
+        "retailer": "stokomak",
+        "pattern": "^svezho ovos[hj]*je$",
+        "family": "fruit"
+      },
+      {
+        "retailer": "stokomak",
+        "pattern": "^svezh zelenchuk$",
+        "family": "vegetables"
+      },
+      {
+        "retailer": "reptil",
+        "pattern": "jogurt|mleko|kashkaval|sirenje",
+        "family": "dairy"
+      },
+      {
+        "retailer": "vero",
+        "pattern": "(?:^| )alkoholni pijaloci(?:$| )",
+        "family": "alcohol"
+      },
+      {
+        "retailer": "ramstore",
+        "pattern": "^oriz$",
+        "family": "other_food"
+      },
+      {
+        "retailer": "vero",
+        "pattern": "^bezalkoholni pijaloci(?: |$)",
+        "family": "soft_drinks"
+      },
+      {
+        "retailer": "ramstore",
+        "pattern": "^negaziran sok$",
+        "family": "soft_drinks"
+      }
+    ],
+    "evaluation": {
+      "sample_per_store": 10,
+      "holdout_divisor": 3
+    },
+    "candidate_weights": {
+      "barcode": 10,
+      "signature": 5,
+      "brand": 1,
+      "quantity": 0.5,
+      "category": 0.1
+    },
+    "manual": {
+      "candidate_limit": 5,
+      "group_member_limit": 100,
+      "search_min_length": 2,
+      "max_note_length": 500
+    },
+    "ai_categories": [],
+    "prompts": {
+      "root": "prompts",
+      "classification": "classification.md",
+      "comparison": "matching.md",
+      "clarification": "clarification.md",
+      "categories": "categories.json",
+      "comparison_answers": "matching-answers.json",
+      "stores": {
+        "spar": "stores/spar.md",
+        "dim": "stores/dim.md",
+        "reptil": "stores/reptil.md",
+        "zur": "stores/zur.md",
+        "stokomak": "stores/stokomak.md",
+        "vero": "stores/vero.md",
+        "kam": "stores/kam.md",
+        "ramstore": "stores/ramstore.md",
+        "zito": "stores/zito.md"
+      },
+      "families": {
+        "fruit": "families/fruit.md",
+        "vegetables": "families/vegetables.md",
+        "dairy": "families/dairy.md",
+        "alcohol": "families/alcohol.md",
+        "soft_drinks": "families/soft_drinks.md",
+        "other_food": "families/other_food.md",
+        "baby_food": "families/baby_food.md",
+        "baby_care": "families/baby_care.md",
+        "personal_care": "families/personal_care.md",
+        "cleaning": "families/cleaning.md",
+        "automotive": "families/automotive.md",
+        "clothing_accessories": "families/clothing_accessories.md",
+        "pet": "families/pet.md",
+        "household": "families/household.md",
+        "other": "families/other.md",
+        "unknown": "families/unknown.md"
+      },
+      "comparison_question": "matching-question.md"
     }
   },
   "logging": {
@@ -208,7 +497,9 @@
     "search_debounce_ms": 350,
     "auto_refresh_views": ["summary", "runs", "logs"],
     "product_name_quality": "named",
-    "summary_cache_ms": 60000
+    "product_availability": "available",
+    "summary_cache_ms": 60000,
+    "stats_refresh_ms": 60000
   },
   "sources": {
     "kam": {
@@ -245,7 +536,7 @@
       "api_url": null,
       "action": null,
       "notice": "The published update label advances with page rendering; it is retained as reported and is not a stable snapshot version.",
-      "page_size": 100,
+      "page_size": 20,
       "identity_policy": "occurrence",
       "catalog_api_url": null,
       "timestamp_policy": "observed"
@@ -332,5 +623,44 @@
   "worker": {
     "heartbeat_max_age_ms": 180000,
     "heartbeat_file": ".data/worker-heartbeat"
+  },
+  "agent_review": {
+    "default_products": 50,
+    "max_products": 500,
+    "batch_size": 20,
+    "results_page_size": 10,
+    "refresh_ms": 3000,
+    "instructions_file": "agent-category-review.md"
+  },
+  "product_details": {
+    "value_max_length": 200,
+    "note_max_length": 1000,
+    "history_limit": 50
+  },
+  "tasks": {
+    "defaults": {
+      "paused": false,
+      "imports": "manual",
+      "categorization": "manual",
+      "matching": "manual",
+      "ai_enabled": false,
+      "clarification_enabled": false,
+      "cron": "0 12 * * 1",
+      "scheduled_stores": [],
+      "catch_up": false,
+      "ai_categories": [],
+      "category_threshold": 0.8,
+      "match_threshold": 0.75,
+      "initial_budget_usd": 25,
+      "monthly_budget_usd": 2,
+      "task_budget_usd": 0.1,
+      "task_request_limit": 500,
+      "default_product_limit": 50,
+      "candidate_limit": 20,
+      "candidate_batch_size": 5,
+      "batch_size": 50,
+      "parallel_imports": 2,
+      "per_store_downloads": 2
+    }
   }
 }

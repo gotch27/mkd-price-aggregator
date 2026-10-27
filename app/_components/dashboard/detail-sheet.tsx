@@ -24,6 +24,9 @@ import {
   CardAction,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { AvailabilityBadge } from "./availability-badge";
+import { ProductName } from "./product-name";
+import { QuickCategoryApproval } from "./category-quick-accept";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
@@ -46,6 +49,10 @@ import { Choice } from "@/app/_components/dashboard/filters";
 import { StoreLogo } from "@/app/_components/dashboard/store-logo";
 import { Status } from "@/app/_components/dashboard/status";
 import { MatchingHistory } from "@/app/_components/dashboard/matching-history";
+import { ManualMatching } from "@/app/_components/dashboard/manual-matching";
+import { ProductDetailsEditor } from "@/app/_components/dashboard/product-details-editor";
+import { ProductClassificationLabel } from "@/app/_components/dashboard/product-classification";
+import { ProductCategoryEditor } from "@/app/_components/dashboard/product-category-editor";
 import {
   text,
   number,
@@ -119,12 +126,31 @@ function ProductAttributes({ value }: { value: unknown }) {
         ["Pack size", a.pack],
         ["Variant", a.variant],
         ["Barcode", a.gtin],
-      ].map(([key, v]) => (
-        <div key={String(key)}>
-          <dt>{text(key)}</dt>
-          <dd>{text(v, "Not provided")}</dd>
-        </div>
-      ))}
+        ["Packaging", a.form],
+        ["Fat content", a.fat ? `${a.fat}%` : null],
+        ["Alcohol", a.alcohol ? `${a.alcohol}%` : null],
+        ["Model", a.model],
+        ["Product size", a.size],
+        ["Variety", a.variety],
+        ["Grade", a.grade],
+        ["Origin", a.origin],
+        ["Sold by", a.sale_unit],
+        ["Type", a.type],
+        ["Range", a.range],
+        ["Flavour", a.flavour],
+        ["Processing", a.processing],
+        ["Shade", a.shade],
+      ]
+        .filter(
+          ([, value], index) =>
+            index < 5 || (value !== null && value !== undefined),
+        )
+        .map(([key, v]) => (
+          <div key={String(key)}>
+            <dt>{text(key)}</dt>
+            <dd>{text(v, "Not provided")}</dd>
+          </div>
+        ))}
     </dl>
   );
 }
@@ -133,11 +159,13 @@ function ProductContent({
   date,
   pageSize,
   onUnauthorized,
+  onProductChanged,
 }: {
   id: string;
   date: DateFormatter;
   pageSize: number;
   onUnauthorized: () => void;
+  onProductChanged: () => void;
 }) {
   const [state, setState] = useState<{
     id: string;
@@ -145,12 +173,17 @@ function ProductContent({
     error: string;
   }>({ id: "", data: null, error: "" });
   const [revision, setRevision] = useState(0);
+  const [tab, setTab] = useState("listings");
   const [store, setStore] = useState("");
   const [catalog, setCatalog] = useState("");
   const [page, setPage] = useState(1);
   useEffect(() => {
     const controller = new AbortController();
-    setState({ id, data: null, error: "" });
+    setState((previous) => ({
+      id,
+      data: previous.id === id ? previous.data : null,
+      error: "",
+    }));
     setStore("");
     setCatalog("");
     setPage(1);
@@ -203,7 +236,7 @@ function ProductContent({
       </div>
     );
   const { product, listings, offers, decisions } = state.data;
-  const stores = [...new Set(offers.map((o) => text(o.retailer)))];
+  const stores = [...new Set(listings.map((l) => text(l.retailer)))];
   const filtered = offers.filter(
     (o) =>
       (!store || o.retailer === store) &&
@@ -218,15 +251,28 @@ function ProductContent({
           <Package />
         </span>
         <div>
-          <h3>{text(product.name)}</h3>
+          <h3>
+            <ProductName
+              name={product.name}
+              retailer={listings.find((l) => l.name === product.name)?.retailer}
+            />
+          </h3>
           <p className="text-sm text-muted-foreground">
             {number(listings.length)} store products · {number(stores.length)}{" "}
             stores
           </p>
-          <Status value={stores.length > 1 ? "matched" : "separate"} />
+          <Status
+            value={
+              product.matching_conflict
+                ? "legacy_conflict"
+                : stores.length > 1
+                  ? "matched"
+                  : "separate"
+            }
+          />
         </div>
       </div>
-      <Tabs defaultValue="listings">
+      <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
           <TabsTrigger value="listings">Store products</TabsTrigger>
           <TabsTrigger value="prices">Catalog prices</TabsTrigger>
@@ -241,18 +287,102 @@ function ProductContent({
                     <StoreLogo slug={text(l.retailer)} />
                     <div>
                       <CardTitle>{storeName(l.retailer)}</CardTitle>
-                      <CardDescription>{text(l.name)}</CardDescription>
+                      <CardDescription>
+                        <ProductName
+                          name={l.name}
+                          retailer={l.retailer}
+                          showSource
+                        />
+                      </CardDescription>
+                      <AvailabilityBadge value={l.availability} />
+                      <ProductClassificationLabel
+                        classification={l.classification}
+                        suggestionAction={
+                          l.classification && (
+                            <QuickCategoryApproval
+                              id={text(product.id)}
+                              memberId={text(l.store_product_id ?? l.id)}
+                              classification={l.classification}
+                              onUnauthorized={onUnauthorized}
+                              onSaved={() => {
+                                setRevision((v) => v + 1);
+                                onProductChanged();
+                              }}
+                            />
+                          )
+                        }
+                      />
+                      <ProductCategoryEditor
+                        id={text(product.id)}
+                        memberId={text(l.store_product_id ?? l.id)}
+                        onUnauthorized={onUnauthorized}
+                        onSaved={() => {
+                          setRevision((v) => v + 1);
+                          onProductChanged();
+                        }}
+                      />
                     </div>
                   </div>
                   <CardAction>
-                    <Badge variant="outline">
-                      {number(l.catalog_count)} catalogs
-                    </Badge>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge variant="outline">
+                        {number(l.catalog_count)} catalogs
+                      </Badge>
+                      <ProductDetailsEditor
+                        id={text(product.id)}
+                        memberId={text(l.store_product_id ?? l.id)}
+                        date={date}
+                        onUnauthorized={onUnauthorized}
+                        onSaved={() => {
+                          setRevision((v) => v + 1);
+                          onProductChanged();
+                        }}
+                      />
+                    </div>
                   </CardAction>
                 </CardHeader>
                 <CardContent>
-                  <div className="price-value mb-4">{priceRange(l)}</div>
+                  {Number(l.catalog_count) > 0 ? (
+                    <div className="price-value mb-4">{priceRange(l)}</div>
+                  ) : (
+                    <p className="mb-4 text-sm text-muted-foreground">
+                      Not currently offered. Saved product information and
+                      connections are retained.
+                    </p>
+                  )}
                   <ProductAttributes value={l.attributes} />
+                  {l.availability !== "available" && (
+                    <p className="mt-3 text-sm text-muted-foreground">
+                      {l.availability === "unavailable"
+                        ? "The store marks this product unavailable in every current catalog."
+                        : "Availability has not been confirmed by the store."}{" "}
+                      Categorization and matching tasks skip it. Saved
+                      categories and connections are kept.
+                    </p>
+                  )}
+                  {l.price_conflict === true && (
+                    <Alert>
+                      <AlertTitle>
+                        Different prices in the same catalog
+                      </AlertTitle>
+                      <AlertDescription>
+                        The store published this product more than once with
+                        different prices. All prices are kept under Catalog
+                        prices.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                  {Object.keys((l.manual_attributes ?? {}) as Row).length >
+                    0 && (
+                    <Badge variant="secondary" className="mt-3">
+                      Manually edited details
+                    </Badge>
+                  )}
+                  {typeof l.matching_reason === "string" && (
+                    <p className="mt-4 text-sm text-muted-foreground">
+                      {l.matching_reason}
+                    </p>
+                  )}
                   {Boolean(l.description) && (
                     <p className="mt-4 text-sm text-muted-foreground">
                       {text(l.description)}
@@ -265,8 +395,8 @@ function ProductContent({
               <Alert>
                 <AlertTitle>No current store products</AlertTitle>
                 <AlertDescription>
-                  This identity has no products in the current browser index.
-                  Catalog prices may contain more recent observations.
+                  This saved product currently has no active store listings. Its
+                  previous matching information is still kept.
                 </AlertDescription>
               </Alert>
             )}
@@ -278,6 +408,16 @@ function ProductContent({
               Prices as published by each store. Shared online catalogs are
               labeled separately from branch prices.
             </p>
+            {offers.some((offer) => offer.price_conflict === true) && (
+              <Alert>
+                <AlertTitle>Some published prices disagree</AlertTitle>
+                <AlertDescription>
+                  A catalog lists different prices for the same product. Each
+                  distinct price is shown below; identical repeated rows are
+                  combined.
+                </AlertDescription>
+              </Alert>
+            )}
             <div className="flex flex-wrap gap-2">
               <Choice
                 label="Price store"
@@ -336,6 +476,17 @@ function ProductContent({
                       </TableCell>
                       <TableCell>
                         <div className="price-value">{price(o.price)}</div>
+                        {o.price_conflict === true && (
+                          <Badge variant="outline">
+                            Conflicting published price
+                          </Badge>
+                        )}
+                        {Number(o.repeated_rows) > 1 && (
+                          <div className="cell-note">
+                            {number(o.repeated_rows)} identical source rows
+                            combined
+                          </div>
+                        )}
                         {o.regular_price !== null &&
                           o.regular_price !== undefined && (
                             <div className="cell-note">
@@ -393,16 +544,14 @@ function ProductContent({
         </TabsContent>
         <TabsContent value="matching" className="pt-4">
           <div className="flex flex-col gap-4">
-            <Alert>
-              <Link2 />
-              <AlertTitle>Why these products match</AlertTitle>
-              <AlertDescription>
-                Matching connects equivalent store products to one universal
-                product. Size, pack count, and variant differences can keep
-                products separate.
-              </AlertDescription>
-            </Alert>
-            <ProductAttributes value={product.attributes} />
+            <ManualMatching
+              id={text(product.id)}
+              onUnauthorized={onUnauthorized}
+              onSaved={() => {
+                setRevision((v) => v + 1);
+                onProductChanged();
+              }}
+            />
             <MatchingHistory decisions={decisions} date={date} />
           </div>
         </TabsContent>
@@ -418,6 +567,7 @@ export function DetailSheet({
   onRetry,
   onLogs,
   onUnauthorized,
+  onProductChanged,
 }: {
   selection: DetailSelection | null;
   date: DateFormatter;
@@ -426,6 +576,7 @@ export function DetailSheet({
   onRetry: (r: Row) => void;
   onLogs: (id: string) => void;
   onUnauthorized: () => void;
+  onProductChanged: () => void;
 }) {
   const [lastSelection, setLastSelection] = useState(selection);
   useEffect(() => {
@@ -465,6 +616,7 @@ export function DetailSheet({
               date={date}
               pageSize={pageSize}
               onUnauthorized={onUnauthorized}
+              onProductChanged={onProductChanged}
             />
           )}
           {row && displayed?.kind === "update" && (
@@ -495,8 +647,18 @@ export function DetailSheet({
                   <dd>{date(row.finished_at)}</dd>
                 </div>
                 <div>
-                  <dt>Attempts</dt>
+                  <dt>Times started</dt>
                   <dd>{number(row.attempts)}</dd>
+                </div>
+                <div>
+                  <dt>Downloaded pages saved</dt>
+                  <dd>
+                    {number((row.checkpoint as Row | undefined)?.pages_saved)}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Failed requests since last saved page</dt>
+                  <dd>{number(row.retry_failures)}</dd>
                 </div>
               </dl>
               {Boolean(row.error) && (

@@ -23,6 +23,60 @@ const fixtures = [
 ] as Retailer[];
 const escape = (s: string) =>
   s.replaceAll("&", "&amp;").replaceAll("<", "&lt;");
+it("reads KAM availability from each page header and never appends wrapped description text to the flag", () => {
+  const line = (fields: [number, string][]) => {
+    const chars = Array.from({ length: 190 }, () => " ");
+    for (const [at, text] of fields)
+      for (let i = 0; i < text.length; i++) chars[at + i] = text[i];
+    return chars.join("").trimEnd();
+  };
+  const header = (available: number, regular: number) =>
+    line([
+      [0, "Назив на"],
+      [21, "Продажна"],
+      [39, "Единична"],
+      [59, "Опис на"],
+      [available, "Достапност"],
+      [regular, "Редовна"],
+    ]);
+  const sub = line([
+    [109, "Цена со"],
+    [125, "Вид на"],
+    [145, "Времетраење"],
+  ]);
+  const first = line([
+    [0, "ЧОРАПИ"],
+    [24, "40ден."],
+    [60, "Опис"],
+    [89, "Да"],
+    [95, "40ден."],
+  ]);
+  const continuation = line([
+    [3, "3/1 СПИРИТ"],
+    [79, "38"],
+  ]);
+  const second = line([
+    [0, "ГАЈБА"],
+    [24, "40ден."],
+    [60, "Опис"],
+    [75, "Да"],
+    [86, "40ден."],
+  ]);
+  const text = [
+    header(79, 93),
+    sub,
+    first,
+    continuation,
+    "\f",
+    header(70, 84),
+    sub,
+    second,
+  ].join("\n");
+  expect(parseKam(text).map((r) => r.available)).toEqual([true, true]);
+  expect(parseKam(text.replaceAll("Да", "/ ")).map((r) => r.available)).toEqual(
+    [null, null],
+  );
+});
 describe("captured live retailer records", () => {
   it("retains PDF products whose availability is unknown", () => {
     const fixture = JSON.parse(

@@ -24,14 +24,24 @@ export function redact(value: unknown): unknown {
   const seen = new WeakSet<object>();
   return JSON.parse(
     JSON.stringify(value, (key, v: unknown) => {
-      if (/password|secret|authorization|cookie|api.?key|token/i.test(key))
+      const usageCount =
+        ["input_tokens", "output_tokens", "total_tokens"].includes(key) &&
+        typeof v === "number" &&
+        Number.isSafeInteger(v) &&
+        v >= 0;
+      if (
+        !usageCount &&
+        /password|secret|authorization|cookie|api.?key|token/i.test(key)
+      )
         return "[REDACTED]";
       if (v instanceof Error)
         return { name: v.name, message: v.message, stack: v.stack };
       if (typeof v === "string")
         return v
           .replace(/(postgres(?:ql)?:\/\/)[^\s]+/gi, "$1[REDACTED]")
-          .replace(/sk-[a-zA-Z0-9_-]+/g, "[REDACTED]");
+          .replace(/sk-[a-zA-Z0-9_-]+/g, "[REDACTED]")
+          .replace(/\bvck_[a-zA-Z0-9_-]+/g, "[REDACTED]")
+          .replace(/\bBearer\s+[a-zA-Z0-9._~+\/=-]+/gi, "Bearer [REDACTED]");
       if (v && typeof v === "object") {
         if (seen.has(v)) return "[Circular]";
         seen.add(v);

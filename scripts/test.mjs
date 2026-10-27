@@ -27,6 +27,9 @@ const env = {
   ...process.env,
   NEXTSIGNAL_DATABASE__URL: url.href,
   NEXTSIGNAL_MATCHING__AI__ENABLED: String(config.ai_enabled),
+  NEXTSIGNAL_MATCHING__GATEWAY__ENABLED: "false",
+  NEXTSIGNAL_MATCHING__GATEWAY__API_KEY: "isolated-test-key",
+  NEXTSIGNAL_MATCHING__AUTOMATIC_ENABLED: "false",
   NEXTSIGNAL_LOGGING__SPOOL_DIR: config.log_spool_dir,
 };
 const migration = spawnSync("npm", ["run", "migrate"], {

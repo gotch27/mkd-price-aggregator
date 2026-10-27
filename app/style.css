@@ -48,38 +48,38 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --background: oklch(0.976 0.006 255);
+  --foreground: oklch(0.22 0.025 255);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.22 0.025 255);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
+  --primary: oklch(0.43 0.13 257);
   --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.943 0.013 255);
+  --secondary-foreground: oklch(0.32 0.05 255);
+  --muted: oklch(0.955 0.009 255);
+  --muted-foreground: oklch(0.48 0.025 255);
+  --accent: oklch(0.935 0.028 255);
+  --accent-foreground: oklch(0.38 0.11 257);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --border: oklch(0.895 0.015 255);
+  --input: oklch(0.87 0.021 255);
+  --ring: oklch(0.56 0.13 255);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar: oklch(0.948 0.012 255);
+  --sidebar-foreground: oklch(0.31 0.035 255);
+  --sidebar-primary: oklch(0.43 0.13 257);
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar-accent: oklch(0.9 0.035 255);
+  --sidebar-accent-foreground: oklch(0.38 0.11 257);
+  --sidebar-border: oklch(0.875 0.018 255);
+  --sidebar-ring: oklch(0.56 0.13 255);
 }
 
 .dark {
@@ -157,6 +157,7 @@ button:disabled {
   height: 100svh;
 }
 .workspace-topbar {
+  background: var(--card);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -186,6 +187,24 @@ button:disabled {
   align-items: center;
   justify-content: space-between;
   gap: 1.25rem;
+}
+.page-heading:has(.page-actions) {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding-block: 0.5rem;
+  background: var(--background);
+}
+.page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+.page-actions:empty {
+  display: none;
 }
 .page-heading h1 {
   font-size: 1.75rem;
@@ -241,6 +260,7 @@ button:disabled {
   gap: 1.25rem;
 }
 .store-card {
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
   transition: box-shadow 0.15s;
@@ -250,6 +270,27 @@ button:disabled {
 }
 .store-card [data-slot="card-content"] {
   flex: 1;
+}
+.store-counts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(0.25rem, 1.7cqi, 0.65rem);
+}
+.store-counts dt {
+  display: flex;
+  align-items: flex-end;
+  min-height: 2.7em;
+  color: var(--muted-foreground);
+  font-size: 0.7rem;
+  line-height: 1.35;
+}
+.store-counts dd {
+  margin-top: 0.35rem;
+  font-size: clamp(0.8rem, 4cqi, 1.125rem);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 .store-title {
   font-size: 1.1rem;
@@ -387,6 +428,10 @@ button:disabled {
 }
 .detail-sheet {
   width: min(850px, 100vw);
+  max-width: none !important;
+}
+.task-results-sheet {
+  width: min(1100px, 100vw);
   max-width: none !important;
 }
 .detail-sheet [data-slot="sheet-header"] {
@@ -557,4 +602,121 @@ button:disabled {
 .store-logo [data-slot="avatar-fallback"] {
   border-radius: 0;
   background: transparent;
+}
+
+/* Compact settings navigation shares the dashboard surface tokens. */
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+.workspace-sections {
+  display: grid;
+  grid-template-columns: 210px minmax(0, 1fr);
+  align-items: start;
+  gap: 1.25rem;
+}
+.workspace-section-nav {
+  height: auto;
+  flex-direction: column;
+  width: 100%;
+  position: sticky;
+  top: 7rem;
+  align-self: start;
+}
+.workspace-section-description {
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--muted-foreground);
+  text-align: left;
+}
+.workspace-section-select {
+  display: none;
+}
+.settings-mode-field {
+  padding: 0.5rem 0 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.settings-mode-field:last-child {
+  border-bottom: 0;
+  padding-bottom: 0.25rem;
+}
+.settings-help {
+  margin-top: 0.9rem;
+  font-size: 0.75rem;
+  line-height: 1.7;
+  color: var(--muted-foreground);
+}
+.schedule-occurrences {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  font-size: 0.8rem;
+  color: var(--muted-foreground);
+}
+.schedule-occurrences li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.schedule-occurrences svg {
+  width: 1rem;
+  height: 1rem;
+  color: var(--primary);
+}
+.settings-budget-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.settings-budget-summary > div {
+  padding: 1rem;
+  border-radius: var(--radius-lg);
+  background: var(--accent);
+}
+.settings-budget-summary dt,
+.settings-budget-summary p {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+}
+.settings-budget-summary dd {
+  margin: 0.4rem 0;
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: var(--primary);
+  font-variant-numeric: tabular-nums;
+}
+.settings-history-sheet {
+  width: min(680px, 100vw) !important;
+  max-width: none !important;
+}
+.settings-history-entries {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.settings-history-entries > section {
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+.settings-history-entries > section:last-child {
+  border: 0;
+}
+@media (max-width: 1000px) {
+  .workspace-sections {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .workspace-section-nav {
+    display: none;
+  }
+  .workspace-section-select {
+    display: flex;
+  }
+}
+@media (max-width: 600px) {
+  .settings-budget-summary {
+    grid-template-columns: 1fr;
+  }
 }

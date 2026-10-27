@@ -75,6 +75,45 @@ assert.equal(
   ).status,
   404,
 );
+const anyProduct = await (
+  await fetch(
+    new URL("/api/operations?view=universal&search=&page=1&size=1", base),
+    { headers: { cookie } },
+  )
+).json();
+if (anyProduct.data.rows.length) {
+  const id = anyProduct.data.rows[0].product_id;
+  const url = new URL(`/api/products/${id}/matching?page=1&search=`, base);
+  assert.equal((await fetch(url)).status, 401);
+  const manual = await (await fetch(url, { headers: { cookie } })).json();
+  assert.ok(
+    manual.ok && manual.data.group && Array.isArray(manual.data.group.members),
+  );
+  assert.equal(
+    (
+      await fetch(url, {
+        method: "POST",
+        headers: { cookie, "content-type": "application/json" },
+        body: JSON.stringify({ action: "connect" }),
+      })
+    ).status,
+    400,
+  );
+  assert.equal(
+    (
+      await fetch(url, {
+        method: "POST",
+        headers: {
+          cookie,
+          origin: "https://unrelated.example",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({ action: "connect" }),
+      })
+    ).status,
+    403,
+  );
+}
 assert.equal(
   (
     await fetch(new URL("/api/matching", base), {
@@ -98,6 +137,46 @@ assert.equal(
   ).status,
   400,
 );
+for (const path of [
+  "/api/task-settings",
+  "/api/tasks?page=1&size=1",
+  "/api/task-settings/history?page=1&size=1",
+  "/api/task-settings/schedule?cron=0%2012%20*%20*%201",
+  "/api/tasks/categories?retailer=kam&source_id=",
+  "/api/review/categories?status=needs_review&search=&availability=available&page=1&size=1",
+  "/api/review/agent-sessions",
+]) {
+  assert.equal((await fetch(new URL(path, base))).status, 401, path);
+  const response: Response = await fetch(new URL(path, base), {
+    headers: { cookie },
+  });
+  assert.equal(response.status, 200, path);
+  assert.equal((await response.json()).ok, true, path);
+}
+for (const path of [
+  "/api/tasks",
+  "/api/ingestion",
+  "/api/matching",
+  "/api/categorization",
+  "/api/review/agent-sessions",
+]) {
+  const response: Response = await fetch(new URL(path, base), {
+    method: "POST",
+    headers: { cookie, "content-type": "application/json" },
+    body: JSON.stringify({ kind: "match" }),
+  });
+  assert.equal(response.status, 400, path);
+}
+assert.equal(
+  (
+    await fetch(new URL("/api/task-settings", base), {
+      method: "PATCH",
+      headers: { cookie, "content-type": "application/json" },
+      body: JSON.stringify({ revision: "invalid" }),
+    })
+  ).status,
+  400,
+);
 console.info(
-  "HTTP smoke passed: authentication, all dashboard views, invalid input, and cross-origin rejection.",
+  "HTTP smoke passed: authentication, dashboard/settings/task reads, invalid task starts, and cross-origin rejection. No task was started.",
 );

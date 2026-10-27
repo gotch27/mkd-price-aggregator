@@ -143,7 +143,7 @@ export function parseKam(text: string): CatalogRow[] {
   );
   if (!header || !subheader)
     throw new SourceError("KAM PDF column headers changed", false);
-  const boundaries = [
+  let boundaries = [
     0,
     header.indexOf("Продажна"),
     header.indexOf("Единична"),
@@ -157,7 +157,11 @@ export function parseKam(text: string): CatalogRow[] {
   if (boundaries.some((n, i) => n < 0 || (i > 0 && n <= boundaries[i - 1])))
     throw new SourceError("KAM PDF column boundaries are invalid", false);
   const rows: CatalogRow[] = [];
-  let current: { cells: string[]; raw: string[] } | null = null,
+  let current: {
+      cells: string[];
+      raw: string[];
+      available: boolean | null;
+    } | null = null,
     readingHeader = true;
   const columns = (line: string) =>
     boundaries.map((start, i) => line.slice(start, boundaries[i + 1]).trim());
@@ -182,7 +186,7 @@ export function parseKam(text: string): CatalogRow[] {
       regular_price: money(c[5]),
       promo_price: money(c[6]),
       unit_price: c[2] || null,
-      available: availability(c[4]),
+      available: current.available,
       promotion:
         c
           .slice(6)
@@ -199,7 +203,33 @@ export function parseKam(text: string): CatalogRow[] {
       (line.includes("Назив на") && line.includes("Продажна"))
     ) {
       flush();
+      if (line.includes("Продажна") && line.includes("Достапност")) {
+        boundaries = [
+          0,
+          line.indexOf("Продажна"),
+          line.indexOf("Единична"),
+          line.indexOf("Опис на"),
+          line.indexOf("Достапност"),
+          line.indexOf("Редовна"),
+          ...boundaries.slice(6),
+        ];
+        if (
+          boundaries.some((n, i) => n < 0 || (i > 0 && n <= boundaries[i - 1]))
+        )
+          throw new SourceError("KAM PDF page columns changed", false);
+      }
       readingHeader = true;
+      continue;
+    }
+    if (line.includes("Цена со") && line.includes("Времетраење")) {
+      boundaries = [
+        ...boundaries.slice(0, 6),
+        line.indexOf("Цена со"),
+        line.indexOf("Вид на"),
+        line.indexOf("Времетраење"),
+      ];
+      if (boundaries.some((n, i) => n < 0 || (i > 0 && n <= boundaries[i - 1])))
+        throw new SourceError("KAM PDF promotion columns changed", false);
       continue;
     }
     const c = columns(line);
@@ -207,7 +237,11 @@ export function parseKam(text: string): CatalogRow[] {
     if (starts) {
       flush();
       readingHeader = false;
-      current = { cells: c, raw: [line] };
+      current = {
+        cells: c,
+        raw: [line],
+        available: availability(line.slice(boundaries[4], boundaries[5])),
+      };
       continue;
     }
     if (readingHeader || !current || !line.trim()) continue;

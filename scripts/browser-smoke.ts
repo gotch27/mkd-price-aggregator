@@ -199,7 +199,10 @@ try {
     .getByRole("button", { name: "Close", exact: true })
     .click();
   const updates = responseFor("runs");
-  await page.getByRole("button", { name: "Data updates", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Observability", exact: true })
+    .click();
+  await page.getByRole("tab", { name: "Data updates", exact: true }).click();
   assert.equal((await updates).ok(), true);
   await settled();
   await page

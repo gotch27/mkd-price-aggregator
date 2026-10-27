@@ -14,16 +14,7 @@ export default async function Page() {
       debounceMs={settings.dashboard.search_debounce_ms}
       autoRefreshViews={settings.dashboard.auto_refresh_views}
       initialNameQuality={settings.dashboard.product_name_quality}
-      taskSettings={{
-        stores: Object.entries(settings.sources).map(([slug, source]) => ({
-          slug,
-          name: source.name,
-          enabled: source.enabled,
-        })),
-        matchingEnabled: settings.matching.enabled,
-        localEnabled: settings.matching.local.enabled,
-        aiEnabled: settings.matching.ai.enabled,
-      }}
+      initialAvailability={settings.dashboard.product_availability}
     />
   );
 }

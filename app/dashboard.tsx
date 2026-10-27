@@ -1,14 +1,8 @@
 "use client";
 import { useCallback, useRef, useState, type FormEvent } from "react";
-import {
-  Link2,
-  RefreshCw,
-  Store,
-  Layers3,
-  CircleAlert,
-  X,
-  ArrowRight,
-} from "lucide-react";
+import { Link2, Store, Layers3, CircleAlert } from "lucide-react";
+import { toast } from "sonner";
+import { CategoryReview } from "./_components/dashboard/category-review";
 import {
   SidebarProvider,
   SidebarInset,
@@ -30,6 +24,7 @@ import {
 import { Status as StatusLegend } from "@/app/_components/dashboard/status";
 import { Login } from "@/app/_components/dashboard/login";
 import { Overview } from "@/app/_components/dashboard/overview";
+import { ObservabilityTabs } from "./_components/dashboard/observability-tabs";
 import { Navigation } from "@/app/_components/dashboard/navigation";
 import { StoreBrowser } from "@/app/_components/dashboard/store-browser";
 import { StoreLogo } from "@/app/_components/dashboard/store-logo";
@@ -49,7 +44,6 @@ import {
   text,
   type Row,
   type DashboardView,
-  type TaskSettings,
   type TaskRequest,
 } from "@/app/_components/dashboard/types";
 import type {
@@ -64,7 +58,7 @@ export default function Dashboard({
   debounceMs,
   autoRefreshViews,
   initialNameQuality,
-  taskSettings,
+  initialAvailability,
 }: {
   authenticated: boolean;
   pageSize: number;
@@ -73,18 +67,26 @@ export default function Dashboard({
   debounceMs: number;
   autoRefreshViews: DashboardView[];
   initialNameQuality: NameQuality;
-  taskSettings: TaskSettings;
+  initialAvailability: NonNullable<DashboardQuery["availability"]>;
 }) {
   const [signedIn, setSignedIn] = useState(authenticated);
-  const { state: nav, go, navigate } = useNavigation(initialNameQuality);
+  const {
+    state: nav,
+    go,
+    navigate,
+  } = useNavigation(initialNameQuality, initialAvailability);
   const [actionError, setError] = useState("");
-  const [notice, setNotice] = useState("");
   const [pendingAction, setPendingAction] = useState(false);
   const actionInFlight = useRef(false);
   const [reviewTask, setReviewTask] = useState<TaskRequest | null>(null);
-  const [taskError, setTaskError] = useState("");
+  const [taskUpdate, setTaskUpdate] = useState<{
+    revision: number;
+    createdId: string | null;
+  }>({ revision: 0, createdId: null });
   const [retryDraft, setRetryDraft] = useState<Row | null>(null);
   const [detail, setDetail] = useState<DetailSelection | null>(null);
+  const [categoryReviewUpdate, setCategoryReviewUpdate] = useState(0);
+  const [pageActions, setPageActions] = useState<HTMLDivElement | null>(null);
   const onUnauthorized = useCallback(() => setSignedIn(false), []);
   const date = (value: unknown) =>
     value
@@ -95,19 +97,22 @@ export default function Dashboard({
         })
       : "Not yet";
   const view: DashboardView =
-    nav.screen === "overview" || nav.screen === "tasks"
+    nav.screen === "overview" ||
+    nav.screen === "tasks" ||
+    nav.screen === "settings" ||
+    nav.screen === "review"
       ? "summary"
-      : nav.screen === "updates"
-        ? "runs"
-        : nav.screen === "logs"
+      : nav.screen === "observability"
+        ? nav.tab === "logs"
           ? "logs"
-          : nav.mode === "all"
-            ? "universal"
-            : nav.source_id
-              ? "products"
-              : nav.retailer
-                ? "sources"
-                : "summary";
+          : "runs"
+        : nav.mode === "all"
+          ? "universal"
+          : nav.source_id
+            ? "products"
+            : nav.retailer
+              ? "sources"
+              : "summary";
   const query: DashboardQuery = { ...nav, view, size: pageSize };
   const common = { refreshMs, debounceMs, autoRefreshViews, setSignedIn };
   const overview = useDashboardData({
@@ -129,7 +134,6 @@ export default function Dashboard({
     if (!reviewTask || actionInFlight.current) return;
     actionInFlight.current = true;
     setPendingAction(true);
-    setTaskError("");
     try {
       const response = await fetch(reviewTask.endpoint, {
         method: "POST",
@@ -144,19 +148,28 @@ export default function Dashboard({
       const r = await response.json();
       if (!response.ok || !r.ok)
         throw new Error(r.errors?.[0]?.message ?? "Request failed");
-      setNotice(reviewTask.successMessage);
+      setTaskUpdate((previous) => ({
+        revision: previous.revision + 1,
+        createdId:
+          reviewTask.endpoint === "/api/tasks" ? r.data.id : previous.createdId,
+      }));
+      toast.success("Request received", {
+        description: reviewTask.successMessage,
+        action: { label: "View Run Tasks", onClick: () => navigate("tasks") },
+      });
       if (reviewTask.endpoint === "/api/retry") setRetryDraft(null);
       setReviewTask(null);
       data.refresh();
       overview.refresh();
     } catch (e) {
-      setTaskError(
-        e instanceof TypeError
-          ? "Could not confirm the request. Check Data updates before trying again."
-          : e instanceof Error
-            ? e.message
-            : String(e),
-      );
+      toast.error("Request could not be completed", {
+        description:
+          e instanceof TypeError
+            ? "Could not confirm the request. Check Observability → Data updates before trying again."
+            : e instanceof Error
+              ? e.message
+              : String(e),
+      });
     } finally {
       actionInFlight.current = false;
       setPendingAction(false);
@@ -178,7 +191,16 @@ export default function Dashboard({
         body: JSON.stringify(Object.fromEntries(form)),
       });
       if (response.ok) setSignedIn(true);
-      else setError("Invalid credentials or login limit reached.");
+      else {
+        const result: { message?: unknown } | null = await response
+          .json()
+          .catch(() => null);
+        setError(
+          typeof result?.message === "string"
+            ? result.message
+            : "Sign-in is temporarily unavailable. Please try again shortly.",
+        );
+      }
     } catch {
       setError("Unable to connect. Please try again.");
     }
@@ -209,6 +231,55 @@ export default function Dashboard({
       : isProducts && scoped && nav.retailer
         ? storeName(nav.retailer)
         : views[nav.screen].label;
+  const records = view !== "summary" && (
+    <div className="flex flex-col gap-4">
+      <Filters
+        query={query}
+        busy={busy}
+        onChange={change}
+        onRefresh={data.refresh}
+      />
+      {view === "universal" && (
+        <div className="section-context">
+          <Link2 className="size-4" />
+          <span>
+            One row per universal product. Open Details to see its store
+            products and why they match.
+          </span>
+        </div>
+      )}
+      {view === "products" && page?.refresh_pending && (
+        <Alert>
+          <AlertTitle>New catalog data is being indexed</AlertTitle>
+          <AlertDescription>
+            These results show the last completed browser index, updated{" "}
+            {date(page.refreshed_at)}.
+          </AlertDescription>
+        </Alert>
+      )}
+      {view === "logs" && (
+        <div className="log-legend">
+          <span>Log levels</span>
+          {["debug", "info", "warn", "error"].map((v) => (
+            <StatusLegend key={v} value={v} />
+          ))}
+        </div>
+      )}
+      <RecordsTable
+        view={view}
+        rows={page?.rows ?? []}
+        date={date}
+        page={page?.page ?? nav.page}
+        pageSize={pageSize}
+        busy={busy}
+        total={page?.total ?? null}
+        totalPages={page?.total_pages ?? null}
+        onDetails={open}
+        onRetry={retry}
+        onPageChange={(p) => go({ page: p })}
+      />
+    </div>
+  );
   return (
     <TooltipProvider>
       <SidebarProvider className="workspace">
@@ -317,6 +388,9 @@ export default function Dashboard({
                     </p>
                   </div>
                 </div>
+                {(nav.screen === "tasks" || nav.screen === "settings") && (
+                  <div ref={setPageActions} className="page-actions" />
+                )}
               </header>
               {error && (
                 <Alert variant="destructive">
@@ -338,47 +412,41 @@ export default function Dashboard({
                   </AlertDescription>
                 </Alert>
               )}
-              {notice && (
-                <Alert>
-                  <AlertTitle className="flex items-center justify-between gap-3">
-                    Request received
-                    <Button
-                      variant="ghost"
-                      size="icon-xs"
-                      aria-label="Dismiss notification"
-                      onClick={() => setNotice("")}
-                    >
-                      <X />
-                    </Button>
-                  </AlertTitle>
-                  <AlertDescription>
-                    {notice}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigate("updates")}
-                    >
-                      View data updates
-                      <ArrowRight data-icon="inline-end" />
-                    </Button>
-                  </AlertDescription>
-                </Alert>
-              )}
               {nav.screen === "overview" && (
-                <Overview summary={overview.summary} date={date} />
+                <Overview summary={overview.summary} />
               )}
-              {nav.screen === "tasks" && (
+              {nav.screen === "review" && (
+                <CategoryReview
+                  pageSize={pageSize}
+                  debounceMs={debounceMs}
+                  update={categoryReviewUpdate}
+                  onUnauthorized={onUnauthorized}
+                  onProduct={(id) =>
+                    setDetail({ kind: "product", row: { id, product_id: id } })
+                  }
+                  onChanged={() => {
+                    overview.refresh();
+                    data.refresh();
+                  }}
+                />
+              )}
+              {(nav.screen === "tasks" || nav.screen === "settings") && (
                 <Tasks
-                  settings={taskSettings}
-                  summary={overview.summary}
+                  key={nav.screen}
+                  section={nav.screen === "settings" ? "settings" : "run"}
+                  actionsTarget={pageActions}
+                  update={taskUpdate}
+                  refreshMs={refreshMs}
                   pageSize={pageSize}
                   retry={retryDraft}
                   onReview={(task) => {
-                    setTaskError("");
                     setReviewTask(task);
                   }}
                   onDismissRetry={() => setRetryDraft(null)}
-                  onUpdates={() => navigate("updates")}
+                  onUpdates={() => navigate("observability", "updates")}
+                  onProduct={(id) =>
+                    setDetail({ kind: "product", row: { id, product_id: id } })
+                  }
                   onUnauthorized={onUnauthorized}
                 />
               )}
@@ -449,64 +517,19 @@ export default function Dashboard({
                   }
                 />
               )}
-              {view !== "summary" && (
-                <div className="flex flex-col gap-4">
-                  <Filters
-                    query={query}
-                    busy={busy}
-                    onChange={change}
-                    onRefresh={data.refresh}
-                  />
-                  {view === "universal" && (
-                    <div className="section-context">
-                      <Link2 className="size-4" />
-                      <span>
-                        One row per universal product. Open Details to see its
-                        store products and why they match.
-                      </span>
-                    </div>
-                  )}
-                  {view === "products" && page?.refresh_pending && (
-                    <Alert>
-                      <AlertTitle>New catalog data is being indexed</AlertTitle>
-                      <AlertDescription>
-                        These results show the last completed browser index,
-                        updated {date(page.refreshed_at)}.
-                      </AlertDescription>
-                    </Alert>
-                  )}
-                  {nav.screen === "updates" && (
-                    <div className="section-context">
-                      <RefreshCw className="size-4" />
-                      <span>
-                        Catalog discovery finds sources, price imports update
-                        catalogs, and product matching connects equivalent
-                        items.
-                      </span>
-                    </div>
-                  )}
-                  {nav.screen === "logs" && (
-                    <div className="log-legend">
-                      <span>Log levels</span>
-                      {["debug", "info", "warn", "error"].map((v) => (
-                        <StatusLegend key={v} value={v} />
-                      ))}
-                    </div>
-                  )}
-                  <RecordsTable
-                    view={view}
-                    rows={page?.rows ?? []}
-                    date={date}
-                    page={page?.page ?? nav.page}
-                    pageSize={pageSize}
-                    busy={busy}
-                    total={page?.total ?? null}
-                    totalPages={page?.total_pages ?? null}
-                    onDetails={open}
-                    onRetry={retry}
-                    onPageChange={(p) => go({ page: p })}
-                  />
-                </div>
+              {nav.screen === "observability" ? (
+                <ObservabilityTabs
+                  tab={nav.tab ?? "updates"}
+                  onChange={(tab) => {
+                    setDetail(null);
+                    setError("");
+                    navigate("observability", tab);
+                  }}
+                >
+                  {records}
+                </ObservabilityTabs>
+              ) : (
+                records
               )}
             </div>
           </div>
@@ -516,12 +539,23 @@ export default function Dashboard({
           date={date}
           pageSize={pageSize}
           onClose={() => setDetail(null)}
+          onProductChanged={() => {
+            data.refresh();
+            overview.refresh();
+            setCategoryReviewUpdate((revision) => revision + 1);
+          }}
           onRetry={retry}
           onLogs={(id) => {
             setDetail(null);
             go({
-              screen: "logs",
+              screen: "observability",
+              tab: "logs",
               run_id: id,
+              source_id: undefined,
+              source_name: undefined,
+              kind: undefined,
+              status: undefined,
+              correlation_id: undefined,
               retailer: undefined,
               search: "",
               level: undefined,
@@ -533,10 +567,8 @@ export default function Dashboard({
         <TaskReview
           task={reviewTask}
           pending={pendingAction}
-          error={taskError}
           onClose={() => {
             setReviewTask(null);
-            setTaskError("");
           }}
           onConfirm={() => void startTask()}
         />

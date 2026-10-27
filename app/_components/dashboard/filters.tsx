@@ -105,6 +105,21 @@ export function Filters({
       )}
       {(query.view === "products" || query.view === "universal") && (
         <Choice
+          label="Product availability"
+          value={query.availability ?? ""}
+          options={[
+            ["available", "Available products"],
+            ["unavailable", "Unavailable products"],
+            ["unknown", "Availability unknown"],
+            ["all", "All listed products"],
+          ]}
+          onChange={(v) =>
+            onChange({ availability: v as DashboardQuery["availability"] })
+          }
+        />
+      )}
+      {(query.view === "products" || query.view === "universal") && (
+        <Choice
           label="Product names"
           value={query.name_quality ?? "named"}
           options={[

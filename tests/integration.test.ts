@@ -3,6 +3,7 @@ import { readdir, readFile, writeFile, unlink, utimes } from "node:fs/promises";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import testing from "../config/testing.json" with { type: "json" };
+import { families } from "@/nextsignal/domain/matching";
 import { settings, configSchema } from "@/nextsignal/config";
 import { pool } from "@/nextsignal/services/database";
 import {
@@ -39,7 +40,7 @@ const row = (key: string, price: string): CatalogRow => ({
   regular_price: null,
   promo_price: null,
   unit_price: null,
-  available: null,
+  available: true,
   promotion: null,
   source_updated_at: null,
   raw: {},
@@ -197,7 +198,7 @@ it("publishes idempotently and preserves last good catalog on partial retrieval"
   expect((await pool.query("SELECT * FROM offers")).rowCount).toBe(2);
   expect(
     (await pool.query("SELECT * FROM runs WHERE kind='match'")).rowCount,
-  ).toBe(1);
+  ).toBe(0);
   const partial = await createRun("catalog", "spar", r.source_id, null);
   await expect(stage(partial, [row("a", "60.00")], false)).rejects.toThrow(
     "incomplete",
@@ -251,39 +252,26 @@ it("preserves SPAR's repeated article codes and validates the complete row count
   ).toEqual([{ price: "109.00" }, { price: "149.00" }]);
   expect(
     (await pool.query("SELECT raw,attributes FROM listings")).rows.every(
-      (r) => r.raw.id === 41191 && r.attributes.ambiguous === true,
+      (r) => r.raw.id === 41191 && r.attributes.ambiguous === false,
     ),
   ).toBe(true);
-  const enabled = settings.matching.ai.enabled;
-  const fetchMock = vi
-    .fn()
-    .mockRejectedValue(
-      new Error("Ambiguous source rows must not incur AI work"),
-    );
-  vi.stubGlobal("fetch", fetchMock);
-  settings.matching.ai.enabled = true;
-  try {
-    const { matchBatch } = await import("@/nextsignal/services/matching");
-    const match = await createRun("match", "spar", run.source_id, run.id);
-    await matchBatch(match.id, run.source_id);
-    expect(fetchMock).not.toHaveBeenCalled();
-    expect(
-      (await pool.query("SELECT method FROM match_decisions")).rows,
-    ).toEqual([{ method: "ambiguous" }, { method: "ambiguous" }]);
-  } finally {
-    settings.matching.ai.enabled = enabled;
-    vi.unstubAllGlobals();
-  }
+  expect((await pool.query("SELECT * FROM store_products")).rowCount).toBe(1);
+  expect(
+    (await pool.query("SELECT price_conflict FROM store_product_sources")).rows,
+  ).toEqual([{ price_conflict: true }]);
 });
-it("bulk-records known ambiguity with configured bounds and zero model calls across workers", async () => {
+it("bulk-records genuinely conflicting descriptions with configured bounds and zero model calls in code-only work", async () => {
   const run = await catalog();
   await stage(
     run,
-    Array.from({ length: 120 }, () => row("repeat", "65.00")),
+    Array.from({ length: 120 }, (_, i) => ({
+      ...row("repeat", "65.00"),
+      name: `Milk repeat variant ${i}`,
+    })),
   );
   const matching = await createRun("match", "spar", run.source_id, run.id);
   const before = {
-    ai: settings.matching.ai.enabled,
+    ai: settings.matching.gateway.enabled,
     batch: settings.matching.batch_size,
     ambiguity: settings.matching.ambiguity_batch_size,
   };
@@ -291,8 +279,8 @@ it("bulk-records known ambiguity with configured bounds and zero model calls acr
     .fn()
     .mockRejectedValue(new Error("Known ambiguity must not use AI"));
   vi.stubGlobal("fetch", fetchMock);
-  settings.matching.ai.enabled = true;
-  settings.matching.batch_size = 1;
+  settings.matching.gateway.enabled = false;
+  settings.matching.batch_size = 64;
   settings.matching.ambiguity_batch_size = 64;
   try {
     const { matchBatch } = await import("@/nextsignal/services/matching");
@@ -307,7 +295,7 @@ it("bulk-records known ambiguity with configured bounds and zero model calls acr
     expect(
       (
         await pool.query(
-          "SELECT * FROM match_decisions WHERE method='ambiguous' AND model IS NULL",
+          "SELECT * FROM store_match_decisions WHERE outcome='needs_info' AND model IS NULL",
         )
       ).rowCount,
     ).toBe(120);
@@ -319,12 +307,12 @@ it("bulk-records known ambiguity with configured bounds and zero model calls acr
       ).rows[0].n,
     ).toBe(120);
     expect((await matchBatch(matching.id, run.source_id)).processed).toBe(0);
-    expect((await pool.query("SELECT * FROM match_decisions")).rowCount).toBe(
-      120,
-    );
+    expect(
+      (await pool.query("SELECT * FROM store_match_decisions")).rowCount,
+    ).toBe(120);
     expect(fetchMock).not.toHaveBeenCalled();
   } finally {
-    settings.matching.ai.enabled = before.ai;
+    settings.matching.gateway.enabled = before.ai;
     settings.matching.batch_size = before.batch;
     settings.matching.ambiguity_batch_size = before.ambiguity;
     vi.unstubAllGlobals();
@@ -500,9 +488,9 @@ it("fails validation on missing required settings and parses explicit false", ()
       ...settings,
       matching: {
         ...settings.matching,
-        ai: { ...settings.matching.ai, enabled: "false" },
+        gateway: { ...settings.matching.gateway, enabled: "false" },
       },
-    }).matching.ai.enabled,
+    }).matching.gateway.enabled,
   ).toBe(false);
 });
 it("rejects forged sessions and redacts nested secrets", () => {
@@ -555,7 +543,7 @@ it("preserves repeated indistinguishable source rows as separate listings", asyn
       await pool.query(
         "SELECT attributes->>'ambiguous' AS ambiguous FROM listings",
       )
-    ).rows.every((r) => r.ambiguous === "true"),
+    ).rows.every((r) => r.ambiguous === "false"),
   ).toBe(true);
 });
 it("recovers an orphaned running job after a worker exits", async () => {
@@ -787,7 +775,7 @@ it("only uses configured snapshot timestamps to reject changed pagination", asyn
     settings.sources.spar.timestamp_policy = policy;
   }
 });
-it("joins multiple proven identities and preserves old product references", async () => {
+it("keeps distinct source articles within a single chain separate", async () => {
   const run = await catalog();
   await stage(
     run,
@@ -804,9 +792,9 @@ it("joins multiple proven identities and preserves old product references", asyn
       (await pool.query("SELECT count(DISTINCT product_id) AS n FROM listings"))
         .rows[0].n,
     ),
-  ).toBe(1);
+  ).toBe(3);
   const { offersForProduct } = await import("@/nextsignal/services/operations");
-  for (const id of oldIds) expect((await offersForProduct(id)).length).toBe(3);
+  for (const id of oldIds) expect((await offersForProduct(id)).length).toBe(1);
 });
 it("connects listings from different retailers while preserving each offer", async () => {
   const first = await catalog();
@@ -834,7 +822,9 @@ it("connects listings from different retailers while preserving each offer", asy
   const matching = await createRun("match", "zur", second.source_id, second.id);
   await matchBatch(matching.id, second.source_id);
   const productIds = (
-    await pool.query("SELECT DISTINCT product_id FROM listings")
+    await pool.query(
+      "SELECT DISTINCT group_id AS product_id FROM store_products",
+    )
   ).rows;
   expect(productIds).toHaveLength(1);
   const { offersForProduct } = await import("@/nextsignal/services/operations");
@@ -868,33 +858,21 @@ it("does not link conflicting variants even when a retailer repeats a barcode", 
     ),
   ).toBe(2);
 });
-it("keeps incomplete identities due while AI is disabled without rewriting them", async () => {
+it("keeps branch observations unchanged while processing a product without AI", async () => {
   const run = await catalog();
   await stage(run, [row("unknown", "65.00")]);
   const before = (await pool.query("SELECT * FROM listings")).rows[0];
-  const ai = await import("@/nextsignal/services/ai");
-  const extraction = vi.spyOn(ai, "extractAttributes").mockResolvedValue(null);
   const { matchBatch } = await import("@/nextsignal/services/matching");
   const match = await createRun("match", "spar", run.source_id, run.id);
-  const enabled = settings.matching.ai.enabled;
-  try {
-    settings.matching.ai.enabled = false;
-    expect(await matchBatch(match.id, run.source_id)).toMatchObject({
-      processed: 0,
-      ai_disabled: true,
-      more: false,
-    });
-    expect((await pool.query("SELECT * FROM listings")).rows[0]).toEqual(
-      before,
-    );
-    settings.matching.ai.enabled = true;
-    expect((await matchBatch(match.id, run.source_id)).processed).toBe(1);
-    expect(extraction).toHaveBeenCalledTimes(1);
-  } finally {
-    settings.matching.ai.enabled = enabled;
-    extraction.mockRestore();
-  }
+  expect(await matchBatch(match.id, run.source_id)).toMatchObject({
+    processed: 1,
+    ai_disabled: true,
+    more: false,
+  });
+  expect((await pool.query("SELECT * FROM listings")).rows[0]).toEqual(before);
+  expect((await matchBatch(match.id, run.source_id)).processed).toBe(0);
 });
+
 it("searches normalized product names using Cyrillic or Latin while retaining the original", async () => {
   const run = await catalog();
   await stage(run, [{ ...row("milk", "65.00"), name: "МЛЕКО АЛПСКО 1Л" }]);
@@ -915,13 +893,27 @@ it("searches normalized product names using Cyrillic or Latin while retaining th
     expect(rows.rows[0].name).toBe("МЛЕКО АЛПСКО 1Л");
   }
 });
-it("reuses saved connections on repeat imports with zero provider calls", async () => {
-  const enabled = settings.matching.ai.enabled;
-  const fetchMock = vi
-    .fn()
-    .mockRejectedValue(new Error("Unexpected paid request"));
+it("reuses saved outcomes on repeat imports with zero provider calls", async () => {
+  const enabled = settings.matching.gateway.enabled;
+  const fetchMock = vi.fn().mockImplementation(async (_url, options) => {
+    const body = JSON.parse(options.body);
+    if (!body.questions.family) throw new Error("Unexpected matching call");
+    return Response.json({
+      answers: {
+        family: {
+          type: "choice",
+          choice: "dairy",
+          probabilities: Object.fromEntries(
+            families.map((f) => [f, f === "dairy" ? 1 : 0]),
+          ),
+        },
+      },
+      usage: { inputTokens: 50, outputTokens: 0 },
+      providerMetadata: { gateway: { cost: "0.000001" } },
+    });
+  });
   vi.stubGlobal("fetch", fetchMock);
-  settings.matching.ai.enabled = true;
+  settings.matching.gateway.enabled = true;
   try {
     const run = await catalog();
     const rows = ["a", "b"].map((key) => ({
@@ -932,14 +924,16 @@ it("reuses saved connections on repeat imports with zero provider calls", async 
     const { matchBatch } = await import("@/nextsignal/services/matching");
     const first = await createRun("match", "spar", run.source_id, run.id);
     await matchBatch(first.id, run.source_id);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    fetchMock.mockClear();
     const before = (
       await pool.query(
         "SELECT id,product_id,identity_hash,matched_hash FROM listings ORDER BY id",
       )
     ).rows;
-    expect(new Set(before.map((listing) => listing.product_id)).size).toBe(1);
+    expect(new Set(before.map((listing) => listing.product_id)).size).toBe(2);
     const decisions = (
-      await pool.query("SELECT count(*) AS n FROM match_decisions")
+      await pool.query("SELECT count(*) AS n FROM store_match_decisions")
     ).rows[0].n;
     const repeat = await createRun("catalog", "spar", run.source_id, null);
     await stage(
@@ -958,7 +952,8 @@ it("reuses saved connections on repeat imports with zero provider calls", async 
       ).rows,
     ).toEqual(before);
     expect(
-      (await pool.query("SELECT count(*) AS n FROM match_decisions")).rows[0].n,
+      (await pool.query("SELECT count(*) AS n FROM store_match_decisions"))
+        .rows[0].n,
     ).toBe(decisions);
     expect(
       (await pool.query("SELECT price,available FROM offers")).rows,
@@ -968,7 +963,7 @@ it("reuses saved connections on repeat imports with zero provider calls", async 
     ]);
     expect(fetchMock).not.toHaveBeenCalled();
   } finally {
-    settings.matching.ai.enabled = enabled;
+    settings.matching.gateway.enabled = enabled;
     vi.unstubAllGlobals();
   }
 });
@@ -996,6 +991,8 @@ it("preserves a connection committed while an unchanged catalog is being publish
       "UPDATE listings SET product_id=$1,match_status='matched',matched_hash=identity_hash",
       [target],
     );
+    const mergerPid = (await merger.query("SELECT pg_backend_pid() AS pid"))
+      .rows[0].pid;
     publication = publishCatalog(await getRun(repeat.id));
     const deadline = Date.now() + testing.timeout_ms / 2;
     let blocked = false;
@@ -1003,7 +1000,8 @@ it("preserves a connection committed while an unchanged catalog is being publish
       blocked =
         (
           await pool.query(
-            "SELECT 1 FROM pg_stat_activity WHERE datname=current_database() AND wait_event_type='Lock' AND query LIKE 'INSERT INTO listings%' LIMIT 1",
+            "SELECT 1 FROM pg_stat_activity WHERE datname=current_database() AND wait_event_type='Lock' AND $1=ANY(pg_blocking_pids(pid)) LIMIT 1",
+            [mergerPid],
           )
         ).rowCount === 1;
       if (blocked) break;
@@ -1025,18 +1023,18 @@ it("preserves a connection committed while an unchanged catalog is being publish
     if (publication) await publication;
   }
 });
-it("keeps an unchanged abstention without repeating AI until explicitly retried", async () => {
+it("keeps an unchanged outcome without repeating AI after a price update", async () => {
   const run = await catalog();
   await stage(run, [row("uncertain", "65.00")]);
-  await pool.query(
-    "UPDATE listings SET matched_hash=identity_hash,next_match_at=now()-interval '1 hour'",
-  );
+  const { matchBatch } = await import("@/nextsignal/services/matching");
+  const first = await createRun("match", "spar", run.source_id, run.id);
+  await matchBatch(first.id, run.source_id);
   const repeat = await createRun("catalog", "spar", run.source_id, null);
   await stage(repeat, [row("uncertain", "70.00")]);
-  const { matchBatch } = await import("@/nextsignal/services/matching");
   const match = await createRun("match", "spar", run.source_id, repeat.id);
   expect((await matchBatch(match.id, run.source_id)).processed).toBe(0);
 });
+
 it("keeps the published source URL when discovery advances before a failed import", async () => {
   const initial = await catalog();
   await stage(initial, [row("a", "65.00"), row("b", "70.00")]);
@@ -1144,6 +1142,69 @@ it("browses unique retailer articles with exact page totals and retained unusabl
     (await pool.query("SELECT count(*)::int AS n FROM offers")).rows[0].n,
   ).toBe(8);
 });
+it("aggregates branch prices only for the requested product page, even when hash joins are preferred", async () => {
+  const run = await catalog();
+  await stage(
+    run,
+    Array.from({ length: 12 }, (_, i) => ({
+      ...row(String(i), String(50 + i)),
+      name: `Milk product ${String(i).padStart(2, "0")}`,
+    })),
+  );
+  const { readDashboard } = await import("@/nextsignal/services/operations");
+  const recorded = vi.spyOn(pool, "query");
+  let captured: unknown[] | undefined;
+  try {
+    const page = await readDashboard({
+      view: "products",
+      search: "",
+      page: 2,
+      size: 2,
+      source_id: run.source_id!,
+    });
+    expect(page).toMatchObject({ total: 12, page: 2 });
+    if (!("rows" in page)) throw new Error("Expected product page");
+    expect(page.rows.map((r) => r.name)).toEqual([
+      "Milk product 02",
+      "Milk product 03",
+    ]);
+    captured = recorded.mock.calls.find(
+      ([sql]) =>
+        typeof sql === "string" &&
+        sql.startsWith("WITH selected AS MATERIALIZED"),
+    );
+  } finally {
+    recorded.mockRestore();
+  }
+  if (
+    !captured ||
+    typeof captured[0] !== "string" ||
+    !Array.isArray(captured[1])
+  )
+    throw new Error("Missing page query");
+  const c = await pool.connect();
+  try {
+    await c.query("BEGIN");
+    await c.query("SET LOCAL enable_nestloop=off");
+    const result = await c.query(
+      "EXPLAIN (ANALYZE, FORMAT JSON) " + captured[0],
+      captured[1],
+    );
+    type Plan = { Filter?: string; "Actual Loops": number; Plans?: Plan[] };
+    const aggregates: Plan[] = [];
+    function visit(node: Plan) {
+      if (node.Filter?.includes("count(*)")) aggregates.push(node);
+      node.Plans?.forEach(visit);
+    }
+    visit(result.rows[0]["QUERY PLAN"][0].Plan);
+    expect(aggregates.length).toBeGreaterThan(0);
+    expect(aggregates.reduce((n, p) => n + p["Actual Loops"], 0)).toBe(2);
+  } finally {
+    await c.query("ROLLBACK");
+    c.release();
+  }
+});
+
 it("filters matching evidence by retailer and returns its own typed page", async () => {
   const run = await catalog();
   await stage(run, [row("a", "65.00")]);
@@ -1217,55 +1278,35 @@ it("matches equivalent retailer products with local rules and reuses the result 
   try {
     const match = await createRun("match", null, null, null);
     expect((await matchBatch(match.id, null)).matched).toBe(1);
-    const listings = (
-      await pool.query(
-        "SELECT product_id,matched_hash,identity_hash FROM listings",
-      )
+    const products = (
+      await pool.query("SELECT group_id,state FROM store_products")
     ).rows;
-    expect(new Set(listings.map((listing) => listing.product_id)).size).toBe(1);
+    expect(new Set(products.map((p) => p.group_id)).size).toBe(1);
+    expect(products.every((p) => p.state === "matched")).toBe(true);
     expect(
-      listings.every(
-        (listing) => listing.matched_hash === listing.identity_hash,
-      ),
-    ).toBe(true);
-    expect(
-      (await pool.query("SELECT method FROM match_decisions")).rows[0].method,
-    ).toBe("local-rules");
+      (
+        await pool.query(
+          "SELECT outcome FROM store_match_decisions WHERE outcome='matched'",
+        )
+      ).rowCount,
+    ).toBeGreaterThan(0);
     expect((await matchBatch(match.id, null)).processed).toBe(0);
     expect(fetchMock).not.toHaveBeenCalled();
   } finally {
     vi.unstubAllGlobals();
   }
 });
-it("stops the broad AI pass when its request allowance is exhausted", async () => {
+it("records new matching work within publication without a browser refresh or immediate matching run", async () => {
   const run = await catalog();
-  await stage(run, [row("unknown", "65.00")]);
-  const match = await createRun("match", "spar", run.source_id, run.id);
-  const enabled = settings.matching.ai.enabled;
-  const requests = settings.matching.ai.max_requests_per_run;
-  settings.matching.ai.enabled = true;
-  settings.matching.ai.max_requests_per_run = 1;
-  await pool.query(
-    "INSERT INTO ai_usage(run_id,endpoint,model,status,input_tokens,output_tokens,cost_usd) VALUES($1,'responses','test','success',1,0,0)",
-    [match.id],
-  );
-  const fetchMock = vi
-    .fn()
-    .mockRejectedValue(new Error("Paid request forbidden"));
-  vi.stubGlobal("fetch", fetchMock);
-  try {
-    const { matchBatch } = await import("@/nextsignal/services/matching");
-    expect(await matchBatch(match.id, run.source_id)).toMatchObject({
-      processed: 0,
-      more: false,
-      ai_budget_limited: true,
-    });
-    expect(fetchMock).not.toHaveBeenCalled();
-  } finally {
-    settings.matching.ai.enabled = enabled;
-    settings.matching.ai.max_requests_per_run = requests;
-    vi.unstubAllGlobals();
-  }
+  await stage(run, [row("new", "65.00")]);
+  expect(
+    (await pool.query("SELECT * FROM matching_work WHERE state='pending'"))
+      .rowCount,
+  ).toBe(1);
+  expect((await pool.query("SELECT * FROM store_products")).rowCount).toBe(1);
+  expect(
+    (await pool.query("SELECT * FROM runs WHERE kind='match'")).rowCount,
+  ).toBe(0);
 });
 
 it("browses universal groups without duplicating branches and keeps every connected store when filtered", async () => {
@@ -1308,6 +1349,10 @@ it("browses universal groups without duplicating branches and keeps every connec
   ).rows[0];
   await pool.query(
     "UPDATE listings SET product_id=$1,match_status='matched' WHERE name IN ('Cola Alpha 330ml','Soda Charlie 330ml')",
+    [seed.product_id],
+  );
+  await pool.query(
+    "UPDATE store_products SET group_id=$1,state='matched' WHERE name IN ('Cola Alpha 330ml','Soda Charlie 330ml')",
     [seed.product_id],
   );
   await pool.query(

@@ -1,4 +1,5 @@
 import { createHmac, timingSafeEqual, createHash } from "node:crypto";
+import { isIP } from "node:net";
 import {
   authFail,
   forbidden,
@@ -7,6 +8,12 @@ import {
 } from "@gotch/nextsignal";
 import { settings } from "@/nextsignal/config";
 export const SESSION_COOKIE = "mkd_session";
+// The deployment exposes web through a trusted reverse proxy. Configure the
+// proxy-owned address header; never accept a client identifier from the body.
+export function loginClient(headers: Record<string, string> | undefined) {
+  const address = headers?.[settings.auth.login_client_header]?.trim();
+  return address && isIP(address) ? address.toLowerCase() : "unidentified";
+}
 const digest = (value: string) => createHash("sha256").update(value).digest();
 export const safeEqual = (a: string, b: string) =>
   timingSafeEqual(digest(a), digest(b));

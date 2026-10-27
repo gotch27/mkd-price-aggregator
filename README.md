@@ -1,9 +1,14 @@
 # MKD Catalog
 
-Private supermarket catalog ingestion and product identity foundation, built with Next.js and **Nextsignal 0.1.0-alpha.2**.
+Private supermarket catalog imports and cross-store product matching, built with Next.js and **Nextsignal 0.1.0-alpha.2**.
 
 See [the data model and SQL examples](docs/data-model.md) when building the next product on this database.
-See [the architecture and code map](docs/architecture.md) for the ingestion flow, incremental matching, and module responsibilities.
+See [the architecture and code map](docs/architecture.md) for imports and module responsibilities.
+See [the matching workflow and review guide](docs/matching.md) for the new Gateway integration, safety checks, budgets, and evaluation commands.
+
+The latest [category-first matching flow](docs/category-first-matching.md) categorizes unique store products once, permits code-based matches in every category, and limits AI comparisons to selected labels. Review the [external prompt files](prompts/README.md) before activation. `matching.ai_categories` is intentionally empty; automatic matching and Gateway access remain disabled.
+
+Store product cards now support [manual detail corrections and edit history](docs/product-detail-editing.md). Corrections survive repeat imports, preserve the original store data, and are logged through the existing adapters. Saving details makes no AI request.
 
 ## Start
 
@@ -20,6 +25,15 @@ npm run ingest -- --all
 
 Open the web address determined by `WEB_PORT` in `.env.local` (the example uses http://localhost:3000). Username is configured under `auth.username`; the generated password is `NEXTSIGNAL_AUTH__PASSWORD` in `.env.local`. Setup refuses to overwrite existing configuration. This checkout has already been initialized; reuse its existing `.env.local`.
 
+For this initialized checkout, start the dashboard for review with background processing stopped:
+
+```sh
+docker compose --env-file .env.local stop worker
+docker compose --env-file .env.local up -d --build postgres migrate web
+```
+
+Use `--build` after source or JSON configuration changes. Plain `up -d` can reuse old images; an older migration image may reject newly added settings with `Invalid NextSignal configuration`. Rebuild the image rather than removing the settings. These commands preserve the existing database volume.
+
 ## Configuration is mandatory
 
 `config/default.json` is the explicit, committed configuration, despite the framework's conventional filename. **There are no application-level configuration fallbacks or schema defaults.** Root environment variables override it through Nextsignal's `NEXTSIGNAL_` provider. Missing or unknown values fail startup with the relevant configuration path. The web server, workers, scripts, migrations and tests use the same validation.
@@ -28,19 +42,18 @@ Open the web address determined by `WEB_PORT` in `.env.local` (the example uses 
 NEXTSIGNAL_SCHEDULER__CRON=0 12 * * 1
 NEXTSIGNAL_APP__TIMEZONE=Europe/Skopje
 NEXTSIGNAL_SOURCES__SPAR__CRON=0 12 * * 1,4
-NEXTSIGNAL_MATCHING__AI__ENABLED=true
-NEXTSIGNAL_MATCHING__AI__API_KEY=your-key
-NEXTSIGNAL_MATCHING__AI__MONTHLY_BUDGET_USD=5
-NEXTSIGNAL_MATCHING__AI__RUN_BUDGET_USD=null
+NEXTSIGNAL_MATCHING__AUTOMATIC_ENABLED=false
+NEXTSIGNAL_MATCHING__GATEWAY__ENABLED=false
+NEXTSIGNAL_MATCHING__GATEWAY__API_KEY=your-vercel-ai-gateway-key
+NEXTSIGNAL_MATCHING__GATEWAY__INITIAL_BUDGET_USD=25
+NEXTSIGNAL_MATCHING__GATEWAY__MONTHLY_BUDGET_USD=2
 ```
 
-An explicit source cron of `null` selects the configured global cron. The browser origin must be explicitly included in `auth.allowed_origins`, including its port. Spending caps of `null` mean no application cap. Apply environment changes with `docker compose --env-file .env.local up -d --force-recreate web worker`. A plain container restart keeps its previous environment. JSON configuration changes require `docker compose --env-file .env.local up -d --build` so both runtimes load the same values. A changed schedule resets its persisted next occurrence.
+An explicit source cron of `null` selects the configured global cron. The browser origin must be explicitly included in `auth.allowed_origins`, including its port. Apply environment changes with `docker compose --env-file .env.local up -d --force-recreate web worker`. A plain container restart keeps its previous environment. JSON configuration changes require rebuilding both runtimes. A changed schedule resets its persisted next occurrence.
 
-`matching.ai.enabled` is explicitly `false` in the committed configuration. Enable it and supply your own key to run paid matching. Price ingestion and conservative deterministic matching work independently. Provider failures or spending limits leave listings separate and eligible for another matching attempt. Usage costs include conservative reservations for requests whose final provider usage could not be obtained; they are estimates, not invoices.
+**Automatic matching and Gateway calls are disabled pending implementation review and a jointly reviewed evaluation.** Supplying a key does not enable either switch. Do not start the full matching campaign until approved. An initial campaign shares one $25 allowance across all batches; subsequent updates share $2 per calendar month in Europe/Skopje. Interrupted requests retain their estimated reservation until billing can be reconciled. Usage is an application ledger, not an invoice. The former `matching.ai` configuration is accepted only for compatibility with existing environments; the retired OpenAI client is no longer used and its flag cannot activate this workflow.
 
-This initialized checkout also keeps bulk AI disabled in `.env.local` during development, with an explicit $0.25 monthly cap and $0.10 per-run cap. The supplied key is preserved. A small live development evaluation can opt in for that command only: `NEXTSIGNAL_MATCHING__AI__ENABLED=true npm run matching:evaluate`. Enabling the background worker's paid matching requires changing its environment configuration and recreating the worker.
-
-Other controlled settings include queue concurrency/retries/heartbeats, host request intervals, byte/time/page limits, source page sizes and identity policy, catalog reduction confirmation, logging retention, dashboard paging, and AI model/reasoning. The Decisions endpoint has no reasoning-effort parameter; `high` applies to Responses extraction only. `config/build.json` contains explicit non-runtime validation values for building Docker images; actual runtime secrets are always required separately.
+Other explicit settings cover queue concurrency/retries/heartbeats, host request intervals, byte/time/page limits, source page sizes, identity policy, catalog reduction confirmation, logging, dashboard paging, matching rules, models, prompt versions, candidate scoring, and limits. `config/build.json` contains non-runtime validation values for image builds; runtime secrets remain required separately.
 
 For internet-facing deployment, explicitly enable `auth.secure_cookie`, terminate HTTPS at your reverse proxy, and configure its origin consistently. Compose binds the application and database ports to loopback. `APP_ENV_FILE` chooses the runtime environment file; keep it consistent with Compose's `--env-file` argument.
 
@@ -55,15 +68,15 @@ Schedules use five-field cron expressions. `scheduler.tick_cron` and `scheduler.
 - `migrate`: ordered, advisory-locked SQL migrations before startup.
 - `postgres`: PostgreSQL 17 with persistent storage and `pg_trgm`.
 
-Each retailer has its own `catalog.<retailer>.retrieve` business process and `catalog.<retailer>.job` queue consumer. Their concurrency is explicit in `queue.concurrency`. Discovery uses `catalog.job`; matching uses `catalog.match`, so a long catalog cannot prevent other retailers or matching from progressing. `catalog.request` creates discovery runs. Discovery records published scopes and durable pending catalog runs; publication and matching requests are committed together. Source and run locks make repeated deliveries safe, and older runs cannot replace a newer publication. The database pool is validated against the configured consumers' advisory-lock requirements; the queue pool has its own explicit size.
+Each retailer has its own `catalog.<retailer>.retrieve` business process. Discovery and catalog downloads share `catalog.download`; fully downloaded catalogs use `catalog.publish` for their final save. Reviewed tasks and live settings allow two downloads by default, including two branches from one chain, while a shared database lock allows one final save at a time. A bounded ready buffer prevents downloads from outrunning the database. `tasks.job` handles task orchestration and product work. Every queue's capacity is explicit in `queue.concurrency`, and the application pool is validated against its advisory-lock and transaction requirements. Source and run locks make repeated deliveries safe; older snapshots cannot replace newer publications. See [import reliability](docs/import-reliability.md) for recovery, settings, logs, and saved dashboard statistics.
 
 Catalog pages and checkpoints are stored transactionally in staging. Occurrence counters are recovered from indexed staging rows, keeping checkpoints small even for large catalogs. A complete validated catalog atomically replaces offers for its source. Empty or substantially reduced catalogs require an identical independent confirming retrieval. A failed confirmation retains the existing publication. Changed snapshot timestamps or advertised counts, incompatible page sizes, and identity-policy changes create a fresh durable run instead of continuing a mixed checkpoint. This recovery is atomic and idempotent, preserves the last publication, and is bounded by the explicit `queue.retry_limit`; exhausting it leaves a visible failure. Snapshot restarts retain their ingestion budget family. Empty-catalog confirmations inherit the same restart count.
 
-The database separates `listings`, current branch/catalog `offers`, and shared `products`. Original strings and source fields remain available. All prices are exact PostgreSQL numeric MKD values. The configured invalid-price policy can preserve an unparseable price as `null`, with its raw source text retained; the dashboard displays **Unknown**, never zero. Historical price series are not stored. Run, matching and logging audit records are retained independently.
+The database separates original branch `listings`, current branch/catalog `offers`, durable unique `store_products`, and shared `products`. Branch copies point to one store-product revision. Each meaningful descriptive change creates another revision; price-only changes preserve the connection and create no new matching work. Missing products lose current offers, while saved information, decisions, and connections remain available indefinitely. Returning unchanged products reuse their saved revision.
 
-Retailer article codes stay within their source namespace. Sources without reliable unique identifiers use descriptive identity or the published article code and a persisted occurrence counter; ambiguous duplicates are excluded from automatic linking. Different named variants never get collapsed merely to make an import pass.
+Original strings and source fields remain available. All prices are exact PostgreSQL numeric MKD values. Invalid prices may remain `null` with their raw text retained; the dashboard displays **Unknown**, never zero. Historical price series are not stored. Retailer article codes remain scoped to their chain and descriptive fingerprint; conflicting descriptions and ambiguous duplicates are flagged rather than guessed.
 
-Matching is incremental. A listing's identity hash excludes prices, availability, promotions and retrieval timestamps. An unchanged identity keeps its existing shared product, attributes and saved matching result, including abstention. Known ambiguities are recorded without model calls in bounded database batches controlled by `matching.ambiguity_batch_size`; model work has its separate `matching.batch_size`. Recurring imports check new or changed identities; new listings can connect to existing products. Provider failures remain eligible for configured retries. The dashboard's matching retry explicitly reopens unresolved listings while preserving established connections. Model requests are cached by request content, endpoint, model and prompt version across branches. Repeat-import regression tests verify zero provider calls and unchanged shared product IDs.
+Matching searches other chains using indexed names, reviewed brands, amounts, barcodes, and exact signatures. It compares at most 20 candidate groups in batches of five independent same/different/insufficient questions. Several candidates can join together after checking every member of the resulting group. Qwen can clarify a source-supported missing fact once. Price, branch, and run identifiers do not enter reusable provider requests. Publication writes aliases and durable work in the same transaction; HTTP reads and browser refresh never launch matching. See [matching.md](docs/matching.md).
 
 Each run pins its published source URL. Offers retain that URL, run ID, source update time and retrieval time, even when discovery subsequently advances to a new dated catalog. A failed replacement cannot change the provenance of the last successful offers.
 
@@ -88,7 +101,8 @@ npm run ingest -- spar
 npm run coverage
 npm run retry:failed
 npm run run -- RUN_UUID         # execute a specific persisted run through its business process
-npm run matching:evaluate       # paid; requires AI explicitly enabled and a key
+npm run matching:evaluate       # small constructed controls, isolated DB, no paid calls
+npm run matching:sample -- review-1  # read-only sample; review labels before evaluation
 npm run probe -- spar ramstore  # live first-page diagnostics; updates captured fixtures
 
 docker compose --env-file .env.local logs -f worker
@@ -97,7 +111,7 @@ docker compose --env-file .env.local restart worker
 
 The shadcn/ui dashboard has five screens: Overview for statistics; Products for store → catalog → product browsing and universal product groups; Data updates for monitoring imports and matching jobs; Tasks for starting imports, matching and retries after choosing a scope and reviewing the work; and Logs for correlated events with severity colors. Browsing and monitoring never start background tasks directly. Product details show store listings, catalog prices and readable matching history. Only Logs exposes JSON. Filters and pagination survive reloads and browser navigation. It uses a single configured administrator with signed HttpOnly sessions. APIs are authenticated except health/login; mutation requests check their Origin.
 
-PostgreSQL is configured with 1GB of shared memory in Compose; the container runtime's 64MB setting is insufficient for aggregate queries over the full branch catalog. Server memory, connection limits, WAL size, compression and checkpoint cadence are required `POSTGRES_` values in the environment templates. The initialized configuration uses 256MB shared buffers and an 8GB WAL limit to avoid continuous checkpoints during the initial backfill. Review these explicit resource values for the deployment host.
+PostgreSQL is configured with 1GB of shared memory in Compose; the container runtime's 64MB setting is insufficient for aggregate queries over the full branch catalog. Server memory, connection limits, WAL size, compression and checkpoint cadence are required `POSTGRES_` values in the environment templates. The initialized configuration uses 256MB shared buffers and an 8GB WAL limit to avoid continuous checkpoints during large imports. Review these explicit resource values for the deployment host.
 
 Database logging is independent of business transactions. Failed log inserts spool to each runtime's persistent volume and are replayed idempotently. Secrets are redacted from nested data and errors. Operational and debug retention are explicit configuration values. Queue jobs use persisted retries and heartbeats; failed jobs and application runs remain inspectable.
 
@@ -112,7 +126,7 @@ npm run browser:smoke   # headless visual/browser check; install Chromium first
 npm run backup:smoke    # snapshot dump, isolated restore, verify counts/references, remove test database
 ```
 
-`npm test` never truncates the application database and explicitly disables live AI. It covers all nine parsers, money/encoding/identity, catalog replacement and provenance, locks/recovery, cron/DST/catch-up, configuration failure, sessions, log-spool replay, incremental matching, and mocked AI failures/budgets/cache. The live 18-pair evaluation at 0.99 accepted two correct pairs, with zero false links and 25% recall on labeled positives. This small corpus is a regression check, not a statistical accuracy guarantee. `matching:evaluate` records both precision and missed matches under `.data/`.
+`npm test` never truncates the application database and explicitly disables live AI. It covers all nine parsers, money/encoding/identity, catalog replacement and provenance, locks/recovery, cron/DST/catch-up, configuration failure, sessions, log-spool replay, incremental matching, and mocked AI failures/budgets/cache. The replacement evaluation exercises actual retrieval, decisions, validation, and group formation in its own disposable database. Constructed controls are explicitly distinguished from manually reviewed real-store samples. Reports include correct/incorrect connections, unresolved cases, retrieval coverage, calls, and cost; a small test is not a general accuracy guarantee.
 
 ## Backup and restore
 
@@ -134,10 +148,10 @@ branch/catalog count and the observed price range. Details opens every current
 branch offer for that identity, plus connected products. The raw branch listings
 and offers remain authoritative; deduplicating the browser does not remove them.
 
-`catalog_browser` is an indexed read model. Publication marks it dirty, and the
-worker refreshes it after the current import wave finishes. The product screen
-shows its refresh time and pending refresh state. This avoids repeatedly joining
-millions of branch records just to display a page. Every table API returns its
+`store_product_browser` reads canonical store products and compact per-source prices.
+During migration, unmapped records remain visible through the legacy indexed
+`catalog_browser`. The worker refreshes that fallback after an import wave.
+Matching and new-product publication do not depend on that refresh. Every table API returns its
 view, rows, exact total and page count. Matching evidence stores its source name
 and retailer at decision time, so filtering does not join the entire listing table.
 
@@ -181,31 +195,14 @@ docker compose --env-file .env.local up -d --wait
 Global Docker build caches may include other projects. Inspect them before doing
 any global cleanup; never use volume pruning to make this application smaller.
 
-## Free matching before optional AI
+## Matching activation
 
-`matching.local` defines a versioned dictionary of brand and token aliases,
-ignored words, and a bounded indexing batch size. The worker indexes unique
-retailer articles in batches. Matching requires a recognized brand, unambiguous
-quantity, consistent units, and an exact canonical token signature. Remaining
-flavor, fat percentage, variant, and package tokens all participate; similarity
-alone never authorizes a local match. Unknown attributes stay unknown. This
-conservatively trades coverage for precision without a paid API or local model.
+Start with a fresh database and review small manual tasks before enabling automation. Schema setup uses `npm run migrate`; successful imports create the store-product records used by categorization and matching. No separate preparation or backfill command is required. See [docs/matching.md](docs/matching.md) for the workflow and evaluation.
 
-Indexing progress is visible in Overview. Initial indexing can take several ticks;
-some records intentionally have no local signature. Bump `matching.local.version`
-after changing rule dictionaries to reindex existing entries. Existing saved
-connections remain stable; a source identity change or explicit unresolved retry
-controls reconsideration.
+The new engine keeps conservative free exact-signature/barcode checks before Decider. Configured Macedonian spelling normalization, reviewed brand aliases, source quotes, and group-wide conflict checks also apply to AI proposals. Both `matching.automatic_enabled` and `matching.gateway.enabled` must be enabled deliberately for automatic paid work. Tasks provides contextual process-pending, pause, and resume controls without resetting completed products. Products → Details → Matching also provides a [manual interface](docs/manual-matching.md) for saved connections, remembered separations and deliberate undo. These actions make no AI calls; the automatic workflow has no approval queue.
 
-Local candidate lookup works on one representative per retailer article, and
-committing a safe match includes identical branch copies. An unchanged identity
-reuses its attributes and matching result across branches. Known conflicts still
-block whole-group merges. All methods retain evidence, including `local-rules`.
+The bounded [Glyph versus Qwen comparison](docs/glyph-vs-qwen-2026-10-23.md) is available with `npm run matching:compare-models -- --paid`. The first attempt was blocked by Vercel account eligibility, without a charge; it produced no model accuracy comparison.
 
-Paid AI is **disabled** in the initialized environment. If explicitly enabled, only
-remaining eligible identities proceed to it; cached requests are reused, and
-`max_requests_per_run` / `max_requests_per_month` bound paid requests in addition
-to the configured dollar caps. The committed request limits are 10 per ingestion
-family and 100 per billing month. Reservations, including interrupted requests,
-count toward those limits. Enabling AI can still encounter a large unresolved
-backlog, so leave it off unless you deliberately want a bounded paid pass.
+## Gradual activation
+
+Use **Tasks → Automation & settings** for saved operational controls. Fresh deployments use manual imports/categorization/matching, with AI off and no scheduled stores. The worker can remain running without releasing historical work. Review a small task in **Run tasks**, then enable automation when ready. See [Tasks and gradual activation](docs/task-controls.md) for permission, spending, schedule and restart behavior, and [Import reliability and recovery](docs/import-reliability.md) for fair scheduling, cooldowns, logs, and retrying unfinished catalogs.

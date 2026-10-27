@@ -1,12 +1,4 @@
-import {
-  Store,
-  Files,
-  Package,
-  Link2,
-  Database,
-  Clock3,
-  Activity,
-} from "lucide-react";
+import { Package, Link2, Layers3, Wallet } from "lucide-react";
 import {
   Card,
   CardHeader,
@@ -15,212 +7,180 @@ import {
   CardDescription,
   CardAction,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StoreLogo } from "@/app/_components/dashboard/store-logo";
 import {
   number,
   text,
   type Summary,
-  type DateFormatter,
+  type AvailabilityCounts,
 } from "@/app/_components/dashboard/types";
-export function Overview({
-  summary,
-  date,
-}: {
-  summary: Summary | null;
-  date: DateFormatter;
-}) {
+
+export function Overview({ summary }: { summary: Summary | null }) {
   if (!summary)
     return (
-      <div className="grid gap-4 md:grid-cols-3">
-        {Array.from({ length: 6 }, (_, i) => (
-          <Skeleton key={i} className="h-40" />
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {Array.from({ length: 4 }, (_, i) => (
+          <Skeleton key={i} className="h-36" />
         ))}
       </div>
     );
-  const c = summary.counts;
-  const catalogs = summary.retailers.reduce(
-    (sum, r) => sum + Number(r.sources),
-    0,
+  const counts = summary.counts;
+  const stores = summary.retailers.map((store) => ({
+    slug: text(store.slug),
+    name: text(store.name),
+    catalogs: Number(store.sources),
+    imported: Number(store.imported),
+    recent: Number(store.fresh),
+    due: Math.max(0, Number(store.imported) - Number(store.fresh)),
+    missing: Math.max(0, Number(store.sources) - Number(store.imported)),
+  }));
+  const catalogs = stores.reduce((sum, s) => sum + s.catalogs, 0),
+    imported = stores.reduce((sum, s) => sum + s.imported, 0),
+    recent = stores.reduce((sum, s) => sum + s.recent, 0),
+    due = stores.reduce((sum, s) => sum + s.due, 0),
+    missing = stores.reduce((sum, s) => sum + s.missing, 0);
+  const availability = summary.retailers.map(
+    (r) => r.availability_counts as AvailabilityCounts | null,
   );
-  const imported = summary.retailers.reduce(
-    (sum, r) => sum + Number(r.imported),
-    0,
-  );
-  const fresh = summary.retailers.reduce((sum, r) => sum + Number(r.fresh), 0);
+  const availabilityKnown = availability.every((a) => a != null);
+  const unavailable = availability.reduce(
+      (sum, a) => sum + (a?.unavailable ?? 0),
+      0,
+    ),
+    unknown = availability.reduce((sum, a) => sum + (a?.unknown ?? 0), 0);
+  const windowValue =
+    summary.freshness_hours % 24 === 0
+      ? summary.freshness_hours / 24
+      : summary.freshness_hours;
+  const windowUnit = summary.freshness_hours % 24 === 0 ? "day" : "hour";
+  const windowLabel = `${number(windowValue)} ${windowUnit}${windowValue === 1 ? "" : "s"}`;
   const metrics = [
     {
-      title: "Stores",
-      value: summary.retailers.length,
-      note: "Supermarkets in your database",
-      icon: Store,
-    },
-    {
-      title: "Catalogs imported",
-      value: imported,
-      note: `Of ${number(catalogs)} discovered catalogs`,
-      icon: Files,
-    },
-    {
-      title: "Store products",
-      value: c.catalog_items,
-      note: "Distinct articles, without branch duplicates",
+      title: "Available products",
+      value:
+        counts.available_store_products == null
+          ? "—"
+          : number(counts.available_store_products),
+      note: "Unique per store, available in at least one branch.",
       icon: Package,
     },
     {
-      title: "Universal products",
-      value: c.universal_products,
-      note: "Product identities across store catalogs",
-      icon: Database,
+      title: "All listed products",
+      value: counts.catalog_items == null ? "—" : number(counts.catalog_items),
+      note: availabilityKnown
+        ? `${number(unavailable)} unavailable${unknown ? ` · ${number(unknown)} availability unknown` : ""}`
+        : "Includes products currently unavailable.",
+      icon: Layers3,
     },
     {
       title: "Matched across stores",
-      value: c.cross_store_products,
-      note: "Universal products found in two or more stores",
+      value: number(counts.cross_store_products),
+      note: "Shared products found in two or more stores.",
       icon: Link2,
     },
     {
-      title: "Updates in progress",
-      value: c.pending,
-      note: "Waiting, queued, or currently running",
-      icon: Clock3,
+      title: "AI usage this month",
+      value: `$${summary.ai.reduce((sum, row) => sum + Number(row.cost_usd), 0).toFixed(4)}`,
+      note: `AI permission ${summary.ai_enabled ? "on" : "off"}. Runs are controlled in Run Tasks.`,
+      icon: Wallet,
     },
   ];
   return (
-    <div className="flex flex-col gap-7">
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {metrics.map((m) => (
-          <Card key={m.title} className="metric-card">
+    <div className="flex flex-col gap-5">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {metrics.map((metric) => (
+          <Card key={metric.title} className="metric-card">
             <CardHeader>
-              <CardDescription>{m.title}</CardDescription>
+              <CardDescription>{metric.title}</CardDescription>
               <CardAction>
-                <m.icon className="size-4 text-muted-foreground" />
+                <metric.icon className="size-4 text-muted-foreground" />
               </CardAction>
             </CardHeader>
             <CardContent>
-              <div className="metric-value">{number(m.value)}</div>
-              <p className="metric-note">{m.note}</p>
+              <div className="metric-value">{metric.value}</div>
+              <p className="metric-note">{metric.note}</p>
             </CardContent>
           </Card>
         ))}
       </div>
-      <div className="grid items-start gap-5 xl:grid-cols-[1.5fr_1fr]">
-        <Card>
-          <CardHeader>
-            <CardTitle>Catalog coverage</CardTitle>
-            <CardDescription>Imported catalogs for each store</CardDescription>
-            <CardAction>
-              <Badge variant="outline">
-                {number(imported)} / {number(catalogs)}
-              </Badge>
-            </CardAction>
-          </CardHeader>
-          <CardContent>
-            <div className="coverage-grid grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {summary.retailers.map((r) => (
-                <Card size="sm" className="min-w-0" key={text(r.slug)}>
+      <Card>
+        <CardHeader>
+          <CardTitle>Catalog coverage</CardTitle>
+          <CardDescription>
+            Imports within the last {windowLabel} count as recent.
+          </CardDescription>
+          <CardAction>
+            <p className="text-lg font-semibold tabular-nums">
+              {number(imported)} / {number(catalogs)}
+            </p>
+            <p className="text-xs text-muted-foreground">catalogs imported</p>
+          </CardAction>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <dl className="grid grid-cols-3 gap-4">
+            {[
+              { label: "Recent imports", value: recent },
+              { label: "Need refresh", value: due },
+              { label: "Not imported", value: missing },
+            ].map((metric) => (
+              <div key={metric.label}>
+                <dt className="text-xs text-muted-foreground">
+                  {metric.label}
+                </dt>
+                <dd className="mt-1 text-xl font-semibold tabular-nums">
+                  {number(metric.value)}
+                </dd>
+              </div>
+            ))}
+          </dl>
+          <Separator />
+          <div className="coverage-grid grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {stores.map((store) => {
+              const status = [
+                store.recent > 0 ? `${number(store.recent)} recent` : null,
+                store.due > 0 ? `${number(store.due)} need refresh` : null,
+                store.missing > 0
+                  ? `${number(store.missing)} not imported`
+                  : null,
+              ]
+                .filter(Boolean)
+                .join(" · ");
+              return (
+                <Card size="sm" className="min-w-0" key={text(store.slug)}>
                   <CardHeader className="flex flex-row items-center gap-2">
-                    <StoreLogo slug={text(r.slug)} />
-                    <CardTitle className="truncate">{text(r.name)}</CardTitle>
+                    <StoreLogo slug={text(store.slug)} />
+                    <CardTitle className="truncate">
+                      {text(store.name)}
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p
                       className="text-lg font-medium tabular-nums"
-                      aria-label={`${text(r.name)}: ${number(r.imported)} of ${number(r.sources)} catalogs imported`}
+                      aria-label={`${text(store.name)}: ${number(store.imported)} of ${number(store.catalogs)} catalogs imported`}
                     >
-                      {number(r.imported)}
+                      {number(store.imported)}
                       <span className="text-muted-foreground">
                         {" "}
-                        / {number(r.sources)}
+                        / {number(store.catalogs)}
                       </span>
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {status || "No catalogs yet"}
                     </p>
                   </CardContent>
                 </Card>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-        <div className="flex flex-col gap-5">
-          <Card>
-            <CardHeader>
-              <CardTitle>Data freshness</CardTitle>
-              <CardDescription>
-                How current your catalog data is
-              </CardDescription>
-              <CardAction>
-                <Activity className="size-4 text-muted-foreground" />
-              </CardAction>
-            </CardHeader>
-            <CardContent>
-              <div className="metric-value">
-                {number(fresh)}{" "}
-                <span className="text-lg text-muted-foreground">
-                  / {number(catalogs)}
-                </span>
-              </div>
-              <p className="metric-note">
-                Catalogs within the configured freshness window
-              </p>
-              <dl className="detail-fields mt-6">
-                <div>
-                  <dt>Browser index updated</dt>
-                  <dd>{date(summary.refreshed_at)}</dd>
-                </div>
-                <div>
-                  <dt>Index status</dt>
-                  <dd>
-                    {summary.refresh_pending
-                      ? "New import awaiting indexing"
-                      : "Up to date"}
-                  </dd>
-                </div>
-                <div>
-                  <dt>Current price observations</dt>
-                  <dd>{number(c.offers)}</dd>
-                </div>
-              </dl>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Product matching</CardTitle>
-              <CardDescription>
-                Current matching coverage and usage
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <dl className="detail-fields">
-                <div>
-                  <dt>Matched across stores</dt>
-                  <dd>{number(c.cross_store_products)}</dd>
-                </div>
-                <div>
-                  <dt>Source names needing attention</dt>
-                  <dd>{number(c.unnamed)}</dd>
-                </div>
-                <div>
-                  <dt>Local matching</dt>
-                  <dd>{summary.local_enabled ? "Enabled" : "Disabled"}</dd>
-                </div>
-                <div>
-                  <dt>AI matching</dt>
-                  <dd>{summary.ai_enabled ? "Enabled" : "Disabled"}</dd>
-                </div>
-                <div>
-                  <dt>AI usage this month</dt>
-                  <dd>
-                    $
-                    {summary.ai
-                      .reduce((n, r) => n + Number(r.cost_usd), 0)
-                      .toFixed(4)}
-                  </dd>
-                </div>
-              </dl>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+              );
+            })}
+          </div>
+          {summary.statistics_pending && (
+            <p role="status" className="text-xs text-muted-foreground">
+              Totals are being refreshed. Showing the last saved counts.
+            </p>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

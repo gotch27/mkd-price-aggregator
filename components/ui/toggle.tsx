@@ -12,12 +12,14 @@ const toggleVariants = cva(
       variant: {
         default: "bg-transparent",
         outline: "border border-input bg-transparent hover:bg-muted",
+        card: "flex-col items-start justify-start gap-3 whitespace-normal border border-border bg-card text-left shadow-sm hover:bg-accent/50 data-[state=on]:border-primary data-[state=on]:bg-accent aria-pressed:bg-accent [&_[data-slot=choice-icon]]:text-primary [&_[data-slot=choice-title]]:font-medium [&_[data-slot=choice-description]]:text-sm [&_[data-slot=choice-description]]:font-normal [&_[data-slot=choice-description]]:text-muted-foreground [&_[data-slot=choice-selected]]:text-primary [&_[data-slot=choice-selected]]:opacity-0 data-[state=on]:[&_[data-slot=choice-selected]]:opacity-100",
       },
       size: {
         default:
           "h-8 min-w-8 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
         sm: "h-7 min-w-7 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
         lg: "h-9 min-w-9 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
+        card: "h-full min-h-36 w-full p-4",
       },
     },
     defaultVariants: {

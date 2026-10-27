@@ -1,6 +1,27 @@
 import { settings } from "@/nextsignal/config";
 import type { Run } from "@/nextsignal/domain/types";
 import { pool, transaction } from "@/nextsignal/services/database";
+export { claimPendingRuns, releaseDispatch } from "./import-dispatch";
+
+export async function yieldRun(id: string) {
+  await pool.query(
+    `UPDATE runs SET status='pending',next_attempt_at=NULL,error=NULL WHERE id=$1 AND status='running'`,
+    [id],
+  );
+  return { yielded: true };
+}
+
+export async function readyForPublication(id: string) {
+  const result = await pool.query(
+    `UPDATE runs SET status='pending',next_attempt_at=NULL,error=NULL,
+       downloaded_at=coalesce(downloaded_at,clock_timestamp())
+     WHERE id=$1 AND checkpoint->>'done'='true' RETURNING id`,
+    [id],
+  );
+  if (!result.rowCount)
+    throw new Error("A complete saved download is required before publication");
+  return { ready_for_publication: true };
+}
 
 // Run state is independent of catalog contents. Keep its lifecycle and recovery
 // queries here so processes describe orchestration rather than persistence.
@@ -19,6 +40,15 @@ export async function createRun(
     ).rows[0];
     if (!row) throw new Error("Catalog source not found");
     return row;
+  }
+  if (kind === "match") {
+    return (
+      await pool.query<Run>(
+        `INSERT INTO runs(kind,retailer,source_id,parent_id,status,checkpoint)
+         VALUES($1,$2,$3,$4,'pending',coalesce((SELECT checkpoint FROM runs WHERE id=$4 AND kind='match'),'{}'::jsonb)) RETURNING *`,
+        [kind, retailer, sourceId, parentId],
+      )
+    ).rows[0];
   }
   return (
     await pool.query<Run>(
@@ -62,11 +92,11 @@ export async function supersedeDisabled(id: string) {
   );
 }
 
-export async function pendingRuns(limit: number) {
+export async function pendingRuns(limit: number, taskId?: string) {
   return (
     await pool.query<Pick<Run, "id" | "kind" | "retailer">>(
-      "SELECT id,kind,retailer FROM runs WHERE status='pending' ORDER BY row_number() OVER(PARTITION BY retailer ORDER BY created_at),created_at LIMIT $1",
-      [limit],
+      "SELECT id,kind,retailer FROM runs WHERE status='pending' AND (next_attempt_at IS NULL OR next_attempt_at<=now()) AND ($2::uuid IS NULL OR task_id=$2) AND task_id IN(SELECT id FROM task_executions WHERE state IN('queued','running')) ORDER BY row_number() OVER(PARTITION BY retailer ORDER BY created_at),created_at LIMIT $1",
+      [limit, taskId ?? null],
     )
   ).rows;
 }
@@ -78,10 +108,12 @@ export async function markQueued(id: string) {
   );
 }
 const supersedeObsoleteSql = `UPDATE runs current SET status='superseded',finished_at=now(),
-  summary=jsonb_build_object('reason','Newer catalog already published')
-  FROM sources s JOIN runs published ON published.id=s.published_run
+  summary=jsonb_build_object('reason',CASE WHEN NOT s.active THEN 'Catalog no longer offered by this supermarket' ELSE 'Newer catalog already published' END)
+  FROM sources s LEFT JOIN runs published ON published.id=s.published_run
   WHERE current.id=$1 AND current.kind='catalog' AND current.source_id=s.id
-    AND published.created_at>current.created_at RETURNING current.*`;
+    AND (NOT s.active OR coalesce((published.checkpoint->>'snapshot_started_at')::timestamptz,published.created_at)
+      >coalesce((current.checkpoint->>'snapshot_started_at')::timestamptz,current.created_at))
+    RETURNING current.*`;
 export async function supersedeObsolete(run: Run): Promise<Run | null> {
   return (
     (await pool.query<Run>(supersedeObsoleteSql, [run.id])).rows[0] ?? null
@@ -128,6 +160,10 @@ export async function restartCatalog(
       )
     ).rows[0];
     if (!next) throw new Error("Catalog source not found");
+    await c.query("UPDATE runs SET task_id=$2 WHERE id=$1", [
+      next.id,
+      old.task_id ?? null,
+    ]);
     await c.query(
       "UPDATE runs SET status='superseded',finished_at=now(),error=$2,summary=$3 WHERE id=$1",
       [

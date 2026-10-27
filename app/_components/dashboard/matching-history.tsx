@@ -6,6 +6,7 @@ import {
   AccordionContent,
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
+import { ProductName } from "./product-name";
 import {
   Empty,
   EmptyHeader,
@@ -21,6 +22,44 @@ import {
   type DateFormatter,
 } from "@/app/_components/dashboard/types";
 const methods: Record<string, { title: string; description: string }> = {
+  category_excluded: {
+    title: "Category not selected for AI matching",
+    description:
+      "Code-based checks were allowed. No AI comparison was attempted because this category is not selected. Existing connections are preserved.",
+  },
+  manual_match: {
+    title: "Manually connected",
+    description:
+      "You confirmed these store products are the same. This connection is saved for future imports.",
+  },
+  manual_separate: {
+    title: "Manually separated",
+    description:
+      "You separated this store product. The saved decision prevents automatic matching from joining it to the remaining entries again.",
+  },
+  matched: {
+    title: "Same product across stores",
+    description:
+      "Supported product facts and the complete group passed the matching checks.",
+  },
+  different: {
+    title: "Different products",
+    description: "An explicit product detail differs.",
+  },
+  needs_info: {
+    title: "Not enough product information",
+    description: "A distinguishing detail is missing or unclear.",
+  },
+  no_candidates: {
+    title: "No counterpart found",
+    description:
+      "The current search did not find a suitable product from another store.",
+  },
+  deferred: {
+    title: "Matching deferred",
+    description:
+      "Matching is waiting for the provider, configuration or spending allowance.",
+  },
   gtin: {
     title: "Same barcode",
     description:
@@ -101,7 +140,11 @@ export function MatchingHistory({
                       {storeName(d.retailer)} · {date(d.created_at)}
                     </span>
                     {d.current_identity === false && (
-                      <Badge variant="outline">Previous product version</Badge>
+                      <Badge variant="outline">
+                        {text(d.method).startsWith("manual_")
+                          ? "Earlier decision"
+                          : "Previous product version"}
+                      </Badge>
                     )}
                   </div>
                 </div>
@@ -109,10 +152,25 @@ export function MatchingHistory({
               <AccordionContent>
                 <div className="flex flex-col gap-4">
                   <p>{method.description}</p>
+                  {typeof d.reason === "string" && <p>{d.reason}</p>}
+                  {typeof d.note === "string" && d.note && (
+                    <p>Note: {d.note}</p>
+                  )}
+                  {typeof d.actor === "string" && (
+                    <p className="text-xs text-muted-foreground">
+                      Saved by {d.actor}
+                    </p>
+                  )}
                   <dl className="detail-fields">
                     <div>
                       <dt>Store product</dt>
-                      <dd>{text(d.name)}</dd>
+                      <dd>
+                        <ProductName
+                          name={d.name}
+                          retailer={d.retailer}
+                          showSource
+                        />
+                      </dd>
                     </div>
                     <div>
                       <dt>Result</dt>

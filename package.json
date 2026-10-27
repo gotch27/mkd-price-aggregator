@@ -18,12 +18,14 @@
     "coverage": "tsx scripts/coverage.ts",
     "smoke": "tsx scripts/smoke.ts",
     "retry:failed": "tsx scripts/retry-failed.ts",
-    "matching:evaluate": "tsx scripts/evaluate.ts",
+    "matching:evaluate": "node scripts/matching-evaluate.mjs",
     "names:reindex": "tsx scripts/reindex-names.ts",
     "format": "prettier --write --ignore-unknown app nextsignal worker scripts tests/*.ts config *.ts *.json *.yaml Dockerfile README.md AGENTS.md",
     "browser:smoke": "tsx scripts/browser-smoke.ts",
     "backup:smoke": "tsx scripts/backup-smoke.ts",
-    "run": "tsx scripts/run.ts"
+    "run": "tsx scripts/run.ts",
+    "matching:sample": "tsx scripts/matching-sample.ts",
+    "matching:compare-models": "node scripts/matching-evaluate.mjs --compare-models"
   },
   "dependencies": {
     "@gotch/nextsignal": "0.1.0-alpha.2",
@@ -36,13 +38,16 @@
     "drizzle-orm": "^0.45.4",
     "lucide-react": "^1.61.0",
     "next": "^16.2.4",
+    "next-themes": "^0.4.6",
     "pg": "^8.23.1",
     "pg-boss": "^12.38.0",
     "radix-ui": "^1.8.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "shadcn": "^4.22.1",
+    "sonner": "^2.0.8",
     "tw-animate-css": "^1.4.0",
+    "undici": "^7.30.1",
     "zod": "^4.1.12"
   },
   "devDependencies": {

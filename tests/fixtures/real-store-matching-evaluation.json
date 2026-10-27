@@ -1,0 +1,1633 @@
+{
+  "version": 1,
+  "seed": "manual-real-matches-2026-10-23",
+  "provenance": "20 manually selected real-store expected groups, pending user review. No matching-system output used as ground truth. All development diagnostics; no held-out accuracy claim. Expected outcomes fixed before provider evaluation; user approved the proposed real-store test on 23 October 2026. 101 positive pair relationships across 20 groups and eight explicit non-matches.",
+  "products": [
+    {
+      "id": "e1de8673-cef4-402b-8e06-642776fd4888",
+      "retailer": "kam",
+      "name": "ПИЈАЛОК КОКА КОЛА ЛИМЕНКА 330МЛ",
+      "description": "COCA COLA ПИЈАЛAК ГАЗИРАН ЛИМЕНКА",
+      "category": "COCA COLA ПИЈАЛAК ГАЗИРАН ЛИМЕНКА",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "17c6d65f-5d2e-491e-8c75-de2f77edb4f4",
+      "retailer": "spar",
+      "name": "KOKA KOLA 0.33L LIMENKA.",
+      "description": null,
+      "category": "Carbonated drinks with ordinary colas taste - in cans",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "8d9ce4f5-0628-442e-8fd6-9d03203f7b74",
+      "retailer": "reptil",
+      "name": "Coca Cola – Газиран сок лименка 0.33l",
+      "description": "Coca Cola – Газиран сок лименка 0.33l\nCoca-Cola e eдинствен вкус кој носи врвно уживање, инспирација и вистинско освежување за телото, умот и духот, ја покренува силата на оптимизмот и го прави секој миг магичен. Љубителите на Coca-Cola можат да се гордеат дека токму во Пивара Скопје, се произведуваат Coca-Cola пијалаци со највисок квалитет во светот.\nСостав: Вода, шеќер, јаглероден диоксид, боја Е150d, регулатор на киселост Е338, природни ароми (вклучувајќи и кофеин)\nНутритивни вредности: “Енергија kJ |180 |kj, Енергија kcal |42 |kcal, Јагленохидрати |10.6 |g, Шеќери |10.6 |g”",
+      "category": "Безалкохолни газирани пијалоци | Безалкохолни пијалоци | Македонски производи | Пијалоци",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "e1126f4c-457a-4a29-8941-b77a6c93d0c1",
+      "retailer": "ramstore",
+      "name": "КОКА КОЛА ЛИМЕНКА 0.33Л",
+      "description": "ГАЗИРАН СОК",
+      "category": "ГАЗИРАН СОК",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "45f2f701-2b5a-4dfb-8703-3014b9bae52f",
+      "retailer": "vero",
+      "name": "КОКА КОЛА 0.33Л ЛИМЕНКА",
+      "description": "БЕЗАЛКОХОЛНИ ПИЈАЛОЦИ - ГАЗИРАНИ СОКОВИ",
+      "category": "БЕЗАЛКОХОЛНИ ПИЈАЛОЦИ - ГАЗИРАНИ СОКОВИ",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "1da489ed-7144-4019-815e-d34fdad83107",
+      "retailer": "dim",
+      "name": "КОКА КОЛА ЛИМЕНКА 0.33Л",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "084ccf2a-a211-416d-8bda-499db4164c30",
+      "retailer": "zur",
+      "name": "КОКА КОЛА ЛИМЕНКА 0.33Л",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "bea84750-4df8-4a22-8419-857f24469a32",
+      "retailer": "reptil",
+      "name": "Coca Cola Zero – Газиран сок без шеќер лименка 330ml",
+      "description": "Coca Cola Zero – Газиран сок без шеќер лименка 330ml\nКомбинацијата на 3 засладувачи коишто даваат сладок вкус, но без калории. Едноставно уживање кое секој момент од денот го прави специјален.\nСостав: Вода, јаглероден диоксид, боја Е150d, засладувачи Е952, Е950, Е951, регулатор на киселост Е338, Е331, природни ароми (вклучувајќи и кофеин). Содржи аспартам (извор на фенилаланин)\nНутритивни вредности: “Енергија kJ |0.9 |kj, Енергија kcal |0.2 |kcal, Сол |0.02 |g”",
+      "category": "Безалкохолни газирани пијалоци | Безалкохолни пијалоци | Македонски производи | Пијалоци",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "fccb1293-c07d-42f5-8367-ab59c864083a",
+      "retailer": "spar",
+      "name": "KOKA KOLA 0.33L ZERO LIMENKA",
+      "description": null,
+      "category": "Carbonated drink flavored colas of light - in cans",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "a2955185-5815-4367-877c-260fdea30693",
+      "retailer": "ramstore",
+      "name": "КОКА КОЛА ЗЕРО ЛИМЕНКА 0.33Л",
+      "description": "ГАЗИРАН СОК",
+      "category": "ГАЗИРАН СОК",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "80a27877-7506-4f7a-87a6-add8c4603cc3",
+      "retailer": "vero",
+      "name": "КОКА КОЛА ЗЕРО 0.33Л ЛИМЕНКА",
+      "description": "БЕЗАЛКОХОЛНИ ПИЈАЛОЦИ - ГАЗИРАНИ СОКОВИ",
+      "category": "БЕЗАЛКОХОЛНИ ПИЈАЛОЦИ - ГАЗИРАНИ СОКОВИ",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "9fb11c1c-8382-4dc3-87a9-7fe3841006f9",
+      "retailer": "zur",
+      "name": "КОКА КОЛА ЗЕРО 330МЛ.ЛИМЕНКА",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "89698020-af69-4362-8408-c95bd8948d0e",
+      "retailer": "kam",
+      "name": "ПИЈАЛОК КОКА КОЛА ЛИМЕНКА 330МЛ 6/1",
+      "description": "COCA COLA ПРОМО ПАКET ПИЈАЛAК ГАЗИРАН",
+      "category": "COCA COLA ПРОМО ПАКET ПИЈАЛAК ГАЗИРАН",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "37b2bc2c-3504-49e1-80af-594c4aa68f39",
+      "retailer": "reptil",
+      "name": "Coca Cola – Газиран сок лименки сет 0.33l 6/1",
+      "description": "Coca Cola – Газиран сок лименки сет 0.33l 6/1\nCoca-Cola e eдинствен вкус кој носи врвно уживање, инспирација и вистинско освежување за телото, умот и духот, ја покренува силата на оптимизмот и го прави секој миг магичен. Љубителите на Coca-Cola можат да се гордеат дека токму во Пивара Скопје, се произведуваат Coca-Cola пијалаци со највисок квалитет во светот.\nСостав: Вода, шеќер, јаглероден диоксид, боја Е150d, регулатор на киселост Е338, природни ароми (вклучувајќи и кофеин)\nНутритивни вредности: “Енергија kJ |180 |kj, Енергија kcal |42 |kcal, Јагленохидрати |10.6 |g, Шеќери |10.6 |g”",
+      "category": "Безалкохолни газирани пијалоци | Безалкохолни пијалоци | Пијалоци",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "f8bd6c10-5363-4012-8b6c-d7be5fd8eb58",
+      "retailer": "spar",
+      "name": "KOKA KOLA 0.33L LIMENKA 6/1",
+      "description": null,
+      "category": "Carbonated drinks with ordinary colas taste - in cans",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "77fc1f3a-d108-4d32-809e-05b80a2e1663",
+      "retailer": "zito",
+      "name": "СЕТ КОКА КОЛА 330мл 6/1 МУЛТИПАК",
+      "description": "Кола сокови",
+      "category": "Кола сокови",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "610d9651-637e-476f-8dbc-d87a995d0480",
+      "retailer": "kam",
+      "name": "КРЕМ НУТЕЛА 400ГР",
+      "description": "NUTELLA КРЕМ 13% ЛЕШНИК",
+      "category": "NUTELLA КРЕМ 13% ЛЕШНИК",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "6a297743-1816-4347-81ec-33f247df92e9",
+      "retailer": "reptil",
+      "name": "Nutella- еурокрем 400g",
+      "description": "Млечен производ кој содржи палмино масло,шеќер,лешници,какао со намалена масленост,Обезмастено млеко во прав,сурутка во прав и соја.",
+      "category": "Еурокрем | Чоколади, какао",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "aff293ff-05a5-4359-89e2-34d1839ab846",
+      "retailer": "spar",
+      "name": "KREM NUTELA 400GR TEGLA",
+      "description": null,
+      "category": "Chocolate Cream with hazelnuts - Packed in glass 0-450g",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "5d2785a6-cf93-4979-8588-72b361b2eb0f",
+      "retailer": "vero",
+      "name": "КАКАО КРЕМ НУТЕЛА 400Г",
+      "description": "КОНДИТОРСКИ ПРОИЗВОДИ - КАКАО КРЕМ",
+      "category": "КОНДИТОРСКИ ПРОИЗВОДИ - КАКАО КРЕМ",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "65c0fd8b-b746-4008-851a-4ca8667574ed",
+      "retailer": "stokomak",
+      "name": "КРЕМ ЧОКОЛ. СО 13%ЛЕШНИК 750гр. НУТЕЛА",
+      "description": "КРЕМ",
+      "category": "КРЕМ",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "d1e904a8-b5f0-4cd4-80a1-8bc445f47482",
+      "retailer": "ramstore",
+      "name": "НУТЕЛА 750 ГР",
+      "description": "КАКАО КРЕМ",
+      "category": "КАКАО КРЕМ",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "74afdd92-df76-40ec-886f-8fabbc7e1afb",
+      "retailer": "reptil",
+      "name": "Nutella – Еурокрем 750g",
+      "description": "Nutella – Еурокрем 750g",
+      "category": "Еурокрем",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "1f116e28-902d-406e-8f6c-91ec1cfc8302",
+      "retailer": "zito",
+      "name": "КРЕМ НУТЕЛА 750гр",
+      "description": "Крем",
+      "category": "Крем",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "403df10d-a946-487f-8930-92fff6acb05a",
+      "retailer": "ramstore",
+      "name": "БАМБИ ПЛАЗМА КЕКС 300 ГР",
+      "description": "БИСКВИТИ",
+      "category": "БИСКВИТИ",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "6c2220f0-dcb5-4caf-800a-84b346b1b687",
+      "retailer": "reptil",
+      "name": "Plazma – Бисквит кекс 300g",
+      "description": "Plazma – Бисквит кекс 300g",
+      "category": "Бисквити | Кондиторски производи",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "0c1ec1cd-b297-439c-8773-3dcc3ff1116e",
+      "retailer": "vero",
+      "name": "БИСКВИТИ БАМБИ ПЛАЗМА 300Г",
+      "description": "КОНДИТОРСКИ ПРОИЗВОДИ - БИСКВИТИ",
+      "category": "КОНДИТОРСКИ ПРОИЗВОДИ - БИСКВИТИ",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "f34867f4-25b1-4bf1-8479-8ebc679d3280",
+      "retailer": "zito",
+      "name": "КЕКС ПЛАЗМА 300гр БАМБИ",
+      "description": "Бисквити",
+      "category": "Бисквити",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "dce9fef6-869c-4d95-8372-0d3fa7ec782b",
+      "retailer": "kam",
+      "name": "КЕКС ПЛАЗМА 300ГР МЕЛЕНА",
+      "description": "BAMBI БИСКВИТИ МЕЛЕНИ PLAZMA СО ПУТЕР И",
+      "category": "BAMBI БИСКВИТИ МЕЛЕНИ PLAZMA СО ПУТЕР И",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "b0a0952d-adb8-4016-8b80-e8238c7459b4",
+      "retailer": "stokomak",
+      "name": "ПЛАЗМА БИСКВИТ МЕЛЕН 300 ГР",
+      "description": "БИСКВИТИ",
+      "category": "БИСКВИТИ",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "0e5f0e3b-2c95-4df4-8c9d-69edf921a956",
+      "retailer": "reptil",
+      "name": "Plazma – Мелени бисквити 300g",
+      "description": "Plazma – Мелени бисквити 300g\nУникатниот и полн вкус на Plazma Mlevena го прави незаменлива состојка на вкусни оброци и неодоливи десерти. Во комбинација со млеко, тоа е хранлив оброк совршен за секое време од денот, а е идеален и како состојка во квалитетни задоволства како оние што им ги подготвуваме на нашите најблиски за да ги насмееме.",
+      "category": "Бисквити | Кондиторски производи",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "376961ed-17b3-4794-8080-9741e1d9ba22",
+      "retailer": "vero",
+      "name": "БИСКВИТИ БАМБИ ПЛАЗМА МЕЛЕНА 300Г",
+      "description": "КОНДИТОРСКИ ПРОИЗВОДИ - БИСКВИТИ",
+      "category": "КОНДИТОРСКИ ПРОИЗВОДИ - БИСКВИТИ",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "353f469b-7722-43e7-8b36-30d7786e01b1",
+      "retailer": "kam",
+      "name": "БИСК.БАМБИ ПЛАЗМА МИНИ МИНИ 200ГР",
+      "description": "BAMBI БИСКВИТИ МИНИ PLAZMA СО ПУТЕР И",
+      "category": "BAMBI БИСКВИТИ МИНИ PLAZMA СО ПУТЕР И",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "6138127a-77d7-4c1b-8a55-ea30c9c7fcbe",
+      "retailer": "reptil",
+      "name": "Plazma Mini Mini – Бисквит 200g",
+      "description": "Plazma Mini Mini – Бисквит 200g",
+      "category": "Бисквити | Кондиторски производи",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "a4ac4c5d-2620-4dfc-8b7c-e41ecfa33040",
+      "retailer": "vero",
+      "name": "БИСКВИТИ БАМБИ ПЛАЗМА МИНИ МИНИ 200ГР.",
+      "description": "КОНДИТОРСКИ ПРОИЗВОДИ - БИСКВИТИ",
+      "category": "КОНДИТОРСКИ ПРОИЗВОДИ - БИСКВИТИ",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "555ca8a5-3ec9-40ad-807a-3da94eda5f67",
+      "retailer": "zito",
+      "name": "КЕКС ПЛАЗМА БАМБИ 200гр МИНИ МИНИ",
+      "description": "Бисквити",
+      "category": "Бисквити",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "44fa223e-4092-403a-85f2-c5ed31bf56db",
+      "retailer": "ramstore",
+      "name": "НЕСКАФЕ КЛАСИК ЛИМЕНКА 200 ГР",
+      "description": "ИНСТАНТ КАФЕ",
+      "category": "ИНСТАНТ КАФЕ",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "839e5d35-52d0-4e6a-87b2-17fa7cf58b57",
+      "retailer": "spar",
+      "name": "NESKAFE 200GR LIMENKA KLASIK",
+      "description": null,
+      "category": "Instant coffee in cans - classic",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "92cf96e6-9885-4c8c-8e84-72128e85a32a",
+      "retailer": "vero",
+      "name": "КАФЕ НЕСКАФЕ КЛАСИК 200Г ЛИМЕНКА",
+      "description": "КАФЕ - КАФЕ ИНСТАНТ",
+      "category": "КАФЕ - КАФЕ ИНСТАНТ",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "ddbc9711-46da-44f4-81ba-8df6512eede3",
+      "retailer": "zito",
+      "name": "НЕСКАФЕ КЛАСИК 200гр ЛИМЕНКА",
+      "description": "Инстант и останато кафе",
+      "category": "Инстант и останато кафе",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "eafe30cd-2fec-486e-8a6e-13f440ab0351",
+      "retailer": "stokomak",
+      "name": "НЕСКАФЕ ИНСТАНТ КАФЕ КЛАСИК КЕСА 150гр",
+      "description": "ИНСТАНТ КАФИЊА",
+      "category": "ИНСТАНТ КАФИЊА",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "45b6d0c4-9bd0-47ed-804e-f47026bfbc0e",
+      "retailer": "spar",
+      "name": "NESKAFE 150GR KESA KLASIK",
+      "description": null,
+      "category": "Instant coffee in packets - classic",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "ae65de0c-d910-423c-8191-d246b09d39e1",
+      "retailer": "ramstore",
+      "name": "НЕСКАФЕ КЛАСИК КЕСА 150 ГР",
+      "description": "ИНСТАНТ КАФЕ",
+      "category": "ИНСТАНТ КАФЕ",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "be9fe384-d13e-4035-8a67-3473102ccf01",
+      "retailer": "zur",
+      "name": "НЕСКАФЕ? КЛАСИК САЧЕТ 150ГР",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "97de261c-5a81-437a-8731-6c3ab7087643",
+      "retailer": "ramstore",
+      "name": "НИВЕА ГЕЛ ЗА ТУШИРАЊЕ КРЕМ КЕАР 250МЛ",
+      "description": "ГЕЛ ЗА ТУШИРАЊЕ",
+      "category": "ГЕЛ ЗА ТУШИРАЊЕ",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "a7249870-9027-4e4d-84c6-28d440102fcf",
+      "retailer": "vero",
+      "name": "ГЕЛ ЗА ТУШИРАЊЕ НИВЕА КРЕМ КЕАР 250МЛ",
+      "description": "КОЗМЕТИКА ЗА ТЕЛО - ГЕЛОВИ И КУПКИ ЗА ТУШИРАЊЕ",
+      "category": "КОЗМЕТИКА ЗА ТЕЛО - ГЕЛОВИ И КУПКИ ЗА ТУШИРАЊЕ",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "6f0d0e0e-3476-48b8-8050-2a1e73fcc1f5",
+      "retailer": "zur",
+      "name": "НИВЕА ГЕЛ ЗА ТУШИРАЊЕ КРЕМ КЕР 250МЛ",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "e27f1af7-3649-41d5-8e10-84fdfff83812",
+      "retailer": "spar",
+      "name": "GEL ZA TU[ NIVEA @ 250ML KREM SOFT550097",
+      "description": null,
+      "category": "Shampoo sensitive body for women",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "7f762df4-3e0d-49c5-8ef7-065f0d8532d9",
+      "retailer": "vero",
+      "name": "ГЕЛ ЗА ТУШИРАЊЕ НИВЕА КРЕМ СОФТ 250МЛ",
+      "description": "КОЗМЕТИКА ЗА ТЕЛО - ГЕЛОВИ И КУПКИ ЗА ТУШИРАЊЕ",
+      "category": "КОЗМЕТИКА ЗА ТЕЛО - ГЕЛОВИ И КУПКИ ЗА ТУШИРАЊЕ",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "13080d2d-caf3-44a2-8643-138e8c5024c0",
+      "retailer": "zur",
+      "name": "НИВЕА ГЕЛ ЗА ТУШИРАЊЕ КРЕМ СОФТ 250МЛ",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "610805d9-3712-4cdc-897b-1d15fdca412d",
+      "retailer": "vero",
+      "name": "ДЕТЕРГЕНТ ЗА САДОВИ ФЕРИ ЛИМОН 450МЛ",
+      "description": "ДЕТЕРГЕНТИ - ДЕТЕРГЕНТИ ЗА САДОВИ",
+      "category": "ДЕТЕРГЕНТИ - ДЕТЕРГЕНТИ ЗА САДОВИ",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "40b5ca58-a62f-4797-8007-02abdd43e448",
+      "retailer": "zito",
+      "name": "СРЕД ЗА САДОВИ ФЕРИ 450мл ЛИМОН",
+      "description": "Течно средство за садови",
+      "category": "Течно средство за садови",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "edcb1161-af7d-446d-833d-2aac9fa2f300",
+      "retailer": "zur",
+      "name": "ФЕРИ ЛИМОН 450МЛ",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "a0e2526d-a348-42de-8017-a46e76d9b2bb",
+      "retailer": "reptil",
+      "name": "Fairy – Детергент за рачно миење садови јаболко 900ml",
+      "description": "Fairy – Детергент за рачно миење садови јаболко 900ml",
+      "category": "Средства за садови - рачно",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "9cfdb902-f158-4f63-86b0-8243c2a2c351",
+      "retailer": "vero",
+      "name": "ДЕТЕРГЕНТ ФЕРИ ЗА САДОВИ ЈАБОЛКО 900МЛ",
+      "description": "ДЕТЕРГЕНТИ - ДЕТЕРГЕНТИ ЗА САДОВИ",
+      "category": "ДЕТЕРГЕНТИ - ДЕТЕРГЕНТИ ЗА САДОВИ",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "00fc2274-2647-4def-8730-12640afbdd55",
+      "retailer": "zito",
+      "name": "СРЕД ЗА САДОВИ ФЕРИ 900мл ЈАБОЛКО",
+      "description": "Течно средство за садови",
+      "category": "Течно средство за садови",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "06242257-fcd4-46ce-831c-5c012aff991d",
+      "retailer": "reptil",
+      "name": "Fairy Max Power – Детергент за рачно миење садови лимон 545ml",
+      "description": "Fairy Max Power – Детергент за рачно миење садови лимон 545ml",
+      "category": "Средства за садови - рачно",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "9178b490-0730-4aa8-88f0-0b41052079a1",
+      "retailer": "zur",
+      "name": "ФЕРИ Т.ДЕТЕРГЕНТ МАКС ПОВЕР ЛИМОН 545МЛ",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "3663e2af-2019-4252-8f4e-d113edd34c7e",
+      "retailer": "ramstore",
+      "name": "ХЕПИ ДЕЈ ФЕМИЛИ БОРОВНИЦА 1Л",
+      "description": "НЕГАЗИРАН СОК",
+      "category": "НЕГАЗИРАН СОК",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "64b108b1-4e32-4fbe-84ca-6a35e9c0f424",
+      "retailer": "vero",
+      "name": "ПИЈАЛОК ХЕПИ ДЕЈ ФЕМИЛИ БОРОВНИЦА 1Л",
+      "description": "БЕЗАЛКОХОЛНИ ПИЈАЛОЦИ - ЏУС",
+      "category": "БЕЗАЛКОХОЛНИ ПИЈАЛОЦИ - ЏУС",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "373aec70-28de-4a66-82b7-28d7e0d1046f",
+      "retailer": "zur",
+      "name": "ХЕПИ ДЕЈ ФЕМИЛИ БОРОВНИЦА 1Л ТЕТРАПАК",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "5452397f-45d6-4219-8370-a31224faacd0",
+      "retailer": "ramstore",
+      "name": "ВИНЧИНИ МЕДЕЊАЦИ ПОРТОКАЛ 150ГР",
+      "description": "КОЛАЧИ",
+      "category": "КОЛАЧИ",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "30e117e4-0d55-46b1-82bc-0ffe89d3b01e",
+      "retailer": "spar",
+      "name": "MEDEWACI VIN^INI 150GR PORTOKAL",
+      "description": null,
+      "category": "Honey cake - Orange",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "981cb0d4-d10b-4655-8a6e-479823b2a10f",
+      "retailer": "zur",
+      "name": "МЕДЕЊАЦИ ПОРТОКАЛ 150Г ВИНЧИНИ",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "ade31fd7-7bc6-4f85-855a-341b5c2730ed",
+      "retailer": "dim",
+      "name": "БИО ЗЕН?СОЈА НАПИТОК ОРГАНСКИ 1Л",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "45964d35-b1bd-4a31-87c5-c35a09d9e321",
+      "retailer": "zur",
+      "name": "БИО ЗЕН?СОЈА НАПИТОК ОРГАНСКИ 1Л",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "298100d9-70b5-40a7-83f6-1f1752339e00",
+      "retailer": "dim",
+      "name": "ГАРДЕН? КОРНИШОНИ ЕКСТРА 6-9ЦМ 720ГР",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "2209df8a-9baa-496e-84ee-856ce9d7604b",
+      "retailer": "zur",
+      "name": "ГАРДЕН? КОРНИШОНИ ЕКСТРА 6-9ЦМ 720ГР",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "dad0b663-a8fb-4655-899c-fd5791fbfdc2",
+      "retailer": "zito",
+      "name": "МАЛЕНА ПИНК МОЛИВ 707",
+      "description": "Шминки",
+      "category": "Шминки",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "4b0a17a5-36de-4e20-8455-1c75c6900c05",
+      "retailer": "spar",
+      "name": "MALENA PINK MOLIV 707",
+      "description": null,
+      "category": "Pencil for eye - Normal",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "f685e0bb-6ac2-45dc-8571-5ed24dedde2d",
+      "retailer": "zito",
+      "name": "НЕСКАФЕ 200гр КЛАСИК СТАКЛО",
+      "description": "Инстант и останато кафе",
+      "category": "Инстант и останато кафе",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "04711b1a-557f-4529-86c4-ef5d3ec951c1",
+      "retailer": "zur",
+      "name": "ГАРДЕН? КОРНИШОНИ ЕКСТРА 3-6ЦМ 720ГР",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "0f14ea26-f73e-4042-8748-c6cd9485e7e6",
+      "retailer": "spar",
+      "name": "MALENA PINK MOLIV 701",
+      "description": null,
+      "category": "Pencil for eye - Normal",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    }
+  ],
+  "anchors": [
+    "e1de8673-cef4-402b-8e06-642776fd4888",
+    "bea84750-4df8-4a22-8419-857f24469a32",
+    "89698020-af69-4362-8408-c95bd8948d0e",
+    "610d9651-637e-476f-8dbc-d87a995d0480",
+    "65c0fd8b-b746-4008-851a-4ca8667574ed",
+    "403df10d-a946-487f-8930-92fff6acb05a",
+    "dce9fef6-869c-4d95-8372-0d3fa7ec782b",
+    "353f469b-7722-43e7-8b36-30d7786e01b1",
+    "44fa223e-4092-403a-85f2-c5ed31bf56db",
+    "eafe30cd-2fec-486e-8a6e-13f440ab0351",
+    "97de261c-5a81-437a-8731-6c3ab7087643",
+    "e27f1af7-3649-41d5-8e10-84fdfff83812",
+    "610805d9-3712-4cdc-897b-1d15fdca412d",
+    "a0e2526d-a348-42de-8017-a46e76d9b2bb",
+    "06242257-fcd4-46ce-831c-5c012aff991d",
+    "3663e2af-2019-4252-8f4e-d113edd34c7e",
+    "5452397f-45d6-4219-8370-a31224faacd0",
+    "ade31fd7-7bc6-4f85-855a-341b5c2730ed",
+    "298100d9-70b5-40a7-83f6-1f1752339e00",
+    "dad0b663-a8fb-4655-899c-fd5791fbfdc2"
+  ],
+  "cases": [
+    {
+      "id": "group-1-1-2",
+      "a": "e1de8673-cef4-402b-8e06-642776fd4888",
+      "b": "17c6d65f-5d2e-491e-8c75-de2f77edb4f4",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-1-1-3",
+      "a": "e1de8673-cef4-402b-8e06-642776fd4888",
+      "b": "8d9ce4f5-0628-442e-8fd6-9d03203f7b74",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-1-1-4",
+      "a": "e1de8673-cef4-402b-8e06-642776fd4888",
+      "b": "e1126f4c-457a-4a29-8941-b77a6c93d0c1",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-1-1-5",
+      "a": "e1de8673-cef4-402b-8e06-642776fd4888",
+      "b": "45f2f701-2b5a-4dfb-8703-3014b9bae52f",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-1-1-6",
+      "a": "e1de8673-cef4-402b-8e06-642776fd4888",
+      "b": "1da489ed-7144-4019-815e-d34fdad83107",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-1-1-7",
+      "a": "e1de8673-cef4-402b-8e06-642776fd4888",
+      "b": "084ccf2a-a211-416d-8bda-499db4164c30",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-1-2-3",
+      "a": "17c6d65f-5d2e-491e-8c75-de2f77edb4f4",
+      "b": "8d9ce4f5-0628-442e-8fd6-9d03203f7b74",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-1-2-4",
+      "a": "17c6d65f-5d2e-491e-8c75-de2f77edb4f4",
+      "b": "e1126f4c-457a-4a29-8941-b77a6c93d0c1",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-1-2-5",
+      "a": "17c6d65f-5d2e-491e-8c75-de2f77edb4f4",
+      "b": "45f2f701-2b5a-4dfb-8703-3014b9bae52f",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-1-2-6",
+      "a": "17c6d65f-5d2e-491e-8c75-de2f77edb4f4",
+      "b": "1da489ed-7144-4019-815e-d34fdad83107",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-1-2-7",
+      "a": "17c6d65f-5d2e-491e-8c75-de2f77edb4f4",
+      "b": "084ccf2a-a211-416d-8bda-499db4164c30",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-1-3-4",
+      "a": "8d9ce4f5-0628-442e-8fd6-9d03203f7b74",
+      "b": "e1126f4c-457a-4a29-8941-b77a6c93d0c1",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-1-3-5",
+      "a": "8d9ce4f5-0628-442e-8fd6-9d03203f7b74",
+      "b": "45f2f701-2b5a-4dfb-8703-3014b9bae52f",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-1-3-6",
+      "a": "8d9ce4f5-0628-442e-8fd6-9d03203f7b74",
+      "b": "1da489ed-7144-4019-815e-d34fdad83107",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-1-3-7",
+      "a": "8d9ce4f5-0628-442e-8fd6-9d03203f7b74",
+      "b": "084ccf2a-a211-416d-8bda-499db4164c30",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-1-4-5",
+      "a": "e1126f4c-457a-4a29-8941-b77a6c93d0c1",
+      "b": "45f2f701-2b5a-4dfb-8703-3014b9bae52f",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-1-4-6",
+      "a": "e1126f4c-457a-4a29-8941-b77a6c93d0c1",
+      "b": "1da489ed-7144-4019-815e-d34fdad83107",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-1-4-7",
+      "a": "e1126f4c-457a-4a29-8941-b77a6c93d0c1",
+      "b": "084ccf2a-a211-416d-8bda-499db4164c30",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-1-5-6",
+      "a": "45f2f701-2b5a-4dfb-8703-3014b9bae52f",
+      "b": "1da489ed-7144-4019-815e-d34fdad83107",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-1-5-7",
+      "a": "45f2f701-2b5a-4dfb-8703-3014b9bae52f",
+      "b": "084ccf2a-a211-416d-8bda-499db4164c30",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-1-6-7",
+      "a": "1da489ed-7144-4019-815e-d34fdad83107",
+      "b": "084ccf2a-a211-416d-8bda-499db4164c30",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-2-1-2",
+      "a": "bea84750-4df8-4a22-8419-857f24469a32",
+      "b": "fccb1293-c07d-42f5-8367-ab59c864083a",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-2-1-3",
+      "a": "bea84750-4df8-4a22-8419-857f24469a32",
+      "b": "a2955185-5815-4367-877c-260fdea30693",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-2-1-4",
+      "a": "bea84750-4df8-4a22-8419-857f24469a32",
+      "b": "80a27877-7506-4f7a-87a6-add8c4603cc3",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-2-1-5",
+      "a": "bea84750-4df8-4a22-8419-857f24469a32",
+      "b": "9fb11c1c-8382-4dc3-87a9-7fe3841006f9",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-2-2-3",
+      "a": "fccb1293-c07d-42f5-8367-ab59c864083a",
+      "b": "a2955185-5815-4367-877c-260fdea30693",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-2-2-4",
+      "a": "fccb1293-c07d-42f5-8367-ab59c864083a",
+      "b": "80a27877-7506-4f7a-87a6-add8c4603cc3",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-2-2-5",
+      "a": "fccb1293-c07d-42f5-8367-ab59c864083a",
+      "b": "9fb11c1c-8382-4dc3-87a9-7fe3841006f9",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-2-3-4",
+      "a": "a2955185-5815-4367-877c-260fdea30693",
+      "b": "80a27877-7506-4f7a-87a6-add8c4603cc3",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-2-3-5",
+      "a": "a2955185-5815-4367-877c-260fdea30693",
+      "b": "9fb11c1c-8382-4dc3-87a9-7fe3841006f9",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-2-4-5",
+      "a": "80a27877-7506-4f7a-87a6-add8c4603cc3",
+      "b": "9fb11c1c-8382-4dc3-87a9-7fe3841006f9",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-3-1-2",
+      "a": "89698020-af69-4362-8408-c95bd8948d0e",
+      "b": "37b2bc2c-3504-49e1-80af-594c4aa68f39",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-3-1-3",
+      "a": "89698020-af69-4362-8408-c95bd8948d0e",
+      "b": "f8bd6c10-5363-4012-8b6c-d7be5fd8eb58",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-3-1-4",
+      "a": "89698020-af69-4362-8408-c95bd8948d0e",
+      "b": "77fc1f3a-d108-4d32-809e-05b80a2e1663",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-3-2-3",
+      "a": "37b2bc2c-3504-49e1-80af-594c4aa68f39",
+      "b": "f8bd6c10-5363-4012-8b6c-d7be5fd8eb58",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-3-2-4",
+      "a": "37b2bc2c-3504-49e1-80af-594c4aa68f39",
+      "b": "77fc1f3a-d108-4d32-809e-05b80a2e1663",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-3-3-4",
+      "a": "f8bd6c10-5363-4012-8b6c-d7be5fd8eb58",
+      "b": "77fc1f3a-d108-4d32-809e-05b80a2e1663",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-4-1-2",
+      "a": "610d9651-637e-476f-8dbc-d87a995d0480",
+      "b": "6a297743-1816-4347-81ec-33f247df92e9",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-4-1-3",
+      "a": "610d9651-637e-476f-8dbc-d87a995d0480",
+      "b": "aff293ff-05a5-4359-89e2-34d1839ab846",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-4-1-4",
+      "a": "610d9651-637e-476f-8dbc-d87a995d0480",
+      "b": "5d2785a6-cf93-4979-8588-72b361b2eb0f",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-4-2-3",
+      "a": "6a297743-1816-4347-81ec-33f247df92e9",
+      "b": "aff293ff-05a5-4359-89e2-34d1839ab846",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-4-2-4",
+      "a": "6a297743-1816-4347-81ec-33f247df92e9",
+      "b": "5d2785a6-cf93-4979-8588-72b361b2eb0f",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-4-3-4",
+      "a": "aff293ff-05a5-4359-89e2-34d1839ab846",
+      "b": "5d2785a6-cf93-4979-8588-72b361b2eb0f",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-5-1-2",
+      "a": "65c0fd8b-b746-4008-851a-4ca8667574ed",
+      "b": "d1e904a8-b5f0-4cd4-80a1-8bc445f47482",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-5-1-3",
+      "a": "65c0fd8b-b746-4008-851a-4ca8667574ed",
+      "b": "74afdd92-df76-40ec-886f-8fabbc7e1afb",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-5-1-4",
+      "a": "65c0fd8b-b746-4008-851a-4ca8667574ed",
+      "b": "1f116e28-902d-406e-8f6c-91ec1cfc8302",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-5-2-3",
+      "a": "d1e904a8-b5f0-4cd4-80a1-8bc445f47482",
+      "b": "74afdd92-df76-40ec-886f-8fabbc7e1afb",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-5-2-4",
+      "a": "d1e904a8-b5f0-4cd4-80a1-8bc445f47482",
+      "b": "1f116e28-902d-406e-8f6c-91ec1cfc8302",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-5-3-4",
+      "a": "74afdd92-df76-40ec-886f-8fabbc7e1afb",
+      "b": "1f116e28-902d-406e-8f6c-91ec1cfc8302",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-6-1-2",
+      "a": "403df10d-a946-487f-8930-92fff6acb05a",
+      "b": "6c2220f0-dcb5-4caf-800a-84b346b1b687",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-6-1-3",
+      "a": "403df10d-a946-487f-8930-92fff6acb05a",
+      "b": "0c1ec1cd-b297-439c-8773-3dcc3ff1116e",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-6-1-4",
+      "a": "403df10d-a946-487f-8930-92fff6acb05a",
+      "b": "f34867f4-25b1-4bf1-8479-8ebc679d3280",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-6-2-3",
+      "a": "6c2220f0-dcb5-4caf-800a-84b346b1b687",
+      "b": "0c1ec1cd-b297-439c-8773-3dcc3ff1116e",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-6-2-4",
+      "a": "6c2220f0-dcb5-4caf-800a-84b346b1b687",
+      "b": "f34867f4-25b1-4bf1-8479-8ebc679d3280",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-6-3-4",
+      "a": "0c1ec1cd-b297-439c-8773-3dcc3ff1116e",
+      "b": "f34867f4-25b1-4bf1-8479-8ebc679d3280",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-7-1-2",
+      "a": "dce9fef6-869c-4d95-8372-0d3fa7ec782b",
+      "b": "b0a0952d-adb8-4016-8b80-e8238c7459b4",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-7-1-3",
+      "a": "dce9fef6-869c-4d95-8372-0d3fa7ec782b",
+      "b": "0e5f0e3b-2c95-4df4-8c9d-69edf921a956",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-7-1-4",
+      "a": "dce9fef6-869c-4d95-8372-0d3fa7ec782b",
+      "b": "376961ed-17b3-4794-8080-9741e1d9ba22",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-7-2-3",
+      "a": "b0a0952d-adb8-4016-8b80-e8238c7459b4",
+      "b": "0e5f0e3b-2c95-4df4-8c9d-69edf921a956",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-7-2-4",
+      "a": "b0a0952d-adb8-4016-8b80-e8238c7459b4",
+      "b": "376961ed-17b3-4794-8080-9741e1d9ba22",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-7-3-4",
+      "a": "0e5f0e3b-2c95-4df4-8c9d-69edf921a956",
+      "b": "376961ed-17b3-4794-8080-9741e1d9ba22",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-8-1-2",
+      "a": "353f469b-7722-43e7-8b36-30d7786e01b1",
+      "b": "6138127a-77d7-4c1b-8a55-ea30c9c7fcbe",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-8-1-3",
+      "a": "353f469b-7722-43e7-8b36-30d7786e01b1",
+      "b": "a4ac4c5d-2620-4dfc-8b7c-e41ecfa33040",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-8-1-4",
+      "a": "353f469b-7722-43e7-8b36-30d7786e01b1",
+      "b": "555ca8a5-3ec9-40ad-807a-3da94eda5f67",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-8-2-3",
+      "a": "6138127a-77d7-4c1b-8a55-ea30c9c7fcbe",
+      "b": "a4ac4c5d-2620-4dfc-8b7c-e41ecfa33040",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-8-2-4",
+      "a": "6138127a-77d7-4c1b-8a55-ea30c9c7fcbe",
+      "b": "555ca8a5-3ec9-40ad-807a-3da94eda5f67",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-8-3-4",
+      "a": "a4ac4c5d-2620-4dfc-8b7c-e41ecfa33040",
+      "b": "555ca8a5-3ec9-40ad-807a-3da94eda5f67",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-9-1-2",
+      "a": "44fa223e-4092-403a-85f2-c5ed31bf56db",
+      "b": "839e5d35-52d0-4e6a-87b2-17fa7cf58b57",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-9-1-3",
+      "a": "44fa223e-4092-403a-85f2-c5ed31bf56db",
+      "b": "92cf96e6-9885-4c8c-8e84-72128e85a32a",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-9-1-4",
+      "a": "44fa223e-4092-403a-85f2-c5ed31bf56db",
+      "b": "ddbc9711-46da-44f4-81ba-8df6512eede3",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-9-2-3",
+      "a": "839e5d35-52d0-4e6a-87b2-17fa7cf58b57",
+      "b": "92cf96e6-9885-4c8c-8e84-72128e85a32a",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-9-2-4",
+      "a": "839e5d35-52d0-4e6a-87b2-17fa7cf58b57",
+      "b": "ddbc9711-46da-44f4-81ba-8df6512eede3",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-9-3-4",
+      "a": "92cf96e6-9885-4c8c-8e84-72128e85a32a",
+      "b": "ddbc9711-46da-44f4-81ba-8df6512eede3",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-10-1-2",
+      "a": "eafe30cd-2fec-486e-8a6e-13f440ab0351",
+      "b": "45b6d0c4-9bd0-47ed-804e-f47026bfbc0e",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-10-1-3",
+      "a": "eafe30cd-2fec-486e-8a6e-13f440ab0351",
+      "b": "ae65de0c-d910-423c-8191-d246b09d39e1",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-10-1-4",
+      "a": "eafe30cd-2fec-486e-8a6e-13f440ab0351",
+      "b": "be9fe384-d13e-4035-8a67-3473102ccf01",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-10-2-3",
+      "a": "45b6d0c4-9bd0-47ed-804e-f47026bfbc0e",
+      "b": "ae65de0c-d910-423c-8191-d246b09d39e1",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-10-2-4",
+      "a": "45b6d0c4-9bd0-47ed-804e-f47026bfbc0e",
+      "b": "be9fe384-d13e-4035-8a67-3473102ccf01",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-10-3-4",
+      "a": "ae65de0c-d910-423c-8191-d246b09d39e1",
+      "b": "be9fe384-d13e-4035-8a67-3473102ccf01",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-11-1-2",
+      "a": "97de261c-5a81-437a-8731-6c3ab7087643",
+      "b": "a7249870-9027-4e4d-84c6-28d440102fcf",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-11-1-3",
+      "a": "97de261c-5a81-437a-8731-6c3ab7087643",
+      "b": "6f0d0e0e-3476-48b8-8050-2a1e73fcc1f5",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-11-2-3",
+      "a": "a7249870-9027-4e4d-84c6-28d440102fcf",
+      "b": "6f0d0e0e-3476-48b8-8050-2a1e73fcc1f5",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-12-1-2",
+      "a": "e27f1af7-3649-41d5-8e10-84fdfff83812",
+      "b": "7f762df4-3e0d-49c5-8ef7-065f0d8532d9",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-12-1-3",
+      "a": "e27f1af7-3649-41d5-8e10-84fdfff83812",
+      "b": "13080d2d-caf3-44a2-8643-138e8c5024c0",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-12-2-3",
+      "a": "7f762df4-3e0d-49c5-8ef7-065f0d8532d9",
+      "b": "13080d2d-caf3-44a2-8643-138e8c5024c0",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-13-1-2",
+      "a": "610805d9-3712-4cdc-897b-1d15fdca412d",
+      "b": "40b5ca58-a62f-4797-8007-02abdd43e448",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-13-1-3",
+      "a": "610805d9-3712-4cdc-897b-1d15fdca412d",
+      "b": "edcb1161-af7d-446d-833d-2aac9fa2f300",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-13-2-3",
+      "a": "40b5ca58-a62f-4797-8007-02abdd43e448",
+      "b": "edcb1161-af7d-446d-833d-2aac9fa2f300",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-14-1-2",
+      "a": "a0e2526d-a348-42de-8017-a46e76d9b2bb",
+      "b": "9cfdb902-f158-4f63-86b0-8243c2a2c351",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-14-1-3",
+      "a": "a0e2526d-a348-42de-8017-a46e76d9b2bb",
+      "b": "00fc2274-2647-4def-8730-12640afbdd55",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-14-2-3",
+      "a": "9cfdb902-f158-4f63-86b0-8243c2a2c351",
+      "b": "00fc2274-2647-4def-8730-12640afbdd55",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-15-1-2",
+      "a": "06242257-fcd4-46ce-831c-5c012aff991d",
+      "b": "9178b490-0730-4aa8-88f0-0b41052079a1",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-16-1-2",
+      "a": "3663e2af-2019-4252-8f4e-d113edd34c7e",
+      "b": "64b108b1-4e32-4fbe-84ca-6a35e9c0f424",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-16-1-3",
+      "a": "3663e2af-2019-4252-8f4e-d113edd34c7e",
+      "b": "373aec70-28de-4a66-82b7-28d7e0d1046f",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-16-2-3",
+      "a": "64b108b1-4e32-4fbe-84ca-6a35e9c0f424",
+      "b": "373aec70-28de-4a66-82b7-28d7e0d1046f",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-17-1-2",
+      "a": "5452397f-45d6-4219-8370-a31224faacd0",
+      "b": "30e117e4-0d55-46b1-82bc-0ffe89d3b01e",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-17-1-3",
+      "a": "5452397f-45d6-4219-8370-a31224faacd0",
+      "b": "981cb0d4-d10b-4655-8a6e-479823b2a10f",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-17-2-3",
+      "a": "30e117e4-0d55-46b1-82bc-0ffe89d3b01e",
+      "b": "981cb0d4-d10b-4655-8a6e-479823b2a10f",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-18-1-2",
+      "a": "ade31fd7-7bc6-4f85-855a-341b5c2730ed",
+      "b": "45964d35-b1bd-4a31-87c5-c35a09d9e321",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-19-1-2",
+      "a": "298100d9-70b5-40a7-83f6-1f1752339e00",
+      "b": "2209df8a-9baa-496e-84ee-856ce9d7604b",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "group-20-1-2",
+      "a": "dad0b663-a8fb-4655-899c-fd5791fbfdc2",
+      "b": "4b0a17a5-36de-4e20-8455-1c75c6900c05",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "nonmatch-1",
+      "a": "e1de8673-cef4-402b-8e06-642776fd4888",
+      "b": "bea84750-4df8-4a22-8419-857f24469a32",
+      "expected": "different",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "nonmatch-2",
+      "a": "8d9ce4f5-0628-442e-8fd6-9d03203f7b74",
+      "b": "89698020-af69-4362-8408-c95bd8948d0e",
+      "expected": "different",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "nonmatch-3",
+      "a": "610d9651-637e-476f-8dbc-d87a995d0480",
+      "b": "65c0fd8b-b746-4008-851a-4ca8667574ed",
+      "expected": "different",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "nonmatch-4",
+      "a": "403df10d-a946-487f-8930-92fff6acb05a",
+      "b": "0e5f0e3b-2c95-4df4-8c9d-69edf921a956",
+      "expected": "different",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "nonmatch-5",
+      "a": "97de261c-5a81-437a-8731-6c3ab7087643",
+      "b": "e27f1af7-3649-41d5-8e10-84fdfff83812",
+      "expected": "different",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "nonmatch-6",
+      "a": "44fa223e-4092-403a-85f2-c5ed31bf56db",
+      "b": "f685e0bb-6ac2-45dc-8571-5ed24dedde2d",
+      "expected": "different",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "nonmatch-7",
+      "a": "298100d9-70b5-40a7-83f6-1f1752339e00",
+      "b": "04711b1a-557f-4529-86c4-ef5d3ec951c1",
+      "expected": "different",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "nonmatch-8",
+      "a": "dad0b663-a8fb-4655-899c-fd5791fbfdc2",
+      "b": "0f14ea26-f73e-4042-8748-c6cd9485e7e6",
+      "expected": "different",
+      "reviewed": true,
+      "split": "development"
+    }
+  ]
+}

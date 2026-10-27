@@ -1,0 +1,18 @@
+{
+  "fruit": "Fresh fruit, loose or packaged; not juice or fruit-scented products",
+  "vegetables": "Vegetables, including frozen vegetables",
+  "dairy": "Milk, yogurt, cheese and dairy",
+  "alcohol": "Beer, wine and spirits",
+  "soft_drinks": "Non-alcoholic drinks and water",
+  "other_food": "Other human food, including snacks, bakery, meat and pantry goods; not baby food",
+  "baby_food": "Food specifically for babies",
+  "baby_care": "Diapers and non-food baby care",
+  "personal_care": "Cosmetics, toiletries and oral care",
+  "cleaning": "Household cleaning chemicals, cloths and cleaning supplies",
+  "automotive": "Vehicle supplies and windscreen fluids",
+  "clothing_accessories": "Clothing, hair clips and fashion accessories",
+  "pet": "Pet food and supplies",
+  "household": "Other household goods, cookware and appliances",
+  "other": "An identifiable product outside every category defined above",
+  "unknown": "Insufficient source information to identify the product category"
+}

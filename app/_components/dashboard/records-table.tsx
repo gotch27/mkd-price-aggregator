@@ -40,7 +40,7 @@ const columns: Record<TableView, string[]> = {
   products: ["Store product", "Store", "Current price", "Matching", ""],
   universal: ["Universal product", "Stores", "Price range", "Matching", ""],
   sources: ["Catalog", "Products", "Status", "Last updated", ""],
-  runs: ["Update", "Store", "Status", "Requested", "Attempts", ""],
+  runs: ["Update", "Store", "Status", "Requested", "Starts", ""],
   logs: ["Level", "Message", "Process", "Time", ""],
   decisions: [],
 };

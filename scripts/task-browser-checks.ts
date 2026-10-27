@@ -66,8 +66,9 @@ export async function verifyTaskLaunches(page: Page) {
       0,
     );
     await page
-      .getByRole("button", { name: "Data updates", exact: true })
+      .getByRole("button", { name: "Observability", exact: true })
       .click();
+    await page.getByRole("tab", { name: "Data updates", exact: true }).click();
     await page.waitForFunction(
       () => !document.querySelector('[aria-busy="true"]'),
     );
@@ -101,8 +102,10 @@ export async function verifyTaskLaunches(page: Page) {
       "Reloading a view must not launch work",
     );
 
-    await page.getByRole("button", { name: "Tasks", exact: true }).click();
-    await page.getByRole("heading", { name: "Tasks", exact: true }).waitFor();
+    await page.getByRole("button", { name: "Run Tasks", exact: true }).click();
+    await page
+      .getByRole("heading", { name: "Run Tasks", exact: true })
+      .waitFor();
     assert.equal(
       await page
         .getByRole("button", { name: "Review import", exact: true })
@@ -117,7 +120,9 @@ export async function verifyTaskLaunches(page: Page) {
     );
     await screenshot("tasks");
     await page.reload();
-    await page.getByRole("heading", { name: "Tasks", exact: true }).waitFor();
+    await page
+      .getByRole("heading", { name: "Run Tasks", exact: true })
+      .waitFor();
 
     await choose("Store to import", "KAM");
     await page
@@ -131,109 +136,127 @@ export async function verifyTaskLaunches(page: Page) {
       .click();
     assert.match(await dialog.innerText(), /All \d+ enabled stores/);
     await cancel();
-    await choose("Products to re-check", "All catalogs");
-    await page
-      .getByRole("button", { name: "Review matching", exact: true })
-      .click();
-    await dialog
-      .getByText("All catalogs across all stores", { exact: true })
-      .waitFor();
-    await screenshot("task-review");
-    await cancel();
-    assert.equal(
-      submissions.length,
-      0,
-      "Choosing scopes, reviewing, and canceling must not submit work",
-    );
-
-    await choose("Products to re-check", "One catalog");
-    assert.equal(
+    const matchingEnabled = !(await page
+      .getByRole("combobox", { name: "Products to re-check", exact: true })
+      .isDisabled());
+    if (matchingEnabled) {
+      await choose("Products to re-check", "All catalogs");
       await page
         .getByRole("button", { name: "Review matching", exact: true })
-        .isDisabled(),
-      true,
-    );
-    const firstPage = page.waitForResponse((response) => {
-      const url = new URL(response.url());
-      return (
-        url.pathname === "/api/operations" &&
-        url.searchParams.get("view") === "sources" &&
-        url.searchParams.get("retailer") === "kam" &&
-        url.searchParams.get("page") === "1"
-      );
-    });
-    await choose("Catalog store", "KAM");
-    const catalogs = (await (await firstPage).json()).data;
-    await page.waitForFunction(
-      () =>
-        !document
-          .getElementById("task-match-catalog")
-          ?.hasAttribute("disabled"),
-    );
-    await page
-      .getByRole("combobox", { name: "Catalog to re-check", exact: true })
-      .click();
-    assert.equal(
-      await page.getByRole("option").count(),
-      catalogs.total,
-      "Catalog selection must include every page",
-    );
-    await page.getByRole("option").first().click();
-    await page
-      .getByRole("button", { name: "Review matching", exact: true })
-      .click();
-    await dialog
-      .getByText(`KAM · ${catalogs.rows[0].name}`, { exact: true })
-      .waitFor();
-    gate = new Promise<void>((resolve) => {
-      release = resolve;
-    });
-    const firstSubmission = new Promise<void>((resolve) => {
-      captured = resolve;
-    });
-    await dialog
-      .getByRole("button", { name: "Start matching", exact: true })
-      .evaluate((button) => {
-        if (!(button instanceof HTMLButtonElement))
-          throw new Error("Expected a button");
-        button.click();
-        button.click();
-      });
-    await firstSubmission;
-    await dialog
-      .getByRole("button", { name: "Preparing task…", exact: true })
-      .waitFor();
-    assert.equal(
-      submissions.length,
-      1,
-      "Repeated clicks must submit just once",
-    );
-    assert.equal(
+        .click();
       await dialog
-        .getByRole("button", { name: "Cancel", exact: true })
-        .isDisabled(),
-      true,
-    );
-    assert.deepEqual(submissions[0], {
-      path: "/api/matching",
-      body: { source_id: catalogs.rows[0].id },
-    });
-    release!();
-    gate = undefined;
-    await dialog.waitFor({ state: "hidden" });
-    await page.getByText(/Matching accepted/).waitFor();
-    await dismissNotice();
+        .getByText("All catalogs across all stores", { exact: true })
+        .waitFor();
+      await screenshot("task-review");
+      await cancel();
+      assert.equal(
+        submissions.length,
+        0,
+        "Choosing scopes, reviewing, and canceling must not submit work",
+      );
 
-    await choose("Products to re-check", "All catalogs");
-    await page
-      .getByRole("button", { name: "Review matching", exact: true })
-      .click();
-    await confirm("Start matching");
-    assert.deepEqual(submissions[1], {
-      path: "/api/matching",
-      body: { source_id: null },
-    });
-    await dismissNotice();
+      await choose("Products to re-check", "One catalog");
+      assert.equal(
+        await page
+          .getByRole("button", { name: "Review matching", exact: true })
+          .isDisabled(),
+        true,
+      );
+      const firstPage = page.waitForResponse((response) => {
+        const url = new URL(response.url());
+        return (
+          url.pathname === "/api/operations" &&
+          url.searchParams.get("view") === "sources" &&
+          url.searchParams.get("retailer") === "kam" &&
+          url.searchParams.get("page") === "1"
+        );
+      });
+      await choose("Catalog store", "KAM");
+      const catalogs = (await (await firstPage).json()).data;
+      await page.waitForFunction(
+        () =>
+          !document
+            .getElementById("task-match-catalog")
+            ?.hasAttribute("disabled"),
+      );
+      await page
+        .getByRole("combobox", { name: "Catalog to re-check", exact: true })
+        .click();
+      assert.equal(
+        await page.getByRole("option").count(),
+        catalogs.total,
+        "Catalog selection must include every page",
+      );
+      await page.getByRole("option").first().click();
+      await page
+        .getByRole("button", { name: "Review matching", exact: true })
+        .click();
+      await dialog
+        .getByText(`KAM · ${catalogs.rows[0].name}`, { exact: true })
+        .waitFor();
+      gate = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      const firstSubmission = new Promise<void>((resolve) => {
+        captured = resolve;
+      });
+      await dialog
+        .getByRole("button", { name: "Start matching", exact: true })
+        .evaluate((button) => {
+          if (!(button instanceof HTMLButtonElement))
+            throw new Error("Expected a button");
+          button.click();
+          button.click();
+        });
+      await firstSubmission;
+      await dialog
+        .getByRole("button", { name: "Preparing task…", exact: true })
+        .waitFor();
+      assert.equal(
+        submissions.length,
+        1,
+        "Repeated clicks must submit just once",
+      );
+      assert.equal(
+        await dialog
+          .getByRole("button", { name: "Cancel", exact: true })
+          .isDisabled(),
+        true,
+      );
+      assert.deepEqual(submissions[0], {
+        path: "/api/matching",
+        body: { action: "process_pending", source_id: catalogs.rows[0].id },
+      });
+      release!();
+      gate = undefined;
+      await dialog.waitFor({ state: "hidden" });
+      await page.getByText(/Matching accepted/).waitFor();
+      await dismissNotice();
+
+      await choose("Products to re-check", "All catalogs");
+      await page
+        .getByRole("button", { name: "Review matching", exact: true })
+        .click();
+      await confirm("Start matching");
+      assert.deepEqual(submissions[1], {
+        path: "/api/matching",
+        body: { action: "process_pending", source_id: null },
+      });
+      await dismissNotice();
+    } else {
+      await page
+        .getByText("Automatic matching awaits our dataset evaluation.", {
+          exact: true,
+        })
+        .waitFor();
+      assert.equal(
+        await page
+          .getByRole("button", { name: "Review matching", exact: true })
+          .isDisabled(),
+        true,
+      );
+      assert.equal(submissions.length, 0);
+    }
     await choose("Store to import", "KAM");
     await page
       .getByRole("button", { name: "Review import", exact: true })
@@ -262,7 +285,7 @@ export async function verifyTaskLaunches(page: Page) {
       0,
     );
     await confirm("Start import");
-    assert.deepEqual(submissions[3], {
+    assert.deepEqual(submissions.at(-1), {
       path: "/api/ingestion",
       body: { retailer: "kam" },
     });
@@ -272,7 +295,7 @@ export async function verifyTaskLaunches(page: Page) {
       .getByRole("button", { name: "Review import", exact: true })
       .click();
     await confirm("Start import");
-    assert.deepEqual(submissions[4], {
+    assert.deepEqual(submissions.at(-1), {
       path: "/api/ingestion",
       body: { retailer: null },
     });
@@ -294,7 +317,7 @@ export async function verifyTaskLaunches(page: Page) {
             rows: [
               {
                 id: retryId,
-                kind: "match",
+                kind: "catalog",
                 retailer: "kam",
                 source_name: "Test catalog",
                 status: "failed",
@@ -308,15 +331,18 @@ export async function verifyTaskLaunches(page: Page) {
     };
     await page.route("**/api/operations?**", fakeRun);
     await page
-      .getByRole("button", { name: "Data updates", exact: true })
+      .getByRole("button", { name: "Observability", exact: true })
       .click();
+    await page.getByRole("tab", { name: "Data updates", exact: true }).click();
     await page
       .getByRole("button", { name: "Review retry", exact: true })
       .click();
-    await page.getByRole("heading", { name: "Tasks", exact: true }).waitFor();
+    await page
+      .getByRole("heading", { name: "Run Tasks", exact: true })
+      .waitFor();
     assert.equal(
       submissions.length,
-      5,
+      matchingEnabled ? 5 : 3,
       "Opening a retry draft must not start it",
     );
     await page
@@ -324,12 +350,12 @@ export async function verifyTaskLaunches(page: Page) {
       .click();
     await dialog.getByText("KAM · Test catalog", { exact: true }).waitFor();
     await cancel();
-    assert.equal(submissions.length, 5);
+    assert.equal(submissions.length, matchingEnabled ? 5 : 3);
     await page
       .getByRole("button", { name: "Review retry", exact: true })
       .click();
     await confirm("Start retry");
-    assert.deepEqual(submissions[5], {
+    assert.deepEqual(submissions.at(-1), {
       path: "/api/retry",
       body: { id: retryId },
     });
@@ -338,10 +364,17 @@ export async function verifyTaskLaunches(page: Page) {
 
     await page.setViewportSize({ width: 390, height: 844 });
     await screenshot("mobile-tasks");
-    await choose("Products to re-check", "All catalogs");
-    await page
-      .getByRole("button", { name: "Review matching", exact: true })
-      .click();
+    if (matchingEnabled) {
+      await choose("Products to re-check", "All catalogs");
+      await page
+        .getByRole("button", { name: "Review matching", exact: true })
+        .click();
+    } else {
+      await choose("Store to import", "KAM");
+      await page
+        .getByRole("button", { name: "Review import", exact: true })
+        .click();
+    }
     const box = await dialog.boundingBox();
     assert.ok(
       box && box.x >= 0 && box.y >= 0 && box.y + box.height <= 844,
@@ -356,7 +389,7 @@ export async function verifyTaskLaunches(page: Page) {
     );
     await page.setViewportSize({ width: 1440, height: 1000 });
     await page.getByRole("button", { name: "Overview", exact: true }).click();
-    assert.equal(submissions.length, 6);
+    assert.equal(submissions.length, matchingEnabled ? 6 : 4);
     console.info(
       "Task launch checks passed: explicit scopes, complete catalog choices, review/cancel, duplicate-click guard, payloads, error feedback, retry drafts, reload-only GET, mobile review. Every task POST was intercepted.",
     );

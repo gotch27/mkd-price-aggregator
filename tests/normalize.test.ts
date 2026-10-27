@@ -52,6 +52,38 @@ it("does not interpret a diaper weight range as the product's net quantity", () 
   expect(a("ПЕЛЕНИ 3-6кг 60/1").ambiguous).toBe(true);
   expect(a("DIAPERS 3–6kg 60/1").ambiguous).toBe(true);
 });
+it.each([
+  "МОДЛИ ЗА МАФИНИ 35Х26ЦМ",
+  "Tray 35x26cm",
+  "Tray 350 × 260 mm",
+  "Tray 350х260мм",
+  "Mat 0.35*0.26 m",
+  "Мат 0,35Х0,26М",
+  "Model A2x500ml",
+  "Milk 2.5x500ml",
+  "Set 38/10",
+  "Set 38/1.5",
+  "Set 2x6",
+])("keeps unsupported pack expressions unknown: %s", (name) => {
+  expect(a(name).pack).toBeNull();
+});
+it.each([
+  ["Milk 2x500ml", 2],
+  ["МЛЕКО 2Х0,5Л.", 2],
+  ["Milk 500 ml × 2", 2],
+  ["Milk,2 x 500ml", 2],
+  ["Diapers 38/1", 38],
+  ["Diapers 38/1.", 38],
+  ["Wipes 38 pieces", 38],
+  ["МАРАМИЦИ 38ПАРЧИЊА", 38],
+  ["Wipes 2x6pcs", 2],
+  ["Tray 35x26cm 2 pieces", 2],
+])("recognizes complete supported pack expressions: %s", (name, count) => {
+  expect(a(name).pack).toBe(count);
+});
+it("does not choose between conflicting pack statements", () => {
+  expect(a("Milk 2x500ml 6 pieces").pack).toBeNull();
+});
 it("validates barcodes rather than retailer article codes", () => {
   expect(validGtin("4006381333931")).toBe(true);
   expect(validGtin("4006381333932")).toBe(false);

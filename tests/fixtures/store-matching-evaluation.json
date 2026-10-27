@@ -1,0 +1,781 @@
+{
+  "version": 1,
+  "seed": "constructed-regressions-v1",
+  "provenance": "Thirty constructed diagnostic controls with explicit expected outcomes. These are not verified real-store counterpart records and do not replace the planned seeded random dataset. Product groups stay in one split.",
+  "products": [
+    {
+      "id": "f54d56cf-5c11-59e1-a5e7-e9ad46eca565",
+      "retailer": "kam",
+      "name": "Coca-Cola Original 1 x 330 ml can",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "03597389-67cc-5be8-b835-bb20701a3b75",
+      "retailer": "spar",
+      "name": "Coca-Cola Original 1 x 330 ml can",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "dfd11c09-81f8-58b5-8995-83671bb74e66",
+      "retailer": "vero",
+      "name": "Coca-Cola Original 1 x 500 ml can",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "ec21a2e8-cf5c-5857-bdad-8ab1d88ed1db",
+      "retailer": "kam",
+      "name": "Coca-Cola Zero 6 x 330 ml cans",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "40e7fc90-798d-5127-af37-f14a8a2dc1ac",
+      "retailer": "spar",
+      "name": "Coca-Cola Zero 6 x 330 ml cans",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "ef1373fb-7717-52e8-97ec-6417dd4fa4b8",
+      "retailer": "vero",
+      "name": "Coca-Cola Original 6 x 330 ml cans",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "30b51b15-62a5-5bed-bf19-fda6a4410eff",
+      "retailer": "kam",
+      "name": "Pepsi Original 1 x 500 ml can",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "8ad0ec0d-1cdf-5eae-97be-675a9b9911b0",
+      "retailer": "spar",
+      "name": "Pepsi Original 1 x 500 ml can",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "d486c7df-af1a-5641-a2ef-d2bb97caf161",
+      "retailer": "vero",
+      "name": "Pepsi Original 6 x 500 ml cans",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "c1ef15b0-5956-55f5-b0f6-bd37404af976",
+      "retailer": "kam",
+      "name": "Fanta Orange 1 x 330 ml can",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "347546f7-e582-5aa5-a04b-71e0514806e8",
+      "retailer": "spar",
+      "name": "Fanta Orange 1 x 330 ml can",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "9f4bfd86-6c86-55ff-b6d3-1630a7586f66",
+      "retailer": "vero",
+      "name": "Fanta Orange 1 x 500 ml can",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "e6ffdd2a-6314-55ab-81ac-e3c7d1b42b52",
+      "retailer": "kam",
+      "name": "Schweppes Tonic 1 x 250 ml can",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "b1ad1fc2-652f-508f-a7de-c17cc1730bec",
+      "retailer": "spar",
+      "name": "Schweppes Tonic 1 x 250 ml can",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "f48b87f8-7839-568d-a719-baf9dfff204c",
+      "retailer": "vero",
+      "name": "Schweppes Tonic 1 x 330 ml can",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "7fa9dd2f-da26-5495-bf32-9700e45cff86",
+      "retailer": "kam",
+      "name": "Sinalco Original 1 x 330 ml can",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "84beef3d-9e52-51f6-a338-df6ab5d3d705",
+      "retailer": "spar",
+      "name": "Sinalco Original 1 x 330 ml can",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "5f7dcda3-3e32-595f-a534-27493de1d468",
+      "retailer": "vero",
+      "name": "Sinalco Original 1 x 500 ml can",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "9b70a153-7e6a-5c4f-900e-25e980b9f634",
+      "retailer": "kam",
+      "name": "Bimilk Milk 3.2% 1 x 1 L carton",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "6e7517f1-e994-583f-b936-26df725afc21",
+      "retailer": "spar",
+      "name": "Bimilk Milk 3.2% 1 x 1 L carton",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "525048e9-f9ee-5011-8431-adf0afd5bd1e",
+      "retailer": "vero",
+      "name": "Bimilk Milk 2.8% 1 x 1 L carton",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "b743d82f-e05c-57ac-8577-c0a18da326f7",
+      "retailer": "kam",
+      "name": "Dukat Yogurt 2.8% 1 x 1 L carton",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "d85e5723-8cb0-5806-a09a-5e1ba10836cf",
+      "retailer": "spar",
+      "name": "Dukat Yogurt 2.8% 1 x 1 L carton",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "d65e9379-1073-5097-9818-4f15a8237214",
+      "retailer": "vero",
+      "name": "Dukat Yogurt 3.2% 1 x 1 L carton",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "ecdfca57-f2c2-59b9-b2b2-206f591de1a0",
+      "retailer": "kam",
+      "name": "Imlek Milk 3.2% 1 x 1 L carton",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "82e11a34-7589-5216-b4dd-7bf9a69c1346",
+      "retailer": "spar",
+      "name": "Imlek Milk 3.2% 1 x 1 L carton",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "65473dfa-b0ad-53ee-b371-39370103ac25",
+      "retailer": "vero",
+      "name": "Imlek Milk 3.2% 1 x 500 ml carton",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "6409c219-21b3-5e65-bf36-dfda88051dd5",
+      "retailer": "kam",
+      "name": "Alpsko Milk 3.5% 1 x 1 L carton",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "039abd44-54cb-5e74-b94c-e495316589c1",
+      "retailer": "spar",
+      "name": "Alpsko Milk 3.5% 1 x 1 L carton",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "1cb22ce4-8cad-5f77-bde9-4c1ca4b93f06",
+      "retailer": "vero",
+      "name": "Alpsko Milk 3.5% 1 x 500 ml carton",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "4dacf612-47f3-591e-ab2e-bf80cd66a855",
+      "retailer": "ramstore",
+      "name": "ДОРИНА ЧОКОЛАДО 80ГР",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "99b54e19-d00e-5fd2-b612-c30ac34d75ab",
+      "retailer": "dim",
+      "name": "ДОРИНА ЛЕШНИК 80ГР",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "d0256c64-9475-5d28-bd07-f0bb6e0c14c1",
+      "retailer": "ramstore",
+      "name": "BABYLINO SENSITIVE",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "903a3548-4f5c-5c98-a923-a721776688a9",
+      "retailer": "dim",
+      "name": "BABYLINO SENSITIVE SIZE 6 13-18KG 38/1",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "f322a0c7-9c58-5a11-ab12-d9e0780879e0",
+      "retailer": "ramstore",
+      "name": "КРУША /кгр",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "5e23fceb-891b-54d5-bfd2-9bb6ffb1d128",
+      "retailer": "dim",
+      "name": "КРУША /кгр сорта: ВИЛЈАМОВКА",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "caa202a4-b2cc-532e-a9e3-fd9f25d7d55b",
+      "retailer": "ramstore",
+      "name": "[NOLA ZA KOSA S0324",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "fed6fcf9-ca6a-5ebf-aab3-6cd2ada3d554",
+      "retailer": "dim",
+      "name": "[NOLA ZA KOSA S0324 V5-1 C03/24",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "5e73a70f-142f-5649-a099-78536edf44ab",
+      "retailer": "ramstore",
+      "name": "КОКА КОЛА 1.750МЛ",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "f77dbda3-0509-5130-ac68-a57b5639032b",
+      "retailer": "dim",
+      "name": "КОКА КОЛА 1.75Л",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "f11f7758-3625-5577-9094-11f054de2d51",
+      "retailer": "ramstore",
+      "name": "Amalfi Hair Conditioner",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "78fd693f-1479-5b5b-b157-a0ab37ff3fbf",
+      "retailer": "dim",
+      "name": "Amalfi Curly Hair Conditioner 250 ml",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "0d2506e9-ffa6-5944-9997-d180ebafabe2",
+      "retailer": "ramstore",
+      "name": "KORAL WINDSCREEN FLUID",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "f71d3ad6-42e4-5d93-bc73-1ddcbc25baff",
+      "retailer": "dim",
+      "name": "KORAL SUMMER WINDSCREEN FLUID 3L",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "535e29f1-cb7c-57fe-83f9-03475530ef12",
+      "retailer": "ramstore",
+      "name": "МЛЕКО",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "fd74f580-0755-5acc-8422-442f572f216c",
+      "retailer": "dim",
+      "name": "БИМИЛК МЛЕКО 1Л 3.2%",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "cde1dce4-73f7-5f3d-ae86-5c2c819ffd0b",
+      "retailer": "ramstore",
+      "name": "ВИНО",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "b1dda63b-071d-58cb-b6f4-319badb0a35f",
+      "retailer": "dim",
+      "name": "ВИНО ЈП ШЕНЕТ КАБЕРНЕ СИРАХ 0.187Л",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "development"
+    },
+    {
+      "id": "cf8c7de4-c01c-5783-a3ab-f34df8eddf5c",
+      "retailer": "ramstore",
+      "name": "МАИЦА",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "b9215e2d-be47-5ace-9fff-c60b5b581fb7",
+      "retailer": "dim",
+      "name": "МАИЦА Ж НА КРАТОК РАКАВ",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    }
+  ],
+  "anchors": [
+    "f54d56cf-5c11-59e1-a5e7-e9ad46eca565",
+    "f54d56cf-5c11-59e1-a5e7-e9ad46eca565",
+    "ec21a2e8-cf5c-5857-bdad-8ab1d88ed1db",
+    "ec21a2e8-cf5c-5857-bdad-8ab1d88ed1db",
+    "30b51b15-62a5-5bed-bf19-fda6a4410eff",
+    "30b51b15-62a5-5bed-bf19-fda6a4410eff",
+    "c1ef15b0-5956-55f5-b0f6-bd37404af976",
+    "c1ef15b0-5956-55f5-b0f6-bd37404af976",
+    "e6ffdd2a-6314-55ab-81ac-e3c7d1b42b52",
+    "e6ffdd2a-6314-55ab-81ac-e3c7d1b42b52",
+    "7fa9dd2f-da26-5495-bf32-9700e45cff86",
+    "7fa9dd2f-da26-5495-bf32-9700e45cff86",
+    "9b70a153-7e6a-5c4f-900e-25e980b9f634",
+    "9b70a153-7e6a-5c4f-900e-25e980b9f634",
+    "b743d82f-e05c-57ac-8577-c0a18da326f7",
+    "b743d82f-e05c-57ac-8577-c0a18da326f7",
+    "ecdfca57-f2c2-59b9-b2b2-206f591de1a0",
+    "ecdfca57-f2c2-59b9-b2b2-206f591de1a0",
+    "6409c219-21b3-5e65-bf36-dfda88051dd5",
+    "6409c219-21b3-5e65-bf36-dfda88051dd5",
+    "4dacf612-47f3-591e-ab2e-bf80cd66a855",
+    "d0256c64-9475-5d28-bd07-f0bb6e0c14c1",
+    "f322a0c7-9c58-5a11-ab12-d9e0780879e0",
+    "caa202a4-b2cc-532e-a9e3-fd9f25d7d55b",
+    "5e73a70f-142f-5649-a099-78536edf44ab",
+    "f11f7758-3625-5577-9094-11f054de2d51",
+    "0d2506e9-ffa6-5944-9997-d180ebafabe2",
+    "535e29f1-cb7c-57fe-83f9-03475530ef12",
+    "cde1dce4-73f7-5f3d-ae86-5c2c819ffd0b",
+    "cf8c7de4-c01c-5783-a3ab-f34df8eddf5c"
+  ],
+  "cases": [
+    {
+      "id": "positive-0",
+      "a": "f54d56cf-5c11-59e1-a5e7-e9ad46eca565",
+      "b": "03597389-67cc-5be8-b835-bb20701a3b75",
+      "expected": "same",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "difference-0",
+      "a": "f54d56cf-5c11-59e1-a5e7-e9ad46eca565",
+      "b": "dfd11c09-81f8-58b5-8995-83671bb74e66",
+      "expected": "different",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "positive-1",
+      "a": "ec21a2e8-cf5c-5857-bdad-8ab1d88ed1db",
+      "b": "40e7fc90-798d-5127-af37-f14a8a2dc1ac",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "difference-1",
+      "a": "ec21a2e8-cf5c-5857-bdad-8ab1d88ed1db",
+      "b": "ef1373fb-7717-52e8-97ec-6417dd4fa4b8",
+      "expected": "different",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "positive-2",
+      "a": "30b51b15-62a5-5bed-bf19-fda6a4410eff",
+      "b": "8ad0ec0d-1cdf-5eae-97be-675a9b9911b0",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "difference-2",
+      "a": "30b51b15-62a5-5bed-bf19-fda6a4410eff",
+      "b": "d486c7df-af1a-5641-a2ef-d2bb97caf161",
+      "expected": "different",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "positive-3",
+      "a": "c1ef15b0-5956-55f5-b0f6-bd37404af976",
+      "b": "347546f7-e582-5aa5-a04b-71e0514806e8",
+      "expected": "same",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "difference-3",
+      "a": "c1ef15b0-5956-55f5-b0f6-bd37404af976",
+      "b": "9f4bfd86-6c86-55ff-b6d3-1630a7586f66",
+      "expected": "different",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "positive-4",
+      "a": "e6ffdd2a-6314-55ab-81ac-e3c7d1b42b52",
+      "b": "b1ad1fc2-652f-508f-a7de-c17cc1730bec",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "difference-4",
+      "a": "e6ffdd2a-6314-55ab-81ac-e3c7d1b42b52",
+      "b": "f48b87f8-7839-568d-a719-baf9dfff204c",
+      "expected": "different",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "positive-5",
+      "a": "7fa9dd2f-da26-5495-bf32-9700e45cff86",
+      "b": "84beef3d-9e52-51f6-a338-df6ab5d3d705",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "difference-5",
+      "a": "7fa9dd2f-da26-5495-bf32-9700e45cff86",
+      "b": "5f7dcda3-3e32-595f-a534-27493de1d468",
+      "expected": "different",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "positive-6",
+      "a": "9b70a153-7e6a-5c4f-900e-25e980b9f634",
+      "b": "6e7517f1-e994-583f-b936-26df725afc21",
+      "expected": "same",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "difference-6",
+      "a": "9b70a153-7e6a-5c4f-900e-25e980b9f634",
+      "b": "525048e9-f9ee-5011-8431-adf0afd5bd1e",
+      "expected": "different",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "positive-7",
+      "a": "b743d82f-e05c-57ac-8577-c0a18da326f7",
+      "b": "d85e5723-8cb0-5806-a09a-5e1ba10836cf",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "difference-7",
+      "a": "b743d82f-e05c-57ac-8577-c0a18da326f7",
+      "b": "d65e9379-1073-5097-9818-4f15a8237214",
+      "expected": "different",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "positive-8",
+      "a": "ecdfca57-f2c2-59b9-b2b2-206f591de1a0",
+      "b": "82e11a34-7589-5216-b4dd-7bf9a69c1346",
+      "expected": "same",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "difference-8",
+      "a": "ecdfca57-f2c2-59b9-b2b2-206f591de1a0",
+      "b": "65473dfa-b0ad-53ee-b371-39370103ac25",
+      "expected": "different",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "positive-9",
+      "a": "6409c219-21b3-5e65-bf36-dfda88051dd5",
+      "b": "039abd44-54cb-5e74-b94c-e495316589c1",
+      "expected": "same",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "difference-9",
+      "a": "6409c219-21b3-5e65-bf36-dfda88051dd5",
+      "b": "1cb22ce4-8cad-5f77-bde9-4c1ca4b93f06",
+      "expected": "different",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "unknown-0",
+      "a": "4dacf612-47f3-591e-ab2e-bf80cd66a855",
+      "b": "99b54e19-d00e-5fd2-b612-c30ac34d75ab",
+      "expected": "insufficient",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "unknown-1",
+      "a": "d0256c64-9475-5d28-bd07-f0bb6e0c14c1",
+      "b": "903a3548-4f5c-5c98-a923-a721776688a9",
+      "expected": "insufficient",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "unknown-2",
+      "a": "f322a0c7-9c58-5a11-ab12-d9e0780879e0",
+      "b": "5e23fceb-891b-54d5-bfd2-9bb6ffb1d128",
+      "expected": "insufficient",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "unknown-3",
+      "a": "caa202a4-b2cc-532e-a9e3-fd9f25d7d55b",
+      "b": "fed6fcf9-ca6a-5ebf-aab3-6cd2ada3d554",
+      "expected": "insufficient",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "unknown-4",
+      "a": "5e73a70f-142f-5649-a099-78536edf44ab",
+      "b": "f77dbda3-0509-5130-ac68-a57b5639032b",
+      "expected": "insufficient",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "unknown-5",
+      "a": "f11f7758-3625-5577-9094-11f054de2d51",
+      "b": "78fd693f-1479-5b5b-b157-a0ab37ff3fbf",
+      "expected": "insufficient",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "unknown-6",
+      "a": "0d2506e9-ffa6-5944-9997-d180ebafabe2",
+      "b": "f71d3ad6-42e4-5d93-bc73-1ddcbc25baff",
+      "expected": "insufficient",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "unknown-7",
+      "a": "535e29f1-cb7c-57fe-83f9-03475530ef12",
+      "b": "fd74f580-0755-5acc-8422-442f572f216c",
+      "expected": "insufficient",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "unknown-8",
+      "a": "cde1dce4-73f7-5f3d-ae86-5c2c819ffd0b",
+      "b": "b1dda63b-071d-58cb-b6f4-319badb0a35f",
+      "expected": "insufficient",
+      "reviewed": true,
+      "split": "development"
+    },
+    {
+      "id": "unknown-9",
+      "a": "cf8c7de4-c01c-5783-a3ab-f34df8eddf5c",
+      "b": "b9215e2d-be47-5ace-9fff-c60b5b581fb7",
+      "expected": "insufficient",
+      "reviewed": true,
+      "split": "holdout"
+    }
+  ]
+}

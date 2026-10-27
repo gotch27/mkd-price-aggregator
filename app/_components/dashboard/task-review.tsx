@@ -9,19 +9,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import type { TaskRequest } from "@/app/_components/dashboard/types";
 
 export function TaskReview({
   task,
   pending,
-  error,
   onClose,
   onConfirm,
 }: {
   task: TaskRequest | null;
   pending: boolean;
-  error: string;
   onClose: () => void;
   onConfirm: () => void;
 }) {
@@ -52,14 +49,8 @@ export function TaskReview({
         <p className="text-sm text-muted-foreground" role="status">
           {pending
             ? "Preparing your request. Keep this page open until it is accepted."
-            : "Large scopes can take time to prepare. Once accepted, the task runs in the background. Follow progress in Data updates."}
+            : "Large scopes can take time to prepare. Once accepted, the task runs in the background. Follow progress in Observability → Data updates."}
         </p>
-        {error && (
-          <Alert variant="destructive">
-            <AlertTitle>Request needs attention</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
         <AlertDialogFooter>
           <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
           <AlertDialogAction

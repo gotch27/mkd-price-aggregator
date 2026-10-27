@@ -1,0 +1,1301 @@
+{
+  "version": 1,
+  "seed": "independent-2026-10-23-v3",
+  "provenance": "Independent seeded source-text review after the normalization fixes were frozen: 18 random anchors, two per chain, with up to five suggested counterparts each. One representative per chain and exact original name; branch copies with identical names are collapsed for this text-matching diagnostic. Counterpart labels were assigned from names, descriptions and categories before provider results, never from matcher decisions. Ambiguous ranges, models and quantities are explicitly insufficient. No product group overlaps the 20-group development diagnostic. This small source-text test has no barcode verification and does not establish overall catalog accuracy. Constructed controls from the sampler are excluded.",
+  "products": [
+    {
+      "id": "a22e04fe-577a-4409-8d90-93a9f1f45def",
+      "retailer": "dim",
+      "name": "КАН БЕБЕ МАКСИ 80/1",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "89c8a5ed-3a8e-4a45-86a7-51638eb7bf6c",
+      "retailer": "zur",
+      "name": "КАН БЕБЕ МАКСИ 80/1",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "f2fc6907-7178-4829-8bf9-b73b92414d9b",
+      "retailer": "spar",
+      "name": "PELENI KANBEBE PNM MAKSI 80/1",
+      "description": null,
+      "category": "Baby wipes great maxi - over 50 pieces",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "b2c49db9-f6d3-405f-8eac-2e8ce020a727",
+      "retailer": "zur",
+      "name": "КАН БЕБЕ МАКСИ БР.4 40/1 ПЕЛЕНИ",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "53a3d4c8-a2ee-453f-82ff-809262b8e47f",
+      "retailer": "dim",
+      "name": "ДР БЕННЕР ГРАНОЛА ЈАГОДА 40ГР.",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "353f4a08-eaf3-4b07-8743-1650bd484dbe",
+      "retailer": "zur",
+      "name": "ДР БЕННЕР ГРАНОЛА ЈАГОДА 40ГР.",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "91cb26f6-f651-4a48-88b9-fa19eb60da91",
+      "retailer": "zur",
+      "name": "ДР БЕННЕР ГРАНОЛА ЧОКО+БАДЕМ 40ГР",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "3932fcf4-3c9e-4284-86ac-feb4f2881ad7",
+      "retailer": "zur",
+      "name": "ДР БЕННЕР ГРАНОЛА ОРЕВИ И МЕД 40ГР.",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "a6a76359-a5f6-47ef-8fda-7ef2607c2d03",
+      "retailer": "zur",
+      "name": "ДР БЕННЕР ГРАНОЛА ЧОКО+БАДЕМ 300ГР",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "667680b4-cdd4-4f24-8ebc-7ff5f837be9f",
+      "retailer": "zur",
+      "name": "ДР БЕННЕР КУКИС ГРАНОЛА + БРУСНИЦА 110ГР",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "df2e6290-680b-4ee6-8300-5de9d40e82d6",
+      "retailer": "kam",
+      "name": "БУДИМСКА КОЛБАСИЦА РАНЧО 295Г",
+      "description": "RANCHO КОЛБАС БУДИМСКИ ЕКСТРА 72%",
+      "category": "RANCHO КОЛБАС БУДИМСКИ ЕКСТРА 72%",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "40d02639-cdb6-4fd4-8fa2-cce6f7bcb76e",
+      "retailer": "vero",
+      "name": "КОБАСИЦА ЗЛАТИБОРАЦ БУДИМСКА ВАКУМ",
+      "description": "СУВОМЕСНАТИ ПРОИЗВОДИ - СУВОМЕСНАТИ ВО ФРИЖИДЕР",
+      "category": "СУВОМЕСНАТИ ПРОИЗВОДИ - СУВОМЕСНАТИ ВО ФРИЖИДЕР",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "1f4974b4-c25c-4d37-84da-d8ac47e26d5d",
+      "retailer": "kam",
+      "name": "РЕМЕН МАШКИ 4СМ",
+      "description": "РЕМЕН МАШКИ 4 СМ",
+      "category": "РЕМЕН МАШКИ 4 СМ",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "df3e928c-80d0-4405-878c-d8efc755a7f4",
+      "retailer": "stokomak",
+      "name": "МАШКИ РЕМЕН Ј&С",
+      "description": "ТЕКСТИЛ",
+      "category": "ТЕКСТИЛ",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "32f67eb4-31f7-44dc-8168-bb67173d7617",
+      "retailer": "vero",
+      "name": "МАШКИ РАНЕЦ",
+      "description": "ЖЕНСКИ ТАШНИ",
+      "category": "ЖЕНСКИ ТАШНИ",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "4eb78e5f-ada1-4728-844f-24b9aacb1908",
+      "retailer": "spar",
+      "name": "BOKSERKI MA[KI REF.",
+      "description": null,
+      "category": "Underwear for men slim cotton attractive -likra",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "111302d3-be28-4101-8270-13fbeb35657f",
+      "retailer": "ramstore",
+      "name": "КОСИЛИ КУПКА РОЗE 200МЛ",
+      "description": "БЕБЕШКИ ПРОИЗВОДИ ЗА КАПЕЊЕ",
+      "category": "БЕБЕШКИ ПРОИЗВОДИ ЗА КАПЕЊЕ",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "4a4148bd-66df-4115-841f-2be7bf952215",
+      "retailer": "spar",
+      "name": "KUPKA KOSILI 200ML ROZE",
+      "description": null,
+      "category": "Body & hair shampoo for children",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "c53aeb05-7cb5-46b3-8667-725b2adaa5d0",
+      "retailer": "spar",
+      "name": "KUPKA KOSILI 400ML ROZE",
+      "description": null,
+      "category": "Shampoo refreshing body, unisex",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "05dec3ca-a74b-4a04-849d-0eb0310e131a",
+      "retailer": "ramstore",
+      "name": "МАГНУМ СЛАДОЛЕД МИНИ КЛАСИК БАДЕМ БЕЛ 6/1",
+      "description": "ЕДИНЕЧЕН СЛАДОЛЕД",
+      "category": "ЕДИНЕЧЕН СЛАДОЛЕД",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "e11d4bc3-496e-4725-829a-0f64a6f245a9",
+      "retailer": "spar",
+      "name": "SLADOLED MAGNUM MINI 6H55ML KLAS/BAD/BEL",
+      "description": null,
+      "category": "Te pa specifikuara",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "c0fe9f40-d8bf-4db3-8b1e-c469c32845a3",
+      "retailer": "spar",
+      "name": "SLADOLED MAGNUM MINI 345ML KLAS+BAD+BEL",
+      "description": null,
+      "category": "Family Chocolate ice cream - Secondary (250-500ml)",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "8eef56ee-ed7e-4483-88cb-32b39681b87a",
+      "retailer": "reptil",
+      "name": "Stark – Наполитанки ванила и какао 130g",
+      "description": "Stark – Наполитанки ванила и какао 130g",
+      "category": "Кондиторски производи | Наполитанки",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "db4eaf57-ca6a-49c6-8554-06a2efe059f9",
+      "retailer": "vero",
+      "name": "НАПОЛИТАНКИ ШТАРК НА ПОЛА ТАНКЕ КАКАО И ВАНИЛА 130ГР",
+      "description": "КОНДИТОРСКИ ПРОИЗВОДИ - НАПОЛИТАНКИ",
+      "category": "КОНДИТОРСКИ ПРОИЗВОДИ - НАПОЛИТАНКИ",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "f3ead6ea-b744-45c1-8f87-902d3d57f6ab",
+      "retailer": "dim",
+      "name": "НАПОЛА ТАНКЕ КАКАО+ВАНИЛА 130Г ШТАРК",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "f48b8f71-a0b3-4e1a-86f0-46b49679d0e7",
+      "retailer": "zur",
+      "name": "НАПОЛА ТАНКЕ КАКАО+ВАНИЛА 130Г ШТАРК",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "e23e47fe-9cd4-432a-84d5-89ab0e0a1067",
+      "retailer": "spar",
+      "name": "NAPOLITANKI NAPOLA TANKE 130GR KAKAO+VAN",
+      "description": null,
+      "category": "Wafer containing caramel - Medium (80-140gr)",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "85f15bb9-dbbf-4004-8691-1ae79538ea91",
+      "retailer": "reptil",
+      "name": "Moka – Штрудла со ванила и малина 600g",
+      "description": "Производот е достапен само за испорака во Скопје!",
+      "category": "Пекара",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "51b09971-086c-413e-82c7-245544cf2888",
+      "retailer": "spar",
+      "name": "[TRUDLA VANILA DD",
+      "description": null,
+      "category": "Maturity - Traditional Salty Pie - not packaged",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "fd127e16-e76d-4171-84bb-05453266fe3c",
+      "retailer": "spar",
+      "name": "[TRUDLA BELANI 400GR VANILA+MARMALAD",
+      "description": null,
+      "category": "Shtrudlle - Other",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "35a41896-3496-4665-8fe0-d5cd890b8aae",
+      "retailer": "spar",
+      "name": "^INIJA ZA TORTA  H103-49",
+      "description": null,
+      "category": "Plate for food and great -arkopoll plane",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "9b42ef81-0e9b-4fe3-8993-722711c35c61",
+      "retailer": "zito",
+      "name": "ЧИНИЈА ЗА ТОРТА 071724",
+      "description": "Чаши за вино",
+      "category": "Чаши за вино",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "bbbf83d3-a29a-4bde-8ddf-d2e0103f86a0",
+      "retailer": "ramstore",
+      "name": "ПАРМА ЧИНИЈА ЗА ТОРТА 20 CM",
+      "description": "ЧИНИЈА",
+      "category": "ЧИНИЈА",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "4c99f4fa-b46e-4e01-8550-4310690cd4d6",
+      "retailer": "zito",
+      "name": "ЧИНИЈА СТАКЛЕНА ЗА ТОРТА 19см 1/1",
+      "description": "Садови за торти и колачи",
+      "category": "Садови за торти и колачи",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "c6230844-a2d4-4940-8b83-5cf38b22cf6b",
+      "retailer": "spar",
+      "name": "FARBA GARNIER OLIO 6",
+      "description": null,
+      "category": "Permanent color with ammonia",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "4639c7b1-9cfe-4d88-8aed-0fd3f682f68e",
+      "retailer": "dim",
+      "name": "ГАРНИЕР ФАРБА БР.6",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "1c0312b5-5ece-41c0-8929-3e1564cd75ea",
+      "retailer": "zur",
+      "name": "ГАРНИЕР ФАРБА БР.6",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "e4c8d7a1-0f73-42b9-8f5d-02fcbc967f1e",
+      "retailer": "dim",
+      "name": "ГАРНИЕР ФАРБА БР.1",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "1b4e5457-b127-47ca-8ae4-c88d851e90c7",
+      "retailer": "dim",
+      "name": "ГАРНИЕР ФАРБА БР.3",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "418b0354-0d23-4ed6-8c57-a0f6a84a73d6",
+      "retailer": "dim",
+      "name": "ГАРНИЕР ФАРБА БР.4",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "293046fe-08f5-4ef6-8655-2a474da57332",
+      "retailer": "stokomak",
+      "name": "ПЕНА ЗА ЧИСТЕЊЕ ЛИЦЕ 150МЛ ЕКО СОРБЕТ",
+      "description": "КРЕМИ И МЛЕКА ЗА ТЕЛО",
+      "category": "КРЕМИ И МЛЕКА ЗА ТЕЛО",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "9bdd9300-3248-47e9-8d2d-af1b1312e56a",
+      "retailer": "vero",
+      "name": "ПЕНА ЗА ЧИСТЕЊЕ ЛИЦЕ АФРОДИТА 150МЛ",
+      "description": "КОЗМЕТИКА ЗА ЛИЦЕ - ГЕЛ-ТОНИК-МЛЕКО-ЛОСИОН-МАСКИ",
+      "category": "КОЗМЕТИКА ЗА ЛИЦЕ - ГЕЛ-ТОНИК-МЛЕКО-ЛОСИОН-МАСКИ",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "fe26468f-eb08-492b-8cb2-31bd7cac6512",
+      "retailer": "ramstore",
+      "name": "БЈУТИФУЛ СКИН ПЕНА ЗА ЧИСТЕЊЕ НА ЛИЦЕ 150МЛ",
+      "description": "ПЕНА ЗА ЧИСТЕЊЕ ЛИЦЕ",
+      "category": "ПЕНА ЗА ЧИСТЕЊЕ ЛИЦЕ",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "f44acd44-6915-4ca3-807f-eba8d844d206",
+      "retailer": "vero",
+      "name": "ПЕНА НИВЕА ЗА ЧИСТЕЊЕ ЛИЦЕ РОУЗ ТАЧ 150МЛ",
+      "description": "КОЗМЕТИКА ЗА ЛИЦЕ - ГЕЛ-ТОНИК-МЛЕКО-ЛОСИОН-МАСКИ",
+      "category": "КОЗМЕТИКА ЗА ЛИЦЕ - ГЕЛ-ТОНИК-МЛЕКО-ЛОСИОН-МАСКИ",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "43bd53a2-e4de-4f02-85a6-b18afe7563bb",
+      "retailer": "vero",
+      "name": "ПЕНА АФРОДИРА ЗА ЧИСТЕЊЕ ЛИЦЕ БЈУТИФУЛ СКИН 150МЛ",
+      "description": "КОЗМЕТИКА ЗА ЛИЦЕ - ГЕЛ-ТОНИК-МЛЕКО-ЛОСИОН-МАСКИ",
+      "category": "КОЗМЕТИКА ЗА ЛИЦЕ - ГЕЛ-ТОНИК-МЛЕКО-ЛОСИОН-МАСКИ",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "f152c44c-c31b-407d-8cbc-299c79905640",
+      "retailer": "spar",
+      "name": "PENA ZA ^ISTEWE LICE JANG&PJUR 150ML",
+      "description": null,
+      "category": "Cleansing lotion for acne",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "ef0b917d-bf08-4758-820b-60349ec0952f",
+      "retailer": "stokomak",
+      "name": "ПЛАСТИЧНИ ЧАШИ 50ком.",
+      "description": "ПРИБОР ПЛАСТИЧЕН",
+      "category": "ПРИБОР ПЛАСТИЧЕН",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "3850851c-700e-40fb-872b-76faa18c93ff",
+      "retailer": "kam",
+      "name": "ЧАШИ ПЛАСТИЧНИ 50/1",
+      "description": "ЧАШИ ПЛАСТИЧНИ 200 МЛ 50/1",
+      "category": "ЧАШИ ПЛАСТИЧНИ 200 МЛ 50/1",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "7b47ace4-8726-4848-806d-2839030df543",
+      "retailer": "vero",
+      "name": "ПЛАСТИЧНИ ЧАШИ 6/1",
+      "description": "АКСЕСОАРИ ЗА ЗАБАВА",
+      "category": "АКСЕСОАРИ ЗА ЗАБАВА",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "94751f17-b452-4288-8132-1dc55abcfdac",
+      "retailer": "ramstore",
+      "name": "ПЛАСТИЧНИ ЧАШИ 25ЦЛ, 50/1",
+      "description": "ЧАША ЗА ВОДА",
+      "category": "ЧАША ЗА ВОДА",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "1e15cd83-0c64-46d6-8b3e-89a689964793",
+      "retailer": "ramstore",
+      "name": "ПЛАСТИЧНИ ЧАШИ 39ЦЛ, 50/1",
+      "description": "ЧАША ЗА ВОДА",
+      "category": "ЧАША ЗА ВОДА",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "8eb4637f-3e31-4ba0-8366-70fe8af571dc",
+      "retailer": "spar",
+      "name": "^A[I PLASTI^NI  100/1",
+      "description": null,
+      "category": "Cup plastic piece 50-100",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "245f15f0-1729-4d94-8310-78e52fad1a4d",
+      "retailer": "vero",
+      "name": "ШТИПКИ ЗА КОСА 3пар 9см",
+      "description": "ДОДАТОЦИ ЗА УБАВИНА",
+      "category": "ДОДАТОЦИ ЗА УБАВИНА",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "22ee8857-f175-48c6-8fcb-e2b78e74f46d",
+      "retailer": "ramstore",
+      "name": "ШТИПКА ЗА КОСА",
+      "description": "СТЕГАЧ ЗА КОСА",
+      "category": "СТЕГАЧ ЗА КОСА",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "ae3e28da-8afb-4871-81c0-8f601b59b710",
+      "retailer": "stokomak",
+      "name": "ШТИПКИ ЗА КОСА 6/1 НА006",
+      "description": "ЛЕТНИ АКСЕСОАРИ",
+      "category": "ЛЕТНИ АКСЕСОАРИ",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "7b55293a-74b0-4a6f-8496-a3ef41bf75d5",
+      "retailer": "stokomak",
+      "name": "КОРПА ЗА ШТИПКИ 3Л",
+      "description": "ПЛАСТИЧНИ ПРОИЗВОДИ ЗА КУЈНА И БАЊА",
+      "category": "ПЛАСТИЧНИ ПРОИЗВОДИ ЗА КУЈНА И БАЊА",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "720db6db-0709-452f-8d96-25424c3ce926",
+      "retailer": "kam",
+      "name": "КОРПА ЗА ШТИПКИ",
+      "description": "КОРПА ЗА ШТИПКИ",
+      "category": "КОРПА ЗА ШТИПКИ",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "845f959f-99a7-4698-8728-0328352abde9",
+      "retailer": "vero",
+      "name": "ХРАНА ЗА КУЧЕ ХИТ МИНИ ПИЛЕ-ОРИЗ 500ГР.",
+      "description": "ХРАНА И ОПРЕМА ЗА ДОМ.МИЛЕНИЦИ - ХРАНА ЗА КУЧИЊА",
+      "category": "ХРАНА И ОПРЕМА ЗА ДОМ.МИЛЕНИЦИ - ХРАНА ЗА КУЧИЊА",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "7110e621-f9dc-4203-89df-581dc2c0ee39",
+      "retailer": "spar",
+      "name": "HRANA ZA KU^E HIT MINI 500GR PILE[+ORIZ",
+      "description": null,
+      "category": "The canned cat food the liquid - the metal container",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "751daacc-bd4c-41a0-889d-3b0bed27fbfa",
+      "retailer": "spar",
+      "name": "HRANA ZA KU^E HIT MAKSI 500GR PILE[+ORIZ",
+      "description": null,
+      "category": "The canned cat food the liquid - the metal container",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "0a576613-4d57-42c9-8a4c-cf2d58e096b3",
+      "retailer": "zito",
+      "name": "МАИЦА ДЕТСКА МАШКА ДЕЗЕН 227",
+      "description": "Веш",
+      "category": "Веш",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "88c33a18-7d09-4ffd-8cac-4c225569fd11",
+      "retailer": "spar",
+      "name": "MAICA DETSKA MA[KA",
+      "description": null,
+      "category": "T-shirts for men with basic collar",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "91d1c76b-423c-4cec-8451-556c78b4351c",
+      "retailer": "zito",
+      "name": "ВИНО АЛЕКСАНДРИЈА 187 мл ЦРВЕНО КУВЕ",
+      "description": "Црвено вино",
+      "category": "Црвено вино",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "3ff89308-cdab-45b3-8696-6cf096690485",
+      "retailer": "stokomak",
+      "name": "ВИНО АЛЕКСАНДРИЈА КУВЕ ЦРВЕНО 750 МЛ",
+      "description": "ВИНО",
+      "category": "ВИНО",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "93b36062-6b4d-4b83-8e75-d067f7bb2e31",
+      "retailer": "kam",
+      "name": "ВИНО АЛЕКСАНДРИЈА КУВЕ ЦРВЕНО 750",
+      "description": "TIKVEŠ ВИНО ЦРВЕНО CUVEE",
+      "category": "TIKVEŠ ВИНО ЦРВЕНО CUVEE",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "4ce7f7e8-f596-4de3-848c-d5708b42dd3f",
+      "retailer": "stokomak",
+      "name": "АЛЕКСАНДРИЈА ЦРВЕНО ВИНО 750 МЛ",
+      "description": "ВИНО",
+      "category": "ВИНО",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "ee9f9abb-d925-4be3-8b48-e6ac7773b521",
+      "retailer": "zur",
+      "name": "ВОЧНА ДОЛИНА КАЈСИЈА/ЈАБОЛКО 1.5Л",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "440a8b6f-16e8-43d6-8bc3-c7b29f88ccd1",
+      "retailer": "vero",
+      "name": "ВОЧНА ДОЛИНА КАЈСИЈА/ЈАБОЛКО 1,5Л.",
+      "description": "БЕЗАЛКОХОЛНИ ПИЈАЛОЦИ - ЏУС",
+      "category": "БЕЗАЛКОХОЛНИ ПИЈАЛОЦИ - ЏУС",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "fb2da98c-d266-4eea-86a1-273ad39cc557",
+      "retailer": "ramstore",
+      "name": "ВОЧНА ДОЛИНА КАЈСИЈА И ЈАБОЛКО 1.5Л",
+      "description": "НЕГАЗИРАН СОК",
+      "category": "НЕГАЗИРАН СОК",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "9f816748-c1aa-4de2-8fa7-73020a9f8e2c",
+      "retailer": "zito",
+      "name": "СОК ВОЧНА ДОЛИНА 1.5л КАЈСИЈА И ЈАБОЛКО",
+      "description": "Сокови пластика,лименка",
+      "category": "Сокови пластика,лименка",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "8ce83297-7b44-46cd-8f23-9bea63136058",
+      "retailer": "zur",
+      "name": "ВИВА ЛАДЕН ЧАЈ ПРАСКА 0.5Л",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "6c3ce1ea-5c9a-477c-8913-5705d25a742c",
+      "retailer": "dim",
+      "name": "ВИВА ЛАДЕН ЧАЈ ПРАСКА 1.5Л",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "b24e0803-3745-4852-8d33-8d3a8c45f77e",
+      "retailer": "reptil",
+      "name": "Viva – Ладен чај праска 1.5l",
+      "description": "Viva – Леден чај праска 1.5l",
+      "category": "Безалкохолни пијалоци | Ледени чаеви | Пијалоци",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "ddae54ec-8900-49c5-8050-953c654f7dfe",
+      "retailer": "dim",
+      "name": "ВИВА ЛАДЕН ЧАЈ ПРАСКА 0.2Л",
+      "description": null,
+      "category": null,
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "51e705ed-c1b3-435a-8a14-9ba6404a2749",
+      "retailer": "ramstore",
+      "name": "ВИВА ЛЕДЕН ЧАЈ ПРАСКА 1.5Л",
+      "description": "ЛЕДЕН ЧАЈ",
+      "category": "ЛЕДЕН ЧАЈ",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    },
+    {
+      "id": "46336d4a-2812-48cc-8cd3-e082b0a747f4",
+      "retailer": "ramstore",
+      "name": "ГОРА ЛАДЕН ЧАЈ ПРАСКА 0.5Л",
+      "description": "ЛЕДЕН ЧАЈ",
+      "category": "ЛЕДЕН ЧАЈ",
+      "gtin": null,
+      "ambiguous": false,
+      "split": "holdout"
+    }
+  ],
+  "anchors": [
+    "a22e04fe-577a-4409-8d90-93a9f1f45def",
+    "53a3d4c8-a2ee-453f-82ff-809262b8e47f",
+    "df2e6290-680b-4ee6-8300-5de9d40e82d6",
+    "1f4974b4-c25c-4d37-84da-d8ac47e26d5d",
+    "111302d3-be28-4101-8270-13fbeb35657f",
+    "05dec3ca-a74b-4a04-849d-0eb0310e131a",
+    "8eef56ee-ed7e-4483-88cb-32b39681b87a",
+    "85f15bb9-dbbf-4004-8691-1ae79538ea91",
+    "35a41896-3496-4665-8fe0-d5cd890b8aae",
+    "c6230844-a2d4-4940-8b83-5cf38b22cf6b",
+    "293046fe-08f5-4ef6-8655-2a474da57332",
+    "ef0b917d-bf08-4758-820b-60349ec0952f",
+    "245f15f0-1729-4d94-8310-78e52fad1a4d",
+    "845f959f-99a7-4698-8728-0328352abde9",
+    "0a576613-4d57-42c9-8a4c-cf2d58e096b3",
+    "91d1c76b-423c-4cec-8451-556c78b4351c",
+    "ee9f9abb-d925-4be3-8b48-e6ac7773b521",
+    "8ce83297-7b44-46cd-8f23-9bea63136058"
+  ],
+  "cases": [
+    {
+      "id": "independent-1-1",
+      "a": "a22e04fe-577a-4409-8d90-93a9f1f45def",
+      "b": "89c8a5ed-3a8e-4a45-86a7-51638eb7bf6c",
+      "expected": "same",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-1-2",
+      "a": "a22e04fe-577a-4409-8d90-93a9f1f45def",
+      "b": "f2fc6907-7178-4829-8bf9-b73b92414d9b",
+      "expected": "insufficient",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-1-3",
+      "a": "a22e04fe-577a-4409-8d90-93a9f1f45def",
+      "b": "b2c49db9-f6d3-405f-8eac-2e8ce020a727",
+      "expected": "different",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-2-1",
+      "a": "53a3d4c8-a2ee-453f-82ff-809262b8e47f",
+      "b": "353f4a08-eaf3-4b07-8743-1650bd484dbe",
+      "expected": "same",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-2-2",
+      "a": "53a3d4c8-a2ee-453f-82ff-809262b8e47f",
+      "b": "91cb26f6-f651-4a48-88b9-fa19eb60da91",
+      "expected": "different",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-2-3",
+      "a": "53a3d4c8-a2ee-453f-82ff-809262b8e47f",
+      "b": "3932fcf4-3c9e-4284-86ac-feb4f2881ad7",
+      "expected": "different",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-2-4",
+      "a": "53a3d4c8-a2ee-453f-82ff-809262b8e47f",
+      "b": "a6a76359-a5f6-47ef-8fda-7ef2607c2d03",
+      "expected": "different",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-2-5",
+      "a": "53a3d4c8-a2ee-453f-82ff-809262b8e47f",
+      "b": "667680b4-cdd4-4f24-8ebc-7ff5f837be9f",
+      "expected": "different",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-3-1",
+      "a": "df2e6290-680b-4ee6-8300-5de9d40e82d6",
+      "b": "40d02639-cdb6-4fd4-8fa2-cce6f7bcb76e",
+      "expected": "different",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-4-1",
+      "a": "1f4974b4-c25c-4d37-84da-d8ac47e26d5d",
+      "b": "df3e928c-80d0-4405-878c-d8efc755a7f4",
+      "expected": "insufficient",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-4-2",
+      "a": "1f4974b4-c25c-4d37-84da-d8ac47e26d5d",
+      "b": "32f67eb4-31f7-44dc-8168-bb67173d7617",
+      "expected": "different",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-4-3",
+      "a": "1f4974b4-c25c-4d37-84da-d8ac47e26d5d",
+      "b": "4eb78e5f-ada1-4728-844f-24b9aacb1908",
+      "expected": "different",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-5-1",
+      "a": "111302d3-be28-4101-8270-13fbeb35657f",
+      "b": "4a4148bd-66df-4115-841f-2be7bf952215",
+      "expected": "same",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-5-2",
+      "a": "111302d3-be28-4101-8270-13fbeb35657f",
+      "b": "c53aeb05-7cb5-46b3-8667-725b2adaa5d0",
+      "expected": "different",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-6-1",
+      "a": "05dec3ca-a74b-4a04-849d-0eb0310e131a",
+      "b": "e11d4bc3-496e-4725-829a-0f64a6f245a9",
+      "expected": "insufficient",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-6-2",
+      "a": "05dec3ca-a74b-4a04-849d-0eb0310e131a",
+      "b": "c0fe9f40-d8bf-4db3-8b1e-c469c32845a3",
+      "expected": "insufficient",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-7-1",
+      "a": "8eef56ee-ed7e-4483-88cb-32b39681b87a",
+      "b": "db4eaf57-ca6a-49c6-8554-06a2efe059f9",
+      "expected": "insufficient",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-7-2",
+      "a": "8eef56ee-ed7e-4483-88cb-32b39681b87a",
+      "b": "f3ead6ea-b744-45c1-8f87-902d3d57f6ab",
+      "expected": "insufficient",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-7-3",
+      "a": "8eef56ee-ed7e-4483-88cb-32b39681b87a",
+      "b": "f48b8f71-a0b3-4e1a-86f0-46b49679d0e7",
+      "expected": "insufficient",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-7-4",
+      "a": "8eef56ee-ed7e-4483-88cb-32b39681b87a",
+      "b": "e23e47fe-9cd4-432a-84d5-89ab0e0a1067",
+      "expected": "insufficient",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-8-1",
+      "a": "85f15bb9-dbbf-4004-8691-1ae79538ea91",
+      "b": "51b09971-086c-413e-82c7-245544cf2888",
+      "expected": "insufficient",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-8-2",
+      "a": "85f15bb9-dbbf-4004-8691-1ae79538ea91",
+      "b": "fd127e16-e76d-4171-84bb-05453266fe3c",
+      "expected": "different",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-9-1",
+      "a": "35a41896-3496-4665-8fe0-d5cd890b8aae",
+      "b": "9b42ef81-0e9b-4fe3-8993-722711c35c61",
+      "expected": "insufficient",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-9-2",
+      "a": "35a41896-3496-4665-8fe0-d5cd890b8aae",
+      "b": "bbbf83d3-a29a-4bde-8ddf-d2e0103f86a0",
+      "expected": "insufficient",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-9-3",
+      "a": "35a41896-3496-4665-8fe0-d5cd890b8aae",
+      "b": "4c99f4fa-b46e-4e01-8550-4310690cd4d6",
+      "expected": "insufficient",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-10-1",
+      "a": "c6230844-a2d4-4940-8b83-5cf38b22cf6b",
+      "b": "4639c7b1-9cfe-4d88-8aed-0fd3f682f68e",
+      "expected": "insufficient",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-10-2",
+      "a": "c6230844-a2d4-4940-8b83-5cf38b22cf6b",
+      "b": "1c0312b5-5ece-41c0-8929-3e1564cd75ea",
+      "expected": "insufficient",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-10-3",
+      "a": "c6230844-a2d4-4940-8b83-5cf38b22cf6b",
+      "b": "e4c8d7a1-0f73-42b9-8f5d-02fcbc967f1e",
+      "expected": "different",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-10-4",
+      "a": "c6230844-a2d4-4940-8b83-5cf38b22cf6b",
+      "b": "1b4e5457-b127-47ca-8ae4-c88d851e90c7",
+      "expected": "different",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-10-5",
+      "a": "c6230844-a2d4-4940-8b83-5cf38b22cf6b",
+      "b": "418b0354-0d23-4ed6-8c57-a0f6a84a73d6",
+      "expected": "different",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-11-1",
+      "a": "293046fe-08f5-4ef6-8655-2a474da57332",
+      "b": "9bdd9300-3248-47e9-8d2d-af1b1312e56a",
+      "expected": "different",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-11-2",
+      "a": "293046fe-08f5-4ef6-8655-2a474da57332",
+      "b": "fe26468f-eb08-492b-8cb2-31bd7cac6512",
+      "expected": "different",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-11-3",
+      "a": "293046fe-08f5-4ef6-8655-2a474da57332",
+      "b": "f44acd44-6915-4ca3-807f-eba8d844d206",
+      "expected": "different",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-11-4",
+      "a": "293046fe-08f5-4ef6-8655-2a474da57332",
+      "b": "43bd53a2-e4de-4f02-85a6-b18afe7563bb",
+      "expected": "different",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-11-5",
+      "a": "293046fe-08f5-4ef6-8655-2a474da57332",
+      "b": "f152c44c-c31b-407d-8cbc-299c79905640",
+      "expected": "different",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-12-1",
+      "a": "ef0b917d-bf08-4758-820b-60349ec0952f",
+      "b": "3850851c-700e-40fb-872b-76faa18c93ff",
+      "expected": "insufficient",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-12-2",
+      "a": "ef0b917d-bf08-4758-820b-60349ec0952f",
+      "b": "7b47ace4-8726-4848-806d-2839030df543",
+      "expected": "different",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-12-3",
+      "a": "ef0b917d-bf08-4758-820b-60349ec0952f",
+      "b": "94751f17-b452-4288-8132-1dc55abcfdac",
+      "expected": "insufficient",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-12-4",
+      "a": "ef0b917d-bf08-4758-820b-60349ec0952f",
+      "b": "1e15cd83-0c64-46d6-8b3e-89a689964793",
+      "expected": "insufficient",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-12-5",
+      "a": "ef0b917d-bf08-4758-820b-60349ec0952f",
+      "b": "8eb4637f-3e31-4ba0-8366-70fe8af571dc",
+      "expected": "different",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-13-1",
+      "a": "245f15f0-1729-4d94-8310-78e52fad1a4d",
+      "b": "22ee8857-f175-48c6-8fcb-e2b78e74f46d",
+      "expected": "insufficient",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-13-2",
+      "a": "245f15f0-1729-4d94-8310-78e52fad1a4d",
+      "b": "ae3e28da-8afb-4871-81c0-8f601b59b710",
+      "expected": "insufficient",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-13-3",
+      "a": "245f15f0-1729-4d94-8310-78e52fad1a4d",
+      "b": "7b55293a-74b0-4a6f-8496-a3ef41bf75d5",
+      "expected": "different",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-13-4",
+      "a": "245f15f0-1729-4d94-8310-78e52fad1a4d",
+      "b": "720db6db-0709-452f-8d96-25424c3ce926",
+      "expected": "different",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-14-1",
+      "a": "845f959f-99a7-4698-8728-0328352abde9",
+      "b": "7110e621-f9dc-4203-89df-581dc2c0ee39",
+      "expected": "same",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-14-2",
+      "a": "845f959f-99a7-4698-8728-0328352abde9",
+      "b": "751daacc-bd4c-41a0-889d-3b0bed27fbfa",
+      "expected": "different",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-15-1",
+      "a": "0a576613-4d57-42c9-8a4c-cf2d58e096b3",
+      "b": "88c33a18-7d09-4ffd-8cac-4c225569fd11",
+      "expected": "insufficient",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-16-1",
+      "a": "91d1c76b-423c-4cec-8451-556c78b4351c",
+      "b": "3ff89308-cdab-45b3-8696-6cf096690485",
+      "expected": "different",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-16-2",
+      "a": "91d1c76b-423c-4cec-8451-556c78b4351c",
+      "b": "93b36062-6b4d-4b83-8e75-d067f7bb2e31",
+      "expected": "insufficient",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-16-3",
+      "a": "91d1c76b-423c-4cec-8451-556c78b4351c",
+      "b": "4ce7f7e8-f596-4de3-848c-d5708b42dd3f",
+      "expected": "different",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-17-1",
+      "a": "ee9f9abb-d925-4be3-8b48-e6ac7773b521",
+      "b": "440a8b6f-16e8-43d6-8bc3-c7b29f88ccd1",
+      "expected": "same",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-17-2",
+      "a": "ee9f9abb-d925-4be3-8b48-e6ac7773b521",
+      "b": "fb2da98c-d266-4eea-86a1-273ad39cc557",
+      "expected": "same",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-17-3",
+      "a": "ee9f9abb-d925-4be3-8b48-e6ac7773b521",
+      "b": "9f816748-c1aa-4de2-8fa7-73020a9f8e2c",
+      "expected": "same",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-18-1",
+      "a": "8ce83297-7b44-46cd-8f23-9bea63136058",
+      "b": "6c3ce1ea-5c9a-477c-8913-5705d25a742c",
+      "expected": "different",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-18-2",
+      "a": "8ce83297-7b44-46cd-8f23-9bea63136058",
+      "b": "b24e0803-3745-4852-8d33-8d3a8c45f77e",
+      "expected": "different",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-18-3",
+      "a": "8ce83297-7b44-46cd-8f23-9bea63136058",
+      "b": "ddae54ec-8900-49c5-8050-953c654f7dfe",
+      "expected": "different",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-18-4",
+      "a": "8ce83297-7b44-46cd-8f23-9bea63136058",
+      "b": "51e705ed-c1b3-435a-8a14-9ba6404a2749",
+      "expected": "different",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "independent-18-5",
+      "a": "8ce83297-7b44-46cd-8f23-9bea63136058",
+      "b": "46336d4a-2812-48cc-8cd3-e082b0a747f4",
+      "expected": "different",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "wafer-range-0-1",
+      "a": "db4eaf57-ca6a-49c6-8554-06a2efe059f9",
+      "b": "f3ead6ea-b744-45c1-8f87-902d3d57f6ab",
+      "expected": "same",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "wafer-range-0-2",
+      "a": "db4eaf57-ca6a-49c6-8554-06a2efe059f9",
+      "b": "f48b8f71-a0b3-4e1a-86f0-46b49679d0e7",
+      "expected": "same",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "wafer-range-1-2",
+      "a": "f3ead6ea-b744-45c1-8f87-902d3d57f6ab",
+      "b": "f48b8f71-a0b3-4e1a-86f0-46b49679d0e7",
+      "expected": "same",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "positive-completion-67-68",
+      "a": "440a8b6f-16e8-43d6-8bc3-c7b29f88ccd1",
+      "b": "fb2da98c-d266-4eea-86a1-273ad39cc557",
+      "expected": "same",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "positive-completion-67-69",
+      "a": "440a8b6f-16e8-43d6-8bc3-c7b29f88ccd1",
+      "b": "9f816748-c1aa-4de2-8fa7-73020a9f8e2c",
+      "expected": "same",
+      "reviewed": true,
+      "split": "holdout"
+    },
+    {
+      "id": "positive-completion-68-69",
+      "a": "fb2da98c-d266-4eea-86a1-273ad39cc557",
+      "b": "9f816748-c1aa-4de2-8fa7-73020a9f8e2c",
+      "expected": "same",
+      "reviewed": true,
+      "split": "holdout"
+    }
+  ]
+}

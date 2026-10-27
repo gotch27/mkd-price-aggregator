@@ -5,7 +5,6 @@ import {
 } from "@/nextsignal/domain/local-matching";
 import { pool } from "@/nextsignal/services/database";
 import { browserStatus } from "@/nextsignal/services/catalog-browser";
-import { createRun } from "@/nextsignal/services/run-repository";
 let indexedSnapshot: { key: string; version: string } | null = null;
 
 export async function indexLocalProducts() {
@@ -47,14 +46,5 @@ export async function indexLocalProducts() {
     SET listing_id=excluded.listing_id,version=excluded.version,rule_key=excluded.rule_key`,
     [JSON.stringify(prepared), version],
   );
-  if (
-    prepared.some((row) => row.rule_key !== null) &&
-    !(
-      await pool.query(
-        "SELECT 1 FROM runs WHERE kind='match' AND status IN ('pending','queued','running') LIMIT 1",
-      )
-    ).rowCount
-  )
-    await createRun("match", null, null, null);
   return rows.length;
 }

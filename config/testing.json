@@ -7,5 +7,6 @@
   "log_spool_dir": ".data/test-log-spool",
   "restore_database_name": "catalog_restore_test",
   "backup_path": ".data/catalog-smoke.dump",
-  "dashboard_response_budget_ms": 5000
+  "dashboard_response_budget_ms": 5000,
+  "matching_database_name": "catalog_matching_test"
 }

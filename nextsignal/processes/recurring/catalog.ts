@@ -1,6 +1,7 @@
 import { recurringProcess, interval, ok } from "@gotch/nextsignal";
 import { settings } from "@/nextsignal/config";
 import type { AppServices } from "@/nextsignal/services";
+import { dispatchTasks } from "../distributed/tasks";
 import { dispatchPending } from "../distributed/jobs";
 import { replayLogs } from "@/nextsignal/adapters/logger";
 export const catalogTick = recurringProcess<void, AppServices>({
@@ -11,20 +12,25 @@ export const catalogTick = recurringProcess<void, AppServices>({
   }),
   overlap: "skip",
   async handle(ctx) {
-    await ctx.services.catalog.seedRetailers();
-    await ctx.services.scheduling.enqueueDue(new Date());
-    await ctx.services.scheduling.recoverOrphans();
-    await dispatchPending(ctx);
-    if (await ctx.services.browser.refreshBrowser())
-      await ctx.logger.info({ message: "Product browser refreshed" });
-    const indexed = await ctx.services.localMatching.indexLocalProducts();
-    if (indexed)
-      await ctx.logger.info({
-        message: "Local product keys indexed",
-        data: { count: indexed },
-      });
-    await ctx.services.scheduling.maintenance();
-    await replayLogs();
-    return ok();
+    return ctx.services.withLogContext(
+      {
+        logger: ctx.logger,
+        process: ctx.metadata.processName,
+        correlationId: ctx.metadata.correlationId,
+      },
+      async () => {
+        await ctx.services.catalog.seedRetailers();
+        // Settings reads fail closed. Startup is never a grant to the old backlog.
+        await ctx.services.taskSettings.readSettings();
+        await ctx.services.tasks.scheduleTasks(new Date());
+        await ctx.services.tasks.automaticTasks();
+        await dispatchTasks(ctx);
+        await dispatchPending(ctx);
+        await ctx.services.scheduling.maintenance();
+        await ctx.services.statistics.refreshProductStatistics();
+        await replayLogs();
+        return ok();
+      },
+    );
   },
 });

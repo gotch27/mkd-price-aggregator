@@ -1,9 +1,10 @@
 import {
   LayoutDashboard,
   PackageSearch,
-  RefreshCw,
-  ScrollText,
-  ListTodo,
+  Activity,
+  Play,
+  Settings,
+  ListChecks,
 } from "lucide-react";
 export type {
   DashboardView,
@@ -11,7 +12,13 @@ export type {
   ProductDetail,
 } from "@/nextsignal/domain/dashboard";
 export type Row = Record<string, unknown>;
+export type AvailabilityCounts = {
+  available: number;
+  unavailable: number;
+  unknown: number;
+};
 export type Summary = {
+  matching?: import("@/nextsignal/domain/dashboard").MatchingSummary;
   retailers: Row[];
   counts: Record<string, number>;
   ai: Row[];
@@ -19,6 +26,9 @@ export type Summary = {
   local_enabled: boolean;
   refreshed_at: string | null;
   refresh_pending: boolean;
+  statistics_updated_at: string | null;
+  statistics_pending: boolean;
+  freshness_hours: number;
 };
 export type DateFormatter = (value: unknown) => string;
 export const views = {
@@ -32,33 +42,38 @@ export const views = {
     icon: PackageSearch,
     description: "Explore store catalogs and the products that connect them.",
   },
-  updates: {
-    label: "Data updates",
-    icon: RefreshCw,
+  review: {
+    label: "Review",
+    icon: ListChecks,
     description:
-      "Follow catalog imports and product matching, from start to finish.",
+      "Review product categories yourself or with an agent.",
+  },
+  observability: {
+    label: "Observability",
+    icon: Activity,
+    description: "Follow data updates and explore application logs.",
   },
   tasks: {
-    label: "Tasks",
-    icon: ListTodo,
+    label: "Run Tasks",
+    icon: Play,
     description: "Choose a task, set its scope, and review it before starting.",
   },
-  logs: {
-    label: "Logs",
-    icon: ScrollText,
-    description: "A searchable record of what’s happening behind the scenes.",
+  settings: {
+    label: "Settings",
+    icon: Settings,
+    description:
+      "Control automation, schedules, AI permissions, and spending limits.",
   },
 } as const;
 export type Screen = keyof typeof views;
-export type TaskSettings = {
-  stores: { slug: string; name: string; enabled: boolean }[];
-  matchingEnabled: boolean;
-  localEnabled: boolean;
-  aiEnabled: boolean;
-};
 export type TaskRequest = {
-  endpoint: "/api/ingestion" | "/api/matching" | "/api/retry";
-  body: Record<string, string | null>;
+  endpoint:
+    | "/api/ingestion"
+    | "/api/matching"
+    | "/api/retry"
+    | "/api/tasks"
+    | "/api/tasks/control";
+  body: Record<string, unknown>;
   title: string;
   scope: string;
   effect: string;
@@ -100,7 +115,7 @@ export const kindName = (kind: unknown) =>
   ({
     discover: "Find store catalogs",
     catalog: "Import catalog prices",
-    match: "Find product matches",
+    match: "Match products across stores",
   })[String(kind)] ?? text(kind);
 export const label = (key: string) =>
   key.replace(/[_-]/g, " ").replace(/^./, (c) => c.toUpperCase());

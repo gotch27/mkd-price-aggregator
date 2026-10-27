@@ -1,18 +1,22 @@
+import { readSettings } from "./task-settings";
 import { settings } from "@/nextsignal/config";
 import type {
   DashboardPage,
   DashboardQuery,
+  DashboardRow,
   TableView,
 } from "@/nextsignal/domain/dashboard";
 import { normalizeName } from "@/nextsignal/domain/normalize";
-import {
-  expandNameSearch,
-  localMatchingVersion,
-} from "@/nextsignal/domain/local-matching";
+import { expandNameSearch } from "@/nextsignal/domain/local-matching";
 import { pool } from "@/nextsignal/services/database";
 import { dashboardSummary } from "@/nextsignal/services/catalog-repository";
 import { browserStatus } from "@/nextsignal/services/catalog-browser";
 import { readUniversalProducts } from "@/nextsignal/services/product-browser";
+import { matchingStatus } from "@/nextsignal/services/matching-repository";
+import { createReadCache } from "@/nextsignal/services/read-cache";
+import { logEvent } from "@/nextsignal/adapters/log-context";
+import { readProductStatistics } from "@/nextsignal/services/product-statistics";
+import { availabilitySql, availableIdentitySql } from "./product-availability";
 
 type QueryPlan = {
   from: string;
@@ -21,63 +25,74 @@ type QueryPlan = {
   select: string;
   order: string;
 };
-let summaryCache: {
-  expires: number;
-  value: ReturnType<typeof readSummary>;
-} | null = null;
+const cachedSummary = createReadCache(
+  settings.dashboard.summary_cache_ms,
+  readSummary,
+);
 
 export async function readDashboard(input: DashboardQuery) {
-  if (input.view === "summary") return cachedSummary();
-  if (input.view === "products") return readProducts(input);
-  if (input.view === "universal") return readUniversalProducts(input);
-  return readTable(input, input.view);
-}
-
-function cachedSummary() {
-  if (summaryCache && summaryCache.expires > Date.now())
-    return summaryCache.value;
-  const value = readSummary().catch((error) => {
-    summaryCache = null;
-    throw error;
+  const started = performance.now();
+  const result =
+    input.view === "summary"
+      ? await cachedSummary()
+      : input.view === "products"
+        ? await readProducts(input)
+        : input.view === "universal"
+          ? await readUniversalProducts(input)
+          : await readTable(input, input.view);
+  await logEvent("debug", "dashboard.read.completed", "Dashboard data loaded", {
+    view: input.view,
+    retailer: input.retailer,
+    source_id: input.source_id,
+    page: input.page,
+    duration_ms: Math.round(performance.now() - started),
   });
-  summaryCache = {
-    expires: Date.now() + settings.dashboard.summary_cache_ms,
-    value,
-  };
-  return value;
+  return result;
 }
 
 async function readSummary() {
-  const [retailers, counts, ai, status, products] = await Promise.all([
+  const runtime = await readSettings();
+  const statistics = await readProductStatistics();
+  const [retailers, counts, ai, status, matching] = await Promise.all([
     dashboardSummary(),
     pool.query(
-      `SELECT count(*)::int AS catalog_items,
-      coalesce(sum(offer_count),0)::bigint AS listings,
-      count(*) FILTER(WHERE NOT usable_name)::int AS unnamed,
+      `SELECT (SELECT coalesce(sum(row_count),0)::bigint FROM sources WHERE active) AS listings,
       (SELECT coalesce(sum(row_count),0)::bigint FROM sources WHERE active) AS offers,
-      (SELECT count(*)::int FROM runs WHERE status IN ('pending','queued','running')) AS pending,
-      (SELECT count(*)::int FROM match_decisions WHERE product_id IS NOT NULL) AS matched,
-      (SELECT count(*)::int FROM local_product_keys WHERE version=$1) AS local_indexed,
-      (SELECT count(*)::int FROM local_product_keys WHERE version=$1 AND rule_key IS NOT NULL) AS local_eligible
-      FROM catalog_browser`,
-      [localMatchingVersion(settings.matching.local)],
+      (SELECT count(*)::int FROM runs WHERE status IN ('pending','queued','running') AND task_id IN(SELECT id FROM task_executions WHERE state IN ('queued','running'))) AS pending`,
     ),
     pool.query(`SELECT endpoint,status,count(*)::int AS requests,
       sum(input_tokens)::bigint AS input_tokens,sum(output_tokens)::bigint AS output_tokens,
       sum(cost_usd) AS cost_usd FROM ai_usage
       WHERE created_at>=date_trunc('month',now()) GROUP BY endpoint,status`),
     browserStatus(),
-    pool.query(`SELECT count(*)::int AS universal_products,
-      count(*) FILTER(WHERE stores>1)::int AS cross_store_products
-      FROM (SELECT l.product_id,count(DISTINCT b.retailer) AS stores
-      FROM catalog_browser b JOIN listings l ON l.id=b.listing_id
-      GROUP BY l.product_id) groups`),
+    matchingStatus({
+      counts: statistics.matching_counts,
+      work_counts: statistics.work_counts,
+    }),
   ]);
   return {
-    retailers,
-    counts: { ...counts.rows[0], ...products.rows[0] },
+    retailers: retailers.map((retailer): DashboardRow => ({
+      ...retailer,
+      unique_products:
+        statistics.retailer_counts === null
+          ? null
+          : (statistics.retailer_counts[String(retailer.slug)] ?? 0),
+      availability_counts:
+        statistics.availability_counts === null
+          ? null
+          : (statistics.availability_counts[String(retailer.slug)] ?? {
+              available: 0,
+              unavailable: 0,
+              unknown: 0,
+            }),
+    })),
+    counts: { ...statistics.counts, ...counts.rows[0] },
+    statistics_updated_at: statistics.updated_at,
+    statistics_pending: statistics.pending,
+    freshness_hours: settings.ingestion.freshness_hours,
     ai: ai.rows,
-    ai_enabled: settings.matching.ai.enabled,
+    matching,
+    ai_enabled: runtime.policy.ai_enabled,
     local_enabled: settings.matching.local.enabled,
     refreshed_at: status.completed_at,
     refresh_pending: status.dirty,
@@ -131,7 +146,7 @@ function tablePlan(
       };
     case "decisions":
       return {
-        from: "match_decisions d",
+        from: "matching_decision_browser d",
         where:
           "d.listing_name ILIKE $1 AND ($2::text IS NULL OR d.retailer=$2)",
         values: [`%${input.search}%`, input.retailer ?? null],
@@ -193,7 +208,7 @@ async function readProducts(input: DashboardQuery): Promise<DashboardPage> {
   }
   if (search) {
     values.push(
-      expandNameSearch(search, settings.matching.local).map(
+      expandNameSearch(input.search, settings.matching.local).map(
         (term) => `%${term.replace(/[\\%_]/g, "\\$&")}%`,
       ),
     );
@@ -205,28 +220,56 @@ async function readProducts(input: DashboardQuery): Promise<DashboardPage> {
     );
   if (input.source_id) {
     values.push(input.source_id);
-    conditions.push(`EXISTS (SELECT 1 FROM listings scoped JOIN offers o ON o.listing_id=scoped.id JOIN sources source ON source.id=o.source_id AND source.active
-      WHERE o.source_id=$${values.length} AND scoped.retailer=b.retailer
-        AND scoped.identity_hash=b.identity_hash AND scoped.external_key=b.external_key)`);
+    conditions.push(`(
+      (b.store_product_id IS NOT NULL AND EXISTS (
+        SELECT 1 FROM store_product_sources ss JOIN sources source ON source.id=ss.source_id AND source.active
+        WHERE ss.source_id=$${values.length} AND ss.store_product_id=b.store_product_id
+      )) OR (b.store_product_id IS NULL AND EXISTS (
+        SELECT 1 FROM listings scoped JOIN offers o ON o.listing_id=scoped.id JOIN sources source ON source.id=o.source_id AND source.active
+        WHERE o.source_id=$${values.length} AND scoped.retailer=b.retailer
+          AND scoped.identity_hash=b.identity_hash AND scoped.external_key=b.external_key
+      ))
+    )`);
   }
   const sourceParam = input.source_id ? `$${values.length}` : null;
+  const availability =
+    input.availability ?? settings.dashboard.product_availability;
+  if (availability === "available")
+    conditions.push(
+      availableIdentitySql("b.store_product_id", sourceParam ?? undefined),
+    );
+  else if (availability !== "all") {
+    values.push(availability);
+    conditions.push(
+      `${availabilitySql("b.store_product_id", sourceParam ?? undefined)}=$${values.length}`,
+    );
+  }
   const scopeJoin = sourceParam
     ? `JOIN LATERAL (
     SELECT scoped.id,scoped.product_id,scoped.match_status,scoped.attributes,o.price,o.retrieved_at,s.scope,s.name AS catalog_name
+    FROM store_product_aliases a JOIN listings scoped ON scoped.id=a.listing_id
+    JOIN offers o ON o.listing_id=a.listing_id AND o.source_id=a.source_id
+    JOIN sources s ON s.id=o.source_id AND s.active
+    WHERE a.source_id=${sourceParam} AND a.store_product_id=selected.store_product_id
+    UNION ALL
+    SELECT scoped.id,scoped.product_id,scoped.match_status,scoped.attributes,o.price,o.retrieved_at,s.scope,s.name AS catalog_name
     FROM listings scoped JOIN offers o ON o.listing_id=scoped.id JOIN sources s ON s.id=o.source_id AND s.active
-    WHERE o.source_id=${sourceParam} AND scoped.retailer=selected.retailer
+    WHERE selected.store_product_id IS NULL AND o.source_id=${sourceParam} AND scoped.retailer=selected.retailer
       AND scoped.identity_hash=selected.identity_hash AND scoped.external_key=selected.external_key
-    ORDER BY scoped.id LIMIT 1
+    ORDER BY id LIMIT 1
   ) catalog_offer ON true`
     : "";
-  const productId = sourceParam ? "catalog_offer.product_id" : "l.product_id";
+  const productId = "selected.product_id";
   const scopeFields = sourceParam
-    ? ",catalog_offer.id,catalog_offer.product_id,catalog_offer.match_status,catalog_offer.attributes,catalog_offer.price,catalog_offer.price AS highest_price,catalog_offer.retrieved_at,catalog_offer.scope,catalog_offer.catalog_name"
+    ? `,catalog_offer.id,catalog_offer.attributes,
+      coalesce((SELECT ss.price FROM store_product_sources ss WHERE ss.source_id=${sourceParam} AND ss.store_product_id=selected.store_product_id),catalog_offer.price) AS price,
+      coalesce((SELECT ss.highest_price FROM store_product_sources ss WHERE ss.source_id=${sourceParam} AND ss.store_product_id=selected.store_product_id),catalog_offer.price) AS highest_price,
+      catalog_offer.retrieved_at,catalog_offer.scope,catalog_offer.catalog_name`
     : "";
   const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
   const [count, status] = await Promise.all([
     pool.query(
-      `SELECT count(*)::int AS total FROM catalog_browser b ${where}`,
+      `SELECT count(*)::int AS total FROM store_product_identity_browser b ${where}`,
       values,
     ),
     browserStatus(),
@@ -236,17 +279,34 @@ async function readProducts(input: DashboardQuery): Promise<DashboardPage> {
   const page = Math.min(input.page, Math.max(1, totalPages));
   // Limit the compact indexed read model first. Fetch attributes and connection
   // information only for those rows, never for every branch copy in the database.
+  // OFFSET 0 keeps hydration parameterized per selected identity. Without that
+  // boundary PostgreSQL can hash-join the page to a fully aggregated browser.
   const rows = (
     await pool.query(
       `WITH selected AS MATERIALIZED (
-      SELECT b.* FROM catalog_browser b ${where}
-      ORDER BY b.name,b.listing_id LIMIT $${values.length + 1} OFFSET $${values.length + 2}
+      SELECT b.* FROM store_product_identity_browser b ${where}
+      ORDER BY b.name,b.browser_id LIMIT $${values.length + 1} OFFSET $${values.length + 2}
+    ), hydrated AS (
+      SELECT b.*,picked.browser_id FROM selected picked
+      CROSS JOIN LATERAL (
+        SELECT b.* FROM store_product_browser b
+        WHERE b.store_product_id=picked.store_product_id OFFSET 0
+      ) b
+      WHERE picked.store_product_id IS NOT NULL
+      UNION ALL
+      SELECT b.*,picked.browser_id FROM selected picked
+      CROSS JOIN LATERAL (
+        SELECT b.* FROM store_product_browser b
+        WHERE b.listing_id=picked.listing_id AND b.store_product_id IS NULL OFFSET 0
+      ) b
+      WHERE picked.store_product_id IS NULL
     )
-    SELECT selected.*,selected.listing_id AS id,l.product_id,l.match_status,l.attributes,
-      (SELECT count(DISTINCT member.retailer)::int FROM listings member
+    SELECT selected.*,selected.listing_id AS id,selected.product_id,selected.matching_state AS match_status,l.attributes,
+      ${availabilitySql("selected.store_product_id", sourceParam ?? undefined)} AS availability,
+      (SELECT count(DISTINCT member.retailer)::int FROM store_product_identity_browser member
        WHERE member.product_id=${productId}) AS connected_retailers${scopeFields}
-    FROM selected JOIN listings l ON l.id=selected.listing_id ${scopeJoin}
-    ORDER BY selected.name,selected.listing_id`,
+    FROM hydrated selected JOIN listings l ON l.id=selected.listing_id ${scopeJoin}
+    ORDER BY selected.name,selected.browser_id`,
       [...values, size, (page - 1) * size],
     )
   ).rows;

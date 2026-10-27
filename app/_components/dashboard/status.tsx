@@ -10,6 +10,28 @@ import {
   Link2,
 } from "lucide-react";
 const statuses = {
+  category_excluded: {
+    label: "Not selected for AI matching",
+    variant: "outline",
+    icon: Info,
+  },
+  needs_info: {
+    label: "Not enough product information",
+    variant: "outline",
+    icon: Info,
+  },
+  no_candidates: {
+    label: "No counterpart found",
+    variant: "outline",
+    icon: Link2,
+  },
+  deferred: { label: "Matching deferred", variant: "warning", icon: Clock3 },
+  legacy_conflict: {
+    label: "Existing group needs attention",
+    variant: "warning",
+    icon: TriangleAlert,
+  },
+  paused: { label: "Paused", variant: "secondary", icon: Clock3 },
   success: { label: "Completed", variant: "success", icon: Check },
   matched: { label: "Matched", variant: "success", icon: Link2 },
   fresh: { label: "Up to date", variant: "success", icon: Check },

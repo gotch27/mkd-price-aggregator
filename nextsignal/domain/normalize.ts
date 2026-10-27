@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import Decimal from "decimal.js";
 import type { Attributes, CatalogRow } from "./types";
 import { decodeLegacyMacedonian } from "@/nextsignal/domain/name-encoding";
+import { packCount } from "@/nextsignal/domain/pack-count";
 export const hash = (value: unknown) =>
   createHash("sha256")
     .update(
@@ -101,7 +102,6 @@ export function attributes(
   row: Pick<CatalogRow, "name" | "category" | "gtin">,
 ): Attributes {
   const text = normalizeName(row.name.replace(/,/g, "."));
-  const original = row.name.toUpperCase();
   const quantities = [...text.matchAll(/(\d+(?:\.\d+)?)\s*(ml|l|gr|g|kg)\b/g)];
   const found = quantities[0];
   let quantity: string | null = null,
@@ -116,9 +116,7 @@ export function attributes(
     if (["ml", "gr", "g"].includes(found[2]) && /^\d\.\d{3}$/.test(found[1]))
       ambiguous = true;
   }
-  const packMatch =
-    original.match(/(\d+)\s*[XХ*]\s*\d/) ?? original.match(/(\d+)\s*\/\s*1/);
-  const pack = packMatch ? Number(packMatch[1]) : null;
+  const pack = packCount(row.name)?.value ?? null;
   const brand =
     /\b(koka kola|coca cola)\b/.test(text) &&
     !/haribo|minicco|gumeni|bonboni/.test(text)

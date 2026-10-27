@@ -16,6 +16,11 @@ import {
 import { fetchBytes, fetchJson, fetchText } from "./http";
 import { sourceTimestamp } from "@/nextsignal/domain/source-time";
 import {
+  discoverRamstoreCatalogs,
+  discoverSparCatalogs,
+  discoverVeroCatalogs,
+} from "./catalog-discovery";
+import {
   parseTable,
   parseSpar,
   selectedBranches,
@@ -85,60 +90,15 @@ export async function discover(
       );
   } else {
     const html = await fetchText(config.url);
-    const $ = load(html);
     if (["stokomak", "zito", "zur", "dim"].includes(retailer))
       for (const b of selectedBranches(html))
         add(b.id, b.name, config.url, "branch", {});
     else if (retailer === "spar")
-      for (const a of $("a[href]").toArray()) {
-        const href = $(a).attr("href")!,
-          m = href.match(/^\/pricelist\/(\d+)$/);
-        if (m)
-          add(
-            m[1],
-            $(a).parent().text().replace(/\s+/g, " ").trim(),
-            new URL(href, config.url).href,
-            "branch",
-            {},
-          );
-      }
+      result.push(...discoverSparCatalogs(html, config.url));
     else if (retailer === "ramstore")
-      for (const a of $("a[href]").toArray()) {
-        const u = new URL($(a).attr("href")!, config.url);
-        if (
-          u.host === new URL(config.url).host &&
-          /^\/marketi\/[^/]+\/$/.test(u.pathname)
-        )
-          add(
-            u.pathname,
-            $(a).closest("div").find("h2,h3").first().text().trim() ||
-              u.pathname,
-            u.href,
-            "branch",
-            {},
-          );
-      }
-    if (retailer === "ramstore")
-      for (const match of html.matchAll(
-        /(?:href|location\.href)\s*=\s*['"]([^'"]*\/marketi\/[^'"]+)['"]/g,
-      )) {
-        const u = new URL(match[1], config.url);
-        if (u.host === new URL(config.url).host)
-          add(u.pathname, u.pathname, u.href, "branch", {});
-      }
-    if (retailer === "vero")
-      for (const a of $("a[href]").toArray()) {
-        const href = $(a).attr("href")!,
-          m = href.match(/^(\d+)_1\.html$/);
-        if (m && !/ЏАМБО|JUMBO/i.test($(a).text()))
-          add(
-            m[1],
-            $(a).text().trim(),
-            new URL(href, config.url).href,
-            "branch",
-            {},
-          );
-      }
+      result.push(...discoverRamstoreCatalogs(html, config.url));
+    else if (retailer === "vero")
+      result.push(...discoverVeroCatalogs(html, config.url));
   }
   const unique = [...new Map(result.map((s) => [s.external_id, s])).values()];
   if (!unique.length)
@@ -151,10 +111,11 @@ export async function discover(
 export async function* retrieve(
   source: Source,
   cursor: string | null,
+  pageSize = settings.sources[source.retailer].page_size,
 ): AsyncGenerator<CatalogPage> {
   if (source.meta.unavailable)
     throw new SourceError("Branch has no published catalog", false);
-  const cfg = settings.sources[source.retailer];
+  const cfg = { ...settings.sources[source.retailer], page_size: pageSize };
   let page = cursor ? Number(cursor) : 1;
   let updated: string | null = null;
   if (source.retailer === "spar") {
@@ -349,11 +310,14 @@ export async function* retrieve(
           ? u.pathname.endsWith(`_${page + 1}.html`)
           : Number(u.searchParams.get("page")) === page + 1,
       );
-      if (!rows.length && page > 1)
-        throw new SourceError(
+      if (!rows.length && page > 1) {
+        const error = new SourceError(
           `Catalog pagination returned an empty page ${page}`,
-          false,
+          true,
         );
+        error.diagnostics = { phase: "pagination", page, received_rows: 0 };
+        throw error;
+      }
       let total: number | null = null;
       if (source.retailer === "stokomak" || source.retailer === "zito") {
         const counts = publishedCounts(html);
