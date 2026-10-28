@@ -46,7 +46,7 @@ export const views = {
     label: "Review",
     icon: ListChecks,
     description:
-      "Review product categories yourself or with an agent.",
+      "Review product categories yourself, with an agent, or through an LLM task.",
   },
   observability: {
     label: "Observability",

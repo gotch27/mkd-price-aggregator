@@ -442,7 +442,7 @@ export function TaskResults({
                                   ? "Set aside for recovery"
                                   : "Needs review"}
                       </p>
-                      {row.outcome !== "assigned" && (
+                      {(row.outcome !== "assigned" || row.source === "llm") && (
                         <p className="text-xs text-muted-foreground">
                           {row.reason}
                         </p>
