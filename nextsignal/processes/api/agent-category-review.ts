@@ -5,7 +5,6 @@ import {
   fail,
   systemFail,
 } from "@gotch/nextsignal";
-import { requireAgentReviewUser } from "@/nextsignal/adapters/auth";
 import { z } from "zod";
 import type { AppServices } from "@/nextsignal/services";
 import { settings } from "@/nextsignal/config";
@@ -72,12 +71,10 @@ function operation<S extends z.ZodType>(
     input: z.output<S>,
     actor: string,
   ) => Promise<unknown>,
-  machineAccess = true,
 ) {
   return apiProcess<z.output<S>, unknown, AppServices>({
     name,
-    auth: (ctx) =>
-      machineAccess ? requireAgentReviewUser(ctx) : ctx.auth.requireUser!(ctx),
+    auth: (ctx) => ctx.auth.requireUser!(ctx),
     validate: validateWith(schema),
     handle: (ctx, input) =>
       ctx.services.withLogContext(
@@ -128,13 +125,6 @@ export const startAgentCategoryReview = operation(
   startSchema,
   (s, i, a) => s.agentCategoryReview.startSession(i, a),
 );
-export const prepareAgentCategoryBatch = operation(
-  "products.prepareAgentCategoryBatch",
-  startSchema.extend({
-    limit: z.number().int().positive().max(settings.agent_review.batch_size),
-  }),
-  (s, i, a) => s.agentCategoryReview.prepareBatch(i, a),
-);
 export const readAgentCategoryReview = operation(
   "products.readAgentCategoryReview",
   idSchema,
@@ -164,5 +154,4 @@ export const acknowledgeAgentCategoryReview = operation(
   "products.acknowledgeAgentCategoryReview",
   idSchema,
   (s, i, a) => s.agentCategoryReview.acknowledgeSession(i.id, a),
-  false,
 );

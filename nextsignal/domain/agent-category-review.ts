@@ -71,11 +71,3 @@ export type AgentReviewBatch = {
     supported_facts: Record<string, unknown>;
   })[];
 };
-
-export type PreparedAgentReviewBatch = Pick<
-  AgentReviewContext,
-  "limits" | "instructions" | "categories"
-> & {
-  session: AgentReviewSession;
-  batch: AgentReviewBatch;
-};
