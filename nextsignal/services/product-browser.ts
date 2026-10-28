@@ -1,3 +1,4 @@
+import { matchingRules } from "./brand-catalog";
 import type {
   DashboardPage,
   DashboardQuery,
@@ -26,7 +27,7 @@ export async function readUniversalProducts(
   const search = normalizeName(input.search);
   if (search) {
     values.push(
-      expandNameSearch(input.search, settings.matching.local).map(
+      expandNameSearch(input.search, await matchingRules()).map(
         (term) => `%${term.replace(/[\\%_]/g, "\\$&")}%`,
       ),
     );
@@ -34,22 +35,41 @@ export async function readUniversalProducts(
       `bool_or(b.normalized_name ILIKE ANY($${values.length}::text[]))`,
     );
   }
+  // Scope, availability and brand must describe the same store member. The
+  // selected row still expands to the complete shared product group below.
+  const memberPredicates: string[] = [];
   if (input.retailer) {
     values.push(input.retailer);
-    predicates.push(`bool_or(b.retailer=$${values.length})`);
+    memberPredicates.push(`b.retailer=$${values.length}`);
+  }
+  let sourceParam: string | undefined;
+  if (input.source_id) {
+    values.push(input.source_id);
+    sourceParam = `$${values.length}`;
+    memberPredicates.push(
+      `EXISTS(SELECT 1 FROM store_product_sources ss JOIN sources s ON s.id=ss.source_id AND s.active WHERE ss.store_product_id=b.store_product_id AND ss.source_id=${sourceParam}::uuid)`,
+    );
   }
   const availability =
     input.availability ?? settings.dashboard.product_availability;
-  if (availability === "available") {
-    predicates.push(
-      `bool_or((${input.retailer ? `b.retailer=$${values.length} AND ` : ""}${availableIdentitySql("b.store_product_id")}))`,
+  if (availability === "available")
+    memberPredicates.push(
+      availableIdentitySql("b.store_product_id", sourceParam),
     );
-  } else if (availability !== "all") {
+  else if (availability !== "all") {
     values.push(availability);
-    predicates.push(
-      `bool_or((${input.retailer ? "b.retailer=$" + (values.length - 1) + " AND " : ""}${availabilitySql("b.store_product_id")}=$${values.length}))`,
+    memberPredicates.push(
+      `${availabilitySql("b.store_product_id", sourceParam)}=$${values.length}`,
     );
   }
+  if (input.brand_id) {
+    values.push(input.brand_id);
+    memberPredicates.push(
+      `EXISTS(SELECT 1 FROM store_products brand_product WHERE brand_product.id=b.store_product_id AND brand_product.brand_id=$${values.length}::uuid)`,
+    );
+  }
+  if (memberPredicates.length)
+    predicates.push(`bool_or(${memberPredicates.join(" AND ")})`);
   const quality = input.name_quality ?? settings.dashboard.product_name_quality;
   if (quality !== "all")
     predicates.push(
@@ -160,6 +180,17 @@ export async function detailsForProduct(
     )
   ).rows;
   const visibleProducts = [...listings.rows, ...savedProducts];
+  const brandRows = (
+    await pool.query(
+      `SELECT sp.id,b.id AS brand_id,b.name FROM store_products sp JOIN brands b ON b.id=sp.brand_id WHERE sp.id=ANY($1::uuid[])`,
+      [visibleProducts.map((row) => row.store_product_id ?? row.id)],
+    )
+  ).rows;
+  const brandsByProduct = new Map(
+    brandRows.map((row) => [row.id, { id: row.brand_id, name: row.name }]),
+  );
+  for (const row of visibleProducts)
+    row.brand = brandsByProduct.get(row.store_product_id ?? row.id) ?? null;
   const categoryByProduct = await classificationViews(
     visibleProducts.map((row) => row.store_product_id ?? row.id),
   );

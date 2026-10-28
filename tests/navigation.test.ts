@@ -150,3 +150,37 @@ it("treats repeated selections as the same URL regardless of property order", ()
     navigationUrl(current),
   );
 });
+
+it("preserves a brand filter and page in a shareable All products URL", () => {
+  const state = readNavigation(
+    new URLSearchParams({
+      screen: "products",
+      mode: "all",
+      brand_id: run,
+      page: "2",
+    }),
+    initial,
+  );
+  expect(state).toMatchObject({
+    screen: "products",
+    mode: "all",
+    brand_id: run,
+    page: 2,
+  });
+  expect(
+    readNavigation(new URLSearchParams(navigationUrl(state)), initial),
+  ).toEqual(state);
+});
+
+it("rejects malformed brand IDs from bookmarked URLs", () => {
+  expect(
+    readNavigation(
+      new URLSearchParams({
+        screen: "products",
+        mode: "all",
+        brand_id: "not-a-brand",
+      }),
+      initial,
+    ).brand_id,
+  ).toBeUndefined();
+});

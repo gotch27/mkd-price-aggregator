@@ -113,7 +113,12 @@ export default function Dashboard({
             : nav.retailer
               ? "sources"
               : "summary";
-  const query: DashboardQuery = { ...nav, view, size: pageSize };
+  const query: DashboardQuery = {
+    ...nav,
+    view,
+    size: pageSize,
+    brand_id: view === "universal" ? nav.brand_id : undefined,
+  };
   const common = { refreshMs, debounceMs, autoRefreshViews, setSignedIn };
   const overview = useDashboardData({
     ...common,
@@ -157,7 +162,6 @@ export default function Dashboard({
         description: reviewTask.successMessage,
         action: { label: "View Run Tasks", onClick: () => navigate("tasks") },
       });
-      if (reviewTask.endpoint === "/api/retry") setRetryDraft(null);
       setReviewTask(null);
       data.refresh();
       overview.refresh();
@@ -238,6 +242,7 @@ export default function Dashboard({
         busy={busy}
         onChange={change}
         onRefresh={data.refresh}
+        onUnauthorized={onUnauthorized}
       />
       {view === "universal" && (
         <div className="section-context">

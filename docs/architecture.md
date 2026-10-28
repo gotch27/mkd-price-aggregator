@@ -1,7 +1,7 @@
 # Architecture and code map
 
 The application has two runtimes: Next.js serves the private dashboard and APIs;
-Nextsignal's worker executes ingestion and matching. Both load the same required,
+NextSignal's worker executes ingestion and matching. Both load the same required,
 validated configuration and use the same owned PostgreSQL database. pg-boss keeps
 the queue durable without another database or queue service.
 
@@ -12,8 +12,8 @@ the queue durable without another database or queue service.
 | Required configuration and startup validation                           | `config/default.json`, `nextsignal/config.ts`                       |
 | Framework composition and service registration                          | `nextsignal/app.ts`, `nextsignal/services/index.ts`                 |
 | HTTP transport                                                          | `app/api/**/route.ts`                                               |
-| Authentication, input validation, API orchestration                     | `nextsignal/processes/api/operations.ts`                            |
-| Discovery, retrieval, matching, and failure orchestration               | `nextsignal/processes/business/catalog.ts`                          |
+| Authentication, input validation, API orchestration                     | `nextsignal/processes/api/operations.ts`, `tasks.ts`, `brands.ts`   |
+| Catalog discovery, retrieval and failure orchestration                  | `nextsignal/processes/business/catalog.ts`                          |
 | Named retailer retrieval processes                                      | `nextsignal/processes/business/retrieve.ts`                         |
 | Queue consumers and pending-run dispatch                                | `nextsignal/processes/distributed/jobs.ts`                          |
 | Recurring minute bridge                                                 | `nextsignal/processes/recurring/catalog.ts`                         |
@@ -31,7 +31,9 @@ the queue durable without another database or queue service.
 | External store/category prompts and archived prompt bundles             | `nextsignal/services/matching-prompts.ts`, `prompts/`               |
 | Human product corrections, audit and bounded group access               | `nextsignal/services/product-details.ts`, `store-product-groups.ts` |
 | Dashboard queries and operator actions                                  | `nextsignal/services/operations.ts`                                 |
-| Cron evaluation, catch-up, retention                                    | `nextsignal/services/scheduling.ts`                                 |
+| Operational schedules, catch-up and reviewed task authorization         | `nextsignal/services/tasks.ts`, `task-settings.ts`                  |
+| Retention cleanup                                                       | `nextsignal/services/scheduling.ts`                                 |
+| Brand records, spellings, revisions and audit                           | `nextsignal/services/brands.ts`, `brand-catalog.ts`                 |
 | Infrastructure: auth, logs, queue, scheduling                           | `nextsignal/adapters/`                                              |
 | Dashboard state, API requests, user actions                             | `app/dashboard.tsx`                                                 |
 | Login, overview, filters, tables, view-specific cells                   | `app/_components/dashboard/`                                        |
@@ -44,10 +46,12 @@ as props and never import server configuration, secrets, or database modules.
 
 ## Ingestion
 
-1. A configured cron occurrence or authenticated manual action creates a discovery
-   run. The recurring bridge dispatches persisted pending runs to their queues.
-2. Discovery records each published branch or shared catalog and creates retrieval
-   runs with pinned source URLs. Every retailer retains its named process.
+1. A reviewed manual import or an authorized occurrence in the saved operational
+   schedule creates a durable task. Its captured scope and permissions govern its
+   discovery/retrieval runs. The recurring bridge dispatches authorized work.
+2. The Discover catalogs task records published branch or shared catalog links
+   without downloading their prices. Import prices creates retrieval runs for its
+   selected catalogs, with pinned source URLs and named retailer processes.
 3. The retailer importer yields pages. Each page and its checkpoint are committed
    together to staging, allowing durable retries to resume.
 4. Complete downloads release their download reservation and wait for a separate
@@ -72,9 +76,9 @@ is evaluated in PostgreSQL so sub-millisecond differences remain significant.
 
 Read [matching.md](matching.md) for the detailed walkthrough and review commands.
 
-The matching unit is a chain/article/descriptive revision, independent of physical branches. `synchronizeSource` runs inside catalog publication; bounded migration uses the same indexing rules. Original source observations and old accepted groups remain intact. Revision fingerprints exclude prices, availability, promotions, timestamps and branch IDs. Descriptive changes preserve the previous revision and queue a new one. Removed offers do not remove matching memory.
+The matching unit is a chain/article/descriptive revision, independent of physical branches. `synchronizeSource` prepares its canonical store-product records inside catalog publication. There is no application migration/backfill stage before a task can run. Original source observations and accepted groups remain intact. Revision fingerprints exclude prices, availability, promotions, timestamps and branch IDs. Descriptive changes preserve the previous revision and record affected work; saved operational permissions determine whether that work may run automatically. Removed offers do not remove matching memory.
 
-`matching-workflow.ts` coordinates source checks, rule facts, saved Decider categorization, candidate retrieval, deterministic proof, independent Decider questions, optional targeted Qwen clarification, and a complete-group commit. Every valid unique store product is categorized once; unchanged branch copies reuse it. Code-based matching applies to every category. `matching.ai_categories` controls which labels may use paid comparisons and Qwen, with an empty selection allowing none. Categories do not establish product identity. Unknown distinguishing facts remain unknown. Every positive connection must pass source-supported fact checks, regardless of its model probability. Read [category-first-matching.md](category-first-matching.md) for the full flow and review points.
+`matching-workflow.ts` coordinates source checks, rule facts, saved Decider categorization, candidate retrieval, deterministic proof, independent Decider questions, optional targeted Qwen clarification, and a complete-group commit. Categorization is a separately authorized task; unchanged branch copies reuse saved category results. Code-based matching applies to every category. Each manual AI matching task captures its chosen saved categories; automatic AI matching uses the categories saved in operational settings. Products without saved categories remain waiting rather than being secretly categorized by a matching task. An empty category selection allows no paid comparisons. Categories do not establish product identity. Unknown distinguishing facts remain unknown. Every positive connection must pass source-supported fact checks, regardless of its model probability. Read [category-first-matching.md](category-first-matching.md) for the full flow and review points.
 
 `matching-prompts.ts` validates all required external instruction files at startup and composes only relevant store/category guidance. Provider usage and decisions reference archived prompt bundles. Classification history is append-only, independent of the AI category selection and price observations; changing the selection does not invalidate saved category answers.
 
@@ -90,9 +94,50 @@ HTTP 5xx failures, interrupted responses and missing billing receipts leave the 
 
 Automatic categorization can include the existing available backlog after explicit activation in Settings. Migration 039 preserves an already-saved Automatic choice without activating new backlog work; “Review activation” followed by “Activate automatic categorization” records the consent and current automation epoch in the settings history. Selecting Automatic from another mode includes that activation in its normal settings save. AI permission is still independent. Matching retains its change-triggered scope. Backlog selection uses the durable store-product layer, excludes unavailable products, respects saved human/agent categories, reuses current model results and does not take selected unfinished products from paused/running tasks. Deferred revisions remain held until explicit recovery or genuinely changed product information. One automatic task per stage is created at a time; completed categorization batches immediately hand off the next authorized batch, while paused automatic tasks cannot be bypassed by creating replacements. Startup, migration and deployment never themselves authorize this new backlog behavior.
 
-One matching consumer claims 50 durable items at a time, checkpoints progress, and releases unfinished claims on pause/failure. Provider calls run outside database transactions. One initial campaign shares $25 across batches; incremental work shares $2 per Europe/Skopje calendar month. Budget pauses retain work. Monthly budget pauses can resume after the month changes; provider/billing pauses require inspection and explicit resume. An uncertain reservation still blocks replay until reconciled.
+One matching consumer processes bounded durable items, checkpoints progress, and releases unfinished claims on pause/failure. The initial batch size is 50 and is constrained by the task's reviewed and live settings. Provider calls run outside database transactions. The initial defaults are $25 across the entire initial campaign and $2 per Europe/Skopje calendar month for incremental work, further constrained by each task's allowance. Budget exhaustion retains work and requires an explicit resume with the applicable allowance available; a calendar change alone does not bypass a paused task. An uncertain reservation still blocks replay until reconciled.
 
-The recurring bridge starts indexing and pending campaigns only when `matching.automatic_enabled` is true. Queue processes also check this flag, including old queued matching runs. Both automatic matching and Gateway access are disabled in this checkout pending review. No full application backfill or paid campaign was run during implementation.
+The recurring bridge authorizes work from persisted operational settings. Queue handlers require durable task authorization and recheck live permissions at safe boundaries. Fresh deployments start with manual operation modes and AI permission off. Standalone model evaluations remain isolated from application data and require an explicit paid argument before provider calls.
+
+## Brands and reference rules
+
+| Data or rule                                             | Authoritative source                                                | How it changes                                                                                                                    |
+| -------------------------------------------------------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Brand ID, canonical slug and display name                | PostgreSQL `brands`                                                 | Authenticated edits with optimistic revisions and audit history.                                                                  |
+| Alternate brand spellings and optional store scope       | PostgreSQL `brand_aliases`                                          | Reviewed edits reject conflicting global/store spellings.                                                                         |
+| Product's current brand connection                       | `store_products.brand_id` with the supported `facts.brand` evidence | Publication/fact edits retain the source quote and connect known canonical values to stable IDs. Unknown brands stay unconnected. |
+| Initial brand dictionary                                 | `reference-data/brands.json`, seeded by migration 040               | Initializes reference records once; application startup does not overwrite database edits.                                        |
+| Character decoding, units, packaging and identity safety | Versioned domain rules                                              | Reviewed code and tests, kept separate from editable reference names.                                                             |
+
+`brand-catalog.ts` loads database spellings, applies store scope and snapshots the
+dictionary for a product-processing batch. The domain layer receives explicit
+rules and does not query PostgreSQL. Pure tests use an explicit starter fixture;
+application services use the persisted dictionary.
+
+Brand names and aliases support search, filtering and readable product details.
+They do not prove that products have the same size, variant or sellable identity.
+Display-name changes preserve the canonical slug, product evidence and saved
+classification request inputs. Adding a spelling makes it available to future
+processing without automatically launching paid work or resetting categories.
+Brand edits are separately audited and do not change automation settings.
+
+## One production execution path
+
+Reviewed Tasks are the production entry point for imports, categorization and
+matching. The old raw run-creation/retry operations, per-retailer scheduler,
+listing-based local indexer, run-based matcher and store-product migration
+backfill have been removed. There is no dormant OpenAI/Luna client or accepted
+model-compatibility configuration block.
+
+`services/scheduling.ts` now owns retention cleanup only. The minute bridge uses
+`tasks.ts` and `task-settings.ts` for schedules and authorization, and
+`task-context.ts` rechecks permissions at safe boundaries. Isolated test helpers
+can arrange domain matching examples but are not registered in the application.
+The evaluation CLI uses the shared rules and Gateway client in a separate test
+database with explicit paid opt-in.
+
+Applied migrations and saved observations, decisions, redirects and corrections
+remain historical data. Removing obsolete runtime execution paths does not
+rewrite that history or reset previously authorized work.
 
 ## Operating boundaries
 
@@ -131,7 +176,7 @@ retains scope counts and price ranges, and exposes its own freshness. Source
 listings and offers are retained. The worker marks publication changes in
 `catalog_browser_state`; it does not rebuild the view from HTTP requests.
 
-`store_product_browser` uses canonical store rows and `store_product_sources` compact price summaries, with an unmapped legacy fallback until migration completes. Matching reads the canonical layer directly and does not wait for materialized-view refresh. `domain/local-matching.ts` provides reviewed exact token signatures to the new matching rules. The old service entry point remains for normalization/index maintenance compatibility; it no longer schedules a second matching path.
+`store_product_browser` uses canonical store rows and `store_product_sources` compact price summaries. Reads can retain original branch records without a canonical alias, but never migrate or prepare them as a side effect. Matching reads the canonical layer directly and does not wait for a materialized-view refresh. `domain/local-matching.ts` provides pure reviewed token signatures using the current database brand dictionary. The separate listing-index service and run-based matching entry point have been removed. Dashboard local-rule coverage is computed from current store products and their local keys, not a retired listing-index table.
 
 Counts, product searches, group selection, and manual counterpart searches use
 `store_product_identity_browser`, which checks current availability without
@@ -151,14 +196,17 @@ view identifiers are part of the shared `domain/dashboard.ts` response contract.
 
 ## Dashboard navigation and product details
 
-The dashboard has five screens: Overview (statistics only), Products, Data updates,
-Tasks, and Logs. Tasks owns manual launches: an explicit scope selection and review
-dialog precede imports and matching. Retry links in Data updates open a draft in
+The dashboard has six screens: Overview (statistics only), Products, Review,
+Observability, Run Tasks, and Settings. Observability combines Data updates and
+Logs. Run Tasks owns manual launches and pause/resume controls; Settings owns
+schedules, automation permissions, thresholds, spending and brand reference data.
+An explicit scope selection and review dialog precede imports, categorization
+and matching. Retry links in Data updates open a draft in
 Tasks without submitting work. The review shows the scope, effects, matching/AI
 behavior, and where progress will appear. Submission stays locked while pending.
 The catalog selector loads every page for the selected store and aborts obsolete
 requests when the store changes. Store availability and matching capabilities come
-from the existing server configuration. Products combines the store → catalog → store-product hierarchy with an
+from the validated deployment and saved operational settings. Products combines the store → catalog → store-product hierarchy with an
 All products mode. All products groups the indexed store articles by their current
 universal product assignment; filtering a group by store or name retains all of its
 connected stores and its complete price range. A catalog drill-down shows that
@@ -188,9 +236,9 @@ Matching tab. Authenticated `products.manualSearch` and `products.manualSave`
 processes call `services/manual-matching.ts`; append-only manual pair decisions
 are reused by both candidate checks and full-group commits. These edits share the
 automatic commit lock, invalidate stale work, and make no AI calls. See
-[manual-matching.md](manual-matching.md) for persistence, undo, legacy preparation,
-logging and configuration. Automatic matching remains separately disabled pending
-review. The bounded experimental model comparison is documented in
+[manual-matching.md](manual-matching.md) for persistence, undo, logging and
+configuration. Automatic matching has its own saved permission and starts off on
+a fresh deployment. The bounded experimental model comparison is documented in
 [glyph-vs-qwen-2026-10-23.md](glyph-vs-qwen-2026-10-23.md).
 
 ## Operational controls

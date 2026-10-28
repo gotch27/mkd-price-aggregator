@@ -1,3 +1,4 @@
+import { matchingRules, withBrandCatalog } from "./brand-catalog";
 import type { PoolClient } from "pg";
 import { pool, transaction } from "./database";
 import { settings } from "@/nextsignal/config";
@@ -28,6 +29,12 @@ export async function classificationViews(
   ids: string[],
   c: Pick<PoolClient, "query"> = pool,
 ) {
+  return withBrandCatalog(() => classificationViewsScoped(ids, c), c);
+}
+async function classificationViewsScoped(
+  ids: string[],
+  c: Pick<PoolClient, "query">,
+) {
   const rows = (
     await c.query<
       StoreProduct & {
@@ -49,62 +56,65 @@ export async function classificationViews(
     )
   ).rows;
   return new Map(
-    rows.map((row) => {
-      const plan = classificationRequest(row),
-        recorded = row.classification_id !== null,
-        current = recorded && row.classification_key === plan.key;
-      const view: ProductClassification = {
-        classification_id: row.classification_id,
-        options: categoryScores(row.probabilities, row.selected_family),
-        state:
-          row.manual_family != null
-            ? row.category_review_source === "agent"
-              ? "agent"
-              : "manual"
-            : !recorded
-              ? "not_categorized"
-              : !current
-                ? "outdated"
-                : row.model_category === "unknown"
-                  ? "uncertain"
-                  : "assigned",
-        category: row.manual_family ?? row.model_category,
-        manual_category: row.manual_family ?? null,
-        source:
-          row.manual_family != null
-            ? (row.category_review_source ?? "human")
-            : recorded
-              ? "decision_model"
-              : null,
-        reviewed_by: row.category_review_actor ?? null,
-        reviewed_at: row.category_reviewed_at ?? null,
-        review_reason: row.category_review_reason ?? null,
-        model_category: row.model_category,
-        suggested_category: row.selected_family,
-        probability: row.probability === null ? null : Number(row.probability),
-        threshold:
-          row.acceptance_threshold === null
-            ? null
-            : Number(row.acceptance_threshold),
-        can_accept_suggestion:
-          row.manual_family == null &&
-          current &&
-          row.model_category === "unknown" &&
-          row.selected_family !== null &&
-          row.selected_family !== "unknown",
-        snapshot: hash([
-          row.id,
-          row.group_id,
-          row.version,
-          row.manual_family,
-          row.category_review_source,
-          row.classification_key,
-          row.classification_threshold,
-          plan.key,
-        ]),
-      };
-      return [row.id, view] as const;
-    }),
+    await Promise.all(
+      rows.map(async (row) => {
+        const plan = await classificationRequest(row, c),
+          recorded = row.classification_id !== null,
+          current = recorded && row.classification_key === plan.key;
+        const view: ProductClassification = {
+          classification_id: row.classification_id,
+          options: categoryScores(row.probabilities, row.selected_family),
+          state:
+            row.manual_family != null
+              ? row.category_review_source === "agent"
+                ? "agent"
+                : "manual"
+              : !recorded
+                ? "not_categorized"
+                : !current
+                  ? "outdated"
+                  : row.model_category === "unknown"
+                    ? "uncertain"
+                    : "assigned",
+          category: row.manual_family ?? row.model_category,
+          manual_category: row.manual_family ?? null,
+          source:
+            row.manual_family != null
+              ? (row.category_review_source ?? "human")
+              : recorded
+                ? "decision_model"
+                : null,
+          reviewed_by: row.category_review_actor ?? null,
+          reviewed_at: row.category_reviewed_at ?? null,
+          review_reason: row.category_review_reason ?? null,
+          model_category: row.model_category,
+          suggested_category: row.selected_family,
+          probability:
+            row.probability === null ? null : Number(row.probability),
+          threshold:
+            row.acceptance_threshold === null
+              ? null
+              : Number(row.acceptance_threshold),
+          can_accept_suggestion:
+            row.manual_family == null &&
+            current &&
+            row.model_category === "unknown" &&
+            row.selected_family !== null &&
+            row.selected_family !== "unknown",
+          snapshot: hash([
+            row.id,
+            row.group_id,
+            row.version,
+            row.manual_family,
+            row.category_review_source,
+            row.classification_key,
+            row.classification_threshold,
+            plan.key,
+          ]),
+        };
+        return [row.id, view] as const;
+      }),
+    ),
   );
 }
 
@@ -261,7 +271,8 @@ export async function saveCategoryInTransaction(
       classification: view,
     };
   const modelCurrent =
-    current.classification_key === classificationRequest(current).key;
+    current.classification_key ===
+    (await classificationRequest(current, c)).key;
   const effective = manual ?? (modelCurrent ? view.model_category : null);
   const after = refreshProductFacts(
     {
@@ -276,7 +287,7 @@ export async function saveCategoryInTransaction(
           settings.matching.category_mappings,
         ),
     },
-    settings.matching.local,
+    await matchingRules(c, current.retailer),
     settings.matching.category_mappings,
   );
   const classificationId =

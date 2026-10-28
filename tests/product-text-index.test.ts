@@ -128,7 +128,7 @@ it("finds a product by both its source spelling and readable Cyrillic after publ
   }
   const saved = await getProduct(p.id);
   expect(saved!.name).toBe("SIREWE KRAVJO 500GR");
-  const request = classificationRequest(saved!);
+  const request = await classificationRequest(saved!);
   expect(request.state.product.name).toBe(saved!.name);
   expect(request.state.product.readable_name).toBe("СИРЕЊЕ КРАВЈО 500GR");
   expect(fetch).not.toHaveBeenCalled();
@@ -157,7 +157,7 @@ it("adds readable interpretation without expiring a saved category for the same 
     description: "DOMA[NO ВРАТ СВИНСКИ",
     category: "DOMA[NO ВРАТ СВИНСКИ",
   };
-  const plan = classificationRequest(input);
+  const plan = await classificationRequest(input);
   expect(plan.state.product.readable_description).toBe("ДОМАШНО ВРАТ СВИНСКИ");
   const priorState = {
     product: {

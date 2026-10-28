@@ -18,9 +18,7 @@
     "allowed_origins": ["http://localhost:3000", "http://127.0.0.1:3000"]
   },
   "scheduler": {
-    "cron": "0 12 * * 1",
     "tick_ms": 60000,
-    "catch_up": true,
     "run_on_start": true,
     "tick_cron": "* * * * *"
   },
@@ -40,7 +38,6 @@
     "heartbeat_seconds": 30,
     "heartbeat_refresh_seconds": 10,
     "stop_ms": 30000,
-    "recover_orphans": true,
     "scheduler_concurrency": 1,
     "database_pool_size": 4,
     "dispatch_lease_seconds": 120
@@ -98,264 +95,17 @@
     "max_ready_catalogs": 4
   },
   "matching": {
-    "enabled": true,
     "batch_size": 50,
     "candidate_limit": 20,
     "threshold": 0.75,
-    "retry_hours": 168,
     "prompt_version": "category-first-v1",
-    "ai": {
-      "enabled": false,
-      "api_key": "disabled",
-      "base_url": "https://api.openai.com/v1/",
-      "model": "gpt-6-luna",
-      "extraction": true,
-      "reasoning_effort": "high",
-      "max_output_tokens": 4096,
-      "timeout_ms": 120000,
-      "run_budget_usd": null,
-      "monthly_budget_usd": null,
-      "input_per_million": 0.1,
-      "output_per_million": 0.5,
-      "max_requests_per_run": 10,
-      "max_requests_per_month": 100
-    },
     "candidate_similarity": 0.3,
-    "ambiguity_batch_size": 10000,
     "local": {
       "enabled": true,
-      "version": "exact-names-v3",
-      "index_batch_size": 10000,
-      "brands": [
-        {
-          "canonical": "coca-cola",
-          "aliases": ["coca cola", "koka kola", "cocacola", "kokakola"]
-        },
-        {
-          "canonical": "pepsi",
-          "aliases": ["pepsi"]
-        },
-        {
-          "canonical": "fanta",
-          "aliases": ["fanta"]
-        },
-        {
-          "canonical": "schweppes",
-          "aliases": ["schweppes", "shveps"]
-        },
-        {
-          "canonical": "sinalco",
-          "aliases": ["sinalco", "sinalko"]
-        },
-        {
-          "canonical": "bimilk",
-          "aliases": ["bimilk"]
-        },
-        {
-          "canonical": "imlek",
-          "aliases": ["imlek"]
-        },
-        {
-          "canonical": "dukat",
-          "aliases": ["dukat"]
-        },
-        {
-          "canonical": "alpsko",
-          "aliases": ["alpsko"]
-        },
-        {
-          "canonical": "milka",
-          "aliases": ["milka"]
-        },
-        {
-          "canonical": "nestle",
-          "aliases": ["nestle"]
-        },
-        {
-          "canonical": "nescafe",
-          "aliases": ["nescafe", "neskafe"]
-        },
-        {
-          "canonical": "jacobs",
-          "aliases": ["jacobs", "jakobs"]
-        },
-        {
-          "canonical": "podravka",
-          "aliases": ["podravka"]
-        },
-        {
-          "canonical": "vitalia",
-          "aliases": ["vitalia", "vitalija"]
-        },
-        {
-          "canonical": "vitaminka",
-          "aliases": ["vitaminka"]
-        },
-        {
-          "canonical": "skopsko",
-          "aliases": ["skopsko"]
-        },
-        {
-          "canonical": "zlaten-dab",
-          "aliases": ["zlaten dab"]
-        },
-        {
-          "canonical": "heineken",
-          "aliases": ["heineken", "hajneken"]
-        },
-        {
-          "canonical": "babylino",
-          "aliases": ["babylino", "bebilino", "bebylino"]
-        },
-        {
-          "canonical": "dorina",
-          "aliases": ["dorina"]
-        },
-        {
-          "canonical": "koral",
-          "aliases": ["koral"]
-        },
-        {
-          "canonical": "amalfi",
-          "aliases": ["amalfi"]
-        },
-        {
-          "canonical": "vileda",
-          "aliases": ["vileda"]
-        },
-        {
-          "canonical": "astera",
-          "aliases": ["astera"]
-        },
-        {
-          "canonical": "kras",
-          "aliases": ["kras"]
-        },
-        {
-          "canonical": "str8",
-          "aliases": ["str8", "str 8"]
-        },
-        {
-          "canonical": "ideal-shipka",
-          "aliases": ["ideal shipka"]
-        },
-        {
-          "canonical": "nutella",
-          "aliases": ["nutella", "nutela"]
-        },
-        {
-          "canonical": "plazma",
-          "aliases": ["bambi plazma", "plazma bambi", "plazma"]
-        },
-        {
-          "canonical": "nivea",
-          "aliases": ["nivea", "niveja"]
-        },
-        {
-          "canonical": "fairy",
-          "aliases": ["fairy", "feri"]
-        },
-        {
-          "canonical": "malena",
-          "aliases": ["malena"]
-        },
-        {
-          "canonical": "vincini",
-          "aliases": ["vincini", "vinchini"]
-        },
-        {
-          "canonical": "happy-day",
-          "aliases": ["happy day", "hepi dej"]
-        },
-        {
-          "canonical": "bio-zen",
-          "aliases": ["bio zen"]
-        },
-        {
-          "canonical": "garden",
-          "aliases": ["garden"]
-        },
-        {
-          "canonical": "hipp",
-          "aliases": ["hipp", "hip"]
-        },
-        {
-          "canonical": "yumis",
-          "aliases": ["yumis", "jumis"]
-        },
-        {
-          "canonical": "pfanner",
-          "aliases": ["pfanner", "faner"]
-        },
-        {
-          "canonical": "dr benner",
-          "aliases": ["ДР БЕННЕР", "DR BENNER"]
-        },
-        {
-          "canonical": "kosili",
-          "aliases": ["КОСИЛИ", "KOSILI"]
-        },
-        {
-          "canonical": "stark",
-          "aliases": ["ШТАРК", "STARK"]
-        },
-        {
-          "canonical": "hit",
-          "aliases": ["ХИТ", "HIT"]
-        },
-        {
-          "canonical": "vochna dolina",
-          "aliases": ["ВОЧНА ДОЛИНА", "VOCNA DOLINA", "VOCHNA DOLINA"]
-        },
-        {
-          "canonical": "kan bebe",
-          "aliases": ["КАН БЕБЕ", "KAN BEBE", "KANBEBE"]
-        },
-        {
-          "canonical": "viva",
-          "aliases": ["ВИВА", "VIVA"]
-        }
-      ],
-      "token_aliases": {
-        "can": ["limenka", "limenki", "can", "cans"],
-        "pet": ["pet", "plasticno shishe", "plastic bottle"],
-        "zero": ["zero sugar", "zero shekjer", "zero"],
-        "classic": ["klasik", "classic", "original"],
-        "biscuit": [
-          "biskviti",
-          "biskvit",
-          "biscuits",
-          "biscuit",
-          "keks",
-          "bisk"
-        ],
-        "spread": [
-          "kakao krem",
-          "eurokrem",
-          "chokoladen krem",
-          "chocolate cream",
-          "krem"
-        ],
-        "shower-gel": ["gel za tushiranje", "gel za tush", "shower gel"],
-        "creme-care": ["krem kear", "krem ker", "creme care"],
-        "creme-soft": ["krem soft", "creme soft"],
-        "ground": ["meleni", "melena", "melen", "mlevena", "ground"],
-        "family": ["femili", "family"],
-        "refill-bag": ["kesa", "sachet", "refill bag"]
-      },
-      "ignored_tokens": [
-        "sok",
-        "gaziran",
-        "gazirano",
-        "pijalok",
-        "set",
-        "multipak"
-      ]
+      "version": "exact-names-v3"
     },
-    "automatic_enabled": false,
     "candidate_batch_size": 5,
     "category_threshold": 0.8,
-    "backfill_batch_size": 10000,
     "lease_seconds": 300,
     "rules_version": "cross-store-v7-dimensional-packs",
     "gateway": {
@@ -506,7 +256,6 @@
       "enabled": true,
       "name": "KAM",
       "url": "https://kam.com.mk/ceni-vo-marketi.nspx",
-      "cron": null,
       "api_url": "https://kam.com.mk/ShopsWeb/LoadShopList",
       "action": null,
       "notice": null,
@@ -519,7 +268,6 @@
       "enabled": true,
       "name": "Ramstore",
       "url": "https://ramstore.com.mk/marketi/",
-      "cron": null,
       "api_url": null,
       "action": null,
       "notice": null,
@@ -532,7 +280,6 @@
       "enabled": true,
       "name": "Stokomak",
       "url": "https://stokomak.proverkanaceni.mk/",
-      "cron": null,
       "api_url": null,
       "action": null,
       "notice": "The published update label advances with page rendering; it is retained as reported and is not a stable snapshot version.",
@@ -545,7 +292,6 @@
       "enabled": true,
       "name": "SPAR",
       "url": "https://spar.mk/pricelist",
-      "cron": null,
       "api_url": "https://api.prod.spar.mk/api/pricelists-web/",
       "action": null,
       "notice": "The published API repeats some article codes, including different prices for the same code. Every row is retained; repeated identities are flagged ambiguous and excluded from automatic linking.",
@@ -558,7 +304,6 @@
       "enabled": true,
       "name": "Žito",
       "url": "https://zito.proverkanaceni.mk/",
-      "cron": null,
       "api_url": null,
       "action": null,
       "notice": "The published update label advances with page rendering; it is retained as reported and is not a stable snapshot version.",
@@ -571,7 +316,6 @@
       "enabled": true,
       "name": "Vero",
       "url": "https://pricelist.vero.com.mk/",
-      "cron": null,
       "api_url": null,
       "action": null,
       "notice": null,
@@ -584,7 +328,6 @@
       "enabled": true,
       "name": "Žur",
       "url": "https://ceni.zur.mk/",
-      "cron": null,
       "api_url": "https://ceni.zur.mk/wp-admin/admin-ajax.php",
       "action": "load_prices_data",
       "notice": null,
@@ -597,7 +340,6 @@
       "enabled": true,
       "name": "Dim",
       "url": "https://dim.marketceni.mk/",
-      "cron": null,
       "api_url": "https://ceni.zur.mk/wp-admin/admin-ajax.php",
       "action": "load_dimceni_prices_data",
       "notice": null,
@@ -610,7 +352,6 @@
       "enabled": true,
       "name": "Reptil",
       "url": "https://www.reptilmarketi.mk/mk/pricelists",
-      "cron": null,
       "api_url": "https://cms.reptilmarketi.mk/wp-json/wp/v2/pages/8",
       "action": null,
       "notice": "Published reuse-with-consent notice; current branch links point to the same webshop. Branch pricing unverified.",
@@ -662,5 +403,8 @@
       "parallel_imports": 2,
       "per_store_downloads": 2
     }
+  },
+  "maintenance": {
+    "batch_size": 10000
   }
 }

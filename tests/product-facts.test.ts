@@ -1,3 +1,4 @@
+import { referenceMatchingRules } from "./helpers/reference-matching-rules";
 import { expect, it } from "vitest";
 import { settings } from "@/nextsignal/config";
 import { validateClarification } from "@/nextsignal/domain/clarification";
@@ -30,7 +31,7 @@ function product(name: string, retailer = "kam"): StoreProduct {
     retailer,
     settings.matching.category_mappings,
   );
-  const facts = prepareFacts(input, family, settings.matching.local);
+  const facts = prepareFacts(input, family, referenceMatchingRules);
   return {
     ...input,
     id: retailer,
@@ -40,7 +41,7 @@ function product(name: string, retailer = "kam"): StoreProduct {
     normalized_name: normalizeName(name),
     family,
     facts,
-    local_key: localKey(name, facts, false, settings.matching.local),
+    local_key: localKey(name, facts, false, referenceMatchingRules),
     category_hints: [],
     group_id: retailer,
     version: 1,
@@ -51,11 +52,11 @@ function product(name: string, retailer = "kam"): StoreProduct {
 
 it("compares reviewed brand spellings while preserving original evidence", () => {
   for (const value of ["НУТЕЛА", "Nutela", "Nutella"])
-    expect(canonicalBrand(value, settings.matching.local)).toBe("nutella");
+    expect(canonicalBrand(value, referenceMatchingRules)).toBe("nutella");
   const p = product("КРЕМ НУТЕЛА 400ГР");
   expect(p.facts.brand?.value).toBe("nutella");
   expect(p.facts.brand?.quote).toBe(p.name);
-  expect(canonicalBrand("Bambi", settings.matching.local)).not.toBe("plazma");
+  expect(canonicalBrand("Bambi", referenceMatchingRules)).not.toBe("plazma");
 });
 
 it("keeps product type separate from range and rejects different ranges", () => {
@@ -135,7 +136,7 @@ it("retains good clarification fields when another field is unsupported", () => 
       { field: "model", value: "C9835", quote: "C9834", source: "name" },
     ],
     ["brand", "model"],
-    settings.matching.local,
+    referenceMatchingRules,
   );
   expect(result.facts.brand?.value).toBe("nutella");
   expect(result.facts.brand?.quote).toBe("НУТЕЛА");
@@ -169,7 +170,7 @@ it("validates amount and unit atomically without discarding unrelated good evide
     p,
     valid,
     ["brand", "quantity", "unit"],
-    settings.matching.local,
+    referenceMatchingRules,
   );
   expect(result.facts.quantity?.value).toBe("400");
   expect(result.facts.unit?.value).toBe("g");
@@ -177,7 +178,7 @@ it("validates amount and unit atomically without discarding unrelated good evide
     p,
     [...valid.slice(0, 2), { ...valid[2], value: "l" }],
     ["brand", "quantity", "unit"],
-    settings.matching.local,
+    referenceMatchingRules,
   );
   expect(Object.keys(invalid.facts)).toEqual(["brand"]);
 });
@@ -198,7 +199,7 @@ it("rejects duplicate facts, invented counts and borrowed or translated quotes",
       },
     ],
     ["brand", "pack", "variant"],
-    settings.matching.local,
+    referenceMatchingRules,
   );
   expect(result.facts).toEqual({});
 });
@@ -219,7 +220,7 @@ it("refreshes old supported AI brand values without manufacturing missing facts"
   };
   const refreshed = refreshProductFacts(
     p,
-    settings.matching.local,
+    referenceMatchingRules,
     settings.matching.category_mappings,
   );
   expect(refreshed.facts.brand?.value).toBe("nutella");
@@ -265,7 +266,7 @@ it("uses reviewed juice categories before fruit ingredients and leaves unlabelle
     familyFromText(input, "vero", settings.matching.category_mappings),
   ).toBe("soft_drinks");
   expect(
-    prepareFacts(input, "soft_drinks", settings.matching.local).type?.value,
+    prepareFacts(input, "soft_drinks", referenceMatchingRules).type?.value,
   ).toBe("juice");
   expect(
     familyFromText(
@@ -327,7 +328,7 @@ it("leaves household vessel capacity out of the sellable product quantity", () =
     gtin: null,
     ambiguous: false,
   };
-  const facts = prepareFacts(input, "household", settings.matching.local);
+  const facts = prepareFacts(input, "household", referenceMatchingRules);
   expect(facts.pack?.value).toBe("2");
   expect(facts.quantity).toBeUndefined();
   expect(facts.unit).toBeUndefined();
@@ -341,7 +342,7 @@ it.each(["rule", "qwen"] as const)(
     expect(
       refreshProductFacts(
         p,
-        settings.matching.local,
+        referenceMatchingRules,
         settings.matching.category_mappings,
       ).facts.pack,
     ).toBeUndefined();
@@ -354,7 +355,7 @@ it("rejects AI pack guesses based only on a number in product dimensions", () =>
     p,
     [{ field: "pack", value: "35", quote: "35Х26ЦМ", source: "name" }],
     ["pack"],
-    settings.matching.local,
+    referenceMatchingRules,
   );
   expect(result.facts.pack).toBeUndefined();
   expect(result.rejected[0].reason).toContain("explicit count");
@@ -364,7 +365,7 @@ it("rejects AI pack guesses based only on a number in product dimensions", () =>
       diapers,
       [{ field: "pack", value: "38", quote: "38/1", source: "name" }],
       ["pack"],
-      settings.matching.local,
+      referenceMatchingRules,
     ).facts.pack?.value,
   ).toBe("38");
 });
@@ -383,7 +384,7 @@ it.each([
         { field: "unit", value: unit, quote, source: "name" },
       ],
       ["quantity", "unit"],
-      settings.matching.local,
+      referenceMatchingRules,
     );
     expect(result.facts.quantity).toBeUndefined();
     expect(result.facts.unit).toBeUndefined();

@@ -1,3 +1,4 @@
+import { readCatalog, rulesFromCatalog } from "./brand-catalog";
 import { settings } from "@/nextsignal/config";
 import { pool, withLock } from "./database";
 import { logEvent } from "@/nextsignal/adapters/log-context";
@@ -28,14 +29,15 @@ export async function refreshProductTextIndex() {
         const rows = (
           await pool.query<StoreProduct>(
             "SELECT *,version::int AS version FROM store_products WHERE id>$1 ORDER BY id LIMIT $2",
-            [after, settings.matching.backfill_batch_size],
+            [after, settings.maintenance.batch_size],
           )
         ).rows;
         if (!rows.length) break;
+        const catalog = await readCatalog(pool);
         const changes = rows.flatMap((row) => {
           const next = refreshProductFacts(
             row,
-            settings.matching.local,
+            rulesFromCatalog(catalog, row.retailer),
             settings.matching.category_mappings,
           );
           const name = normalizeName(

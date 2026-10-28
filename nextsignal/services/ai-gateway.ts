@@ -1,3 +1,5 @@
+import type { PoolClient } from "pg";
+import { matchingRules } from "./brand-catalog";
 import {
   matchingConfig,
   taskContext,
@@ -686,7 +688,10 @@ async function decideScoped(
     prompt_key: prompt?.key ?? null,
   };
 }
-export function classificationRequest(product: StoreProduct) {
+export async function classificationRequest(
+  product: StoreProduct,
+  c?: Pick<PoolClient, "query">,
+) {
   // Category inputs must not depend on a previous model answer or later Qwen
   // enrichment, otherwise the classification would invalidate its own cache.
   const ruleFamily = familyFromText(
@@ -705,7 +710,7 @@ export function classificationRequest(product: StoreProduct) {
         family: ruleFamily,
         facts: {},
       },
-      matchingConfig().local,
+      await matchingRules(c, product.retailer),
       matchingConfig().category_mappings,
     ).facts,
   });
@@ -751,7 +756,7 @@ export function classificationRequest(product: StoreProduct) {
   };
 }
 export async function classify(campaign: Campaign, product: StoreProduct) {
-  const plan = classificationRequest(product);
+  const plan = await classificationRequest(product);
   const result = await withAvailableProducts([product.id], product.id, () =>
     decide(
       campaign,
@@ -963,7 +968,7 @@ async function clarifyScoped(
     product,
     parsed.facts,
     allowed,
-    matchingConfig().local,
+    await matchingRules(undefined, product.retailer),
   );
   if (rejected.length) {
     await logEvent(

@@ -95,7 +95,7 @@ async function seed(count = 3) {
   for (const id of ids) {
     const p = await getProduct(id);
     await saveClassification(p, {
-      key: classificationRequest(p).key,
+      key: (await classificationRequest(p)).key,
       family: "unknown",
       hints: [],
       selected: "other_food",
@@ -291,7 +291,7 @@ it("preserves agent choices through later imports and classification attempts", 
   expect(product.category_review_source).toBe("agent");
   expect(
     await saveClassification(product, {
-      key: classificationRequest(product).key,
+      key: (await classificationRequest(product)).key,
       family: "cleaning",
       hints: [],
       selected: "cleaning",

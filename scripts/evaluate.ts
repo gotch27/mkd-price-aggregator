@@ -1,3 +1,7 @@
+import {
+  readCatalog,
+  rulesFromCatalog,
+} from "@/nextsignal/services/brand-catalog";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { dirname } from "node:path";
 import { createHash } from "node:crypto";
@@ -37,8 +41,6 @@ if (!new URL(settings.database.url).pathname.endsWith("_matching_test"))
   throw new Error(
     "Evaluation refuses application and normal test databases. Use npm run matching:evaluate.",
   );
-if (settings.matching.automatic_enabled)
-  throw new Error("Automatic matching must remain disabled in evaluation.");
 if (settings.matching.gateway.enabled !== args.includes("--paid"))
   throw new Error("Paid evaluation requires the explicit --paid argument.");
 try {
@@ -62,14 +64,16 @@ try {
   await pool.query("TRUNCATE retailers,products,runs,sources,listings CASCADE");
   await seedRetailers();
   const campaign = await ensureCampaign("evaluation");
+  const brandCatalog = await readCatalog(pool);
   await transaction(async (c) => {
     for (const product of products) {
+      const localRules = rulesFromCatalog(brandCatalog, product.retailer);
       const family = familyFromText(
         product,
         product.retailer,
         settings.matching.category_mappings,
       );
-      const facts = prepareFacts(product, family, settings.matching.local),
+      const facts = prepareFacts(product, family, localRules),
         group = stableId(`group:${product.id}`),
         source = stableId(`source:${product.retailer}`);
       await c.query(
@@ -95,12 +99,7 @@ try {
           product.ambiguous,
           JSON.stringify(facts),
           family,
-          localKey(
-            product.name,
-            facts,
-            product.ambiguous,
-            settings.matching.local,
-          ),
+          localKey(product.name, facts, product.ambiguous, localRules),
           group,
           product.id,
         ],
@@ -256,7 +255,6 @@ try {
       ai_categories: settings.matching.ai_categories,
       decision_model: settings.matching.gateway.decision_model,
       extraction_model: settings.matching.gateway.extraction_model,
-      automatic_matching: settings.matching.automatic_enabled,
     },
     summary: {
       cases: results.length,

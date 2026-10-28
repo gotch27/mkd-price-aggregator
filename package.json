@@ -17,7 +17,6 @@
     "probe": "tsx scripts/probe.ts",
     "coverage": "tsx scripts/coverage.ts",
     "smoke": "tsx scripts/smoke.ts",
-    "retry:failed": "tsx scripts/retry-failed.ts",
     "matching:evaluate": "node scripts/matching-evaluate.mjs",
     "names:reindex": "tsx scripts/reindex-names.ts",
     "format": "prettier --write --ignore-unknown app nextsignal worker scripts tests/*.ts config *.ts *.json *.yaml Dockerfile README.md AGENTS.md",

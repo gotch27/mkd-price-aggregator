@@ -15,7 +15,6 @@ export type MatchingSummary = {
   automatic_enabled: boolean;
   gateway_enabled: boolean;
   ai_categories: string[];
-  indexing: { completed: boolean } | null;
   counts: Record<string, number>;
   work_counts: Record<string, number>;
   campaigns: {
@@ -35,6 +34,7 @@ export type DashboardQuery = {
   page: number;
   size: number;
   retailer?: string;
+  brand_id?: string;
   source_id?: string;
   run_id?: string;
   correlation_id?: string;

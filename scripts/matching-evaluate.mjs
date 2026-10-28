@@ -46,7 +46,6 @@ const env = {
   ...(categoryOverride
     ? { NEXTSIGNAL_MATCHING__AI_CATEGORIES: JSON.stringify(categoryOverride) }
     : {}),
-  NEXTSIGNAL_MATCHING__AUTOMATIC_ENABLED: "false",
   NEXTSIGNAL_MATCHING__GATEWAY__ENABLED: String(
     process.argv.includes("--paid"),
   ),

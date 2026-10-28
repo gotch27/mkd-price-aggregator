@@ -15,6 +15,22 @@ try {
     viewport: { width: 1440, height: 1000 },
   });
   activePage = page;
+  // Fail closed for every write, including future task/settings endpoints. The
+  // scoped task helper registers mock acceptance above this catch-all guard.
+  const unexpectedWrites: string[] = [];
+  await page.route("**/api/**", async (route) => {
+    const request = route.request();
+    const path = new URL(request.url()).pathname;
+    if (
+      !["GET", "HEAD"].includes(request.method()) &&
+      path !== "/api/auth/login"
+    ) {
+      unexpectedWrites.push(`${request.method()} ${path}`);
+      await route.abort("blockedbyclient");
+      return;
+    }
+    await route.continue();
+  });
   page.setDefaultTimeout(testing.timeout_ms);
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
@@ -280,7 +296,10 @@ try {
     .fill("stale-test");
   await intercepted;
   const currentLogs = responseFor("logs");
-  await page.getByRole("button", { name: "Logs", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Observability", exact: true })
+    .click();
+  await page.getByRole("tab", { name: "Logs", exact: true }).click();
   await currentLogs;
   release();
   await settled();
@@ -288,7 +307,7 @@ try {
     await page.locator("tbody").innerText(),
     /STALE PRODUCT MUST NOT RENDER|undefined/,
   );
-  await page.unrouteAll({ behavior: "wait" });
+  await page.unroute("**/api/operations?**");
   await page.setViewportSize({ width: 390, height: 844 });
   await page
     .getByRole("button", { name: "Toggle Sidebar", exact: true })
@@ -307,6 +326,11 @@ try {
     ),
     true,
     "Mobile layout must not overflow horizontally",
+  );
+  assert.deepEqual(
+    unexpectedWrites,
+    [],
+    "Browser smoke blocked an unexpected mutation",
   );
   assert.deepEqual(errors, []);
   console.info(

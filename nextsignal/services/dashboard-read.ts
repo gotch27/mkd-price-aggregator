@@ -1,3 +1,4 @@
+import { matchingRules } from "./brand-catalog";
 import { readSettings } from "./task-settings";
 import { settings } from "@/nextsignal/config";
 import type {
@@ -208,7 +209,7 @@ async function readProducts(input: DashboardQuery): Promise<DashboardPage> {
   }
   if (search) {
     values.push(
-      expandNameSearch(input.search, settings.matching.local).map(
+      expandNameSearch(input.search, await matchingRules()).map(
         (term) => `%${term.replace(/[\\%_]/g, "\\$&")}%`,
       ),
     );
@@ -218,8 +219,10 @@ async function readProducts(input: DashboardQuery): Promise<DashboardPage> {
     conditions.push(
       quality === "named" ? "b.usable_name" : "NOT b.usable_name",
     );
+  let sourceParam: string | null = null;
   if (input.source_id) {
     values.push(input.source_id);
+    sourceParam = `$${values.length}`;
     conditions.push(`(
       (b.store_product_id IS NOT NULL AND EXISTS (
         SELECT 1 FROM store_product_sources ss JOIN sources source ON source.id=ss.source_id AND source.active
@@ -231,7 +234,12 @@ async function readProducts(input: DashboardQuery): Promise<DashboardPage> {
       ))
     )`);
   }
-  const sourceParam = input.source_id ? `$${values.length}` : null;
+  if (input.brand_id) {
+    values.push(input.brand_id);
+    conditions.push(
+      `EXISTS(SELECT 1 FROM store_products brand_product WHERE brand_product.id=b.store_product_id AND brand_product.brand_id=$${values.length}::uuid)`,
+    );
+  }
   const availability =
     input.availability ?? settings.dashboard.product_availability;
   if (availability === "available")

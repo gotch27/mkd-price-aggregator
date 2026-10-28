@@ -1,3 +1,4 @@
+import { matchingRules } from "./brand-catalog";
 import type { PoolClient } from "pg";
 import { pool, transaction } from "./database";
 import { settings } from "@/nextsignal/config";
@@ -174,7 +175,7 @@ export async function startSession(input: AgentReviewStart, actor: string) {
         "An agent review is already active. Read or stop that session before starting another.",
       );
     const terms = normalizeName(input.search)
-      ? expandNameSearch(input.search, settings.matching.local).map(
+      ? expandNameSearch(input.search, await matchingRules()).map(
           (t) => `%${t.replace(/[\\%_]/g, "\\$&")}%`,
         )
       : [];

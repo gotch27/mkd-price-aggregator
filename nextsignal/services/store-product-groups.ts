@@ -1,3 +1,4 @@
+import { readCatalog, rulesFromCatalog } from "./brand-catalog";
 import type { PoolClient } from "pg";
 import { settings } from "@/nextsignal/config";
 import { indexListings } from "@/nextsignal/services/matching-repository";
@@ -55,10 +56,11 @@ export async function readGroup(
     )
   ).rows;
   const limited = rows.length > limits.group_member_limit;
+  const catalog = await readCatalog(c);
   const all = rows.slice(0, limits.group_member_limit).map((r) => ({
     ...refreshProductFacts(
       { ...r, group_version: root.matching_version },
-      settings.matching.local,
+      rulesFromCatalog(catalog, r.retailer),
       settings.matching.category_mappings,
     ),
     indexed: r.indexed,
@@ -117,10 +119,10 @@ export async function indexMember(
     FROM listings selected JOIN listings l ON l.retailer=selected.retailer AND l.external_key=selected.external_key AND l.identity_hash=selected.identity_hash
     JOIN sources s ON s.retailer=l.retailer AND s.external_id=l.namespace
     WHERE selected.id=$1 ORDER BY l.id LIMIT $2 FOR UPDATE OF l`,
-      [member.id, settings.matching.backfill_batch_size + 1],
+      [member.id, settings.maintenance.batch_size + 1],
     )
   ).rows;
-  if (rows.length > settings.matching.backfill_batch_size)
+  if (rows.length > settings.maintenance.batch_size)
     throw new ProductGroupConflict(
       "This product has too many branch records for a manual update. Finish its bounded indexing first.",
     );

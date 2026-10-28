@@ -1,3 +1,9 @@
+import {
+  withBrandCatalog,
+  matchingRules,
+  readCatalog,
+  rulesFromCatalog,
+} from "./brand-catalog";
 import { grantChangedProducts } from "./task-automation";
 import {
   availableProductSql,
@@ -10,7 +16,7 @@ import {
   taskContext,
   checkpoint,
 } from "@/nextsignal/services/task-context";
-import { logEvent, withLogContext } from "@/nextsignal/adapters/log-context";
+import { logEvent } from "@/nextsignal/adapters/log-context";
 import { randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
 import {
@@ -67,10 +73,10 @@ export type Work = {
 const active = `EXISTS(SELECT 1 FROM store_product_sources ss JOIN sources s ON s.id=ss.source_id AND s.active WHERE ss.store_product_id=sp.id)`;
 const productSelect = `SELECT sp.*,sp.version::int AS version,p.matching_version::int AS group_version,
  (SELECT availability FROM store_product_availability WHERE store_product_id=sp.id) AS availability FROM store_products sp JOIN products p ON p.id=sp.group_id`;
-const currentFacts = (product: StoreProduct) =>
+const currentFacts = async (product: StoreProduct) =>
   refreshProductFacts(
     product,
-    matchingConfig().local,
+    await matchingRules(pool, product.retailer),
     matchingConfig().category_mappings,
   );
 
@@ -147,15 +153,16 @@ export async function indexListings(
     )
   ).rows;
   const rootById = new Map(roots.map((r) => [r.origin, r.id]));
+  const catalog = await readCatalog(c);
   const prepared = fingerprinted.map((row) => {
+    const rules = rulesFromCatalog(catalog, row.retailer);
     const saved = existingByIdentity.get(
       `${row.retailer}:${row.external_key}:${row.fingerprint}`,
     );
     const family =
       saved?.family ??
       familyFromText(row, row.retailer, matchingConfig().category_mappings);
-    const facts =
-      saved?.facts ?? prepareFacts(row, family, matchingConfig().local);
+    const facts = saved?.facts ?? prepareFacts(row, family, rules);
     return {
       ...row,
       product_id: rootById.get(row.product_id) ?? row.product_id,
@@ -171,7 +178,7 @@ export async function indexListings(
             readableProductText(row.name, row.retailer),
             facts,
             row.ambiguous,
-            matchingConfig().local,
+            rules,
           ),
     };
   });
@@ -293,12 +300,12 @@ export async function preserveSourceProducts(c: PoolClient, sourceId: string) {
     )
   ).rows.map((r) => ({ ...r, ambiguous: r.ambiguous === true }));
   const changes = emptyChanges();
-  for (let i = 0; i < rows.length; i += matchingConfig().backfill_batch_size)
+  for (let i = 0; i < rows.length; i += settings.maintenance.batch_size)
     addChanges(
       changes,
       await indexListings(
         c,
-        rows.slice(i, i + matchingConfig().backfill_batch_size),
+        rows.slice(i, i + settings.maintenance.batch_size),
       ),
     );
   return changes;
@@ -323,12 +330,12 @@ export async function synchronizeSource(c: PoolClient, sourceId: string) {
   // All batches share the catalog publication transaction, so no partial alias
   // or change event becomes visible if the import fails.
   const changes = emptyChanges();
-  for (let i = 0; i < rows.length; i += matchingConfig().backfill_batch_size)
+  for (let i = 0; i < rows.length; i += settings.maintenance.batch_size)
     addChanges(
       changes,
       await indexListings(
         c,
-        rows.slice(i, i + matchingConfig().backfill_batch_size),
+        rows.slice(i, i + settings.maintenance.batch_size),
         { authorizeChanges: true },
       ),
     );
@@ -462,7 +469,7 @@ export async function refreshIdentitySafety(c: PoolClient, ids: string[]) {
         readableProductText(product.name, product.retailer),
         product.facts,
         product.ambiguous,
-        matchingConfig().local,
+        await matchingRules(c, product.retailer),
       ),
     ]);
   const changes = (
@@ -490,111 +497,6 @@ export async function refreshIdentitySafety(c: PoolClient, ids: string[]) {
   };
 }
 
-export async function backfillStoreProducts() {
-  return withLogContext({}, async () => {
-    try {
-      return await backfillScoped();
-    } catch (error) {
-      await logEvent(
-        "error",
-        "matching.backfill.failed",
-        "Store product indexing failed; inspect the last saved checkpoint",
-        {},
-        error,
-      );
-      throw error;
-    }
-  });
-}
-async function backfillScoped() {
-  const started = Date.now();
-  let progressed = false,
-    cursor: string | null = null,
-    changes = emptyChanges(),
-    legacyConflicts = 0;
-  const result = await transaction(async (c) => {
-    const state = (
-      await c.query(
-        `SELECT * FROM matching_state WHERE key='store-products' FOR UPDATE`,
-      )
-    ).rows[0];
-    if (state.completed) return { processed: 0, completed: true };
-    progressed = true;
-    const rows = (
-      await c.query<SourceListing>(
-        `SELECT l.id,l.retailer,l.external_key,l.raw->>'identity_base' AS identity_base,l.identity_hash,l.product_id,l.name,l.description,l.category,l.gtin,
-      l.raw->>'identity_ambiguous'='true' AS ambiguous,l.match_status,s.id AS source_id
-      FROM listings l JOIN sources s ON s.retailer=l.retailer AND s.external_id=l.namespace
-      WHERE ($1::uuid IS NULL OR l.id>$1) ORDER BY l.id LIMIT $2 FOR UPDATE OF l`,
-        [state.cursor, matchingConfig().backfill_batch_size],
-      )
-    ).rows.map((r) => ({ ...r, ambiguous: r.ambiguous === true }));
-    changes = await indexListings(c, rows);
-    cursor = rows.at(-1)?.id ?? state.cursor;
-    const ids = rows.map((r) => r.id);
-    // Upsert only migrated observations; do not scan every branch after every
-    // cursor page. The final row counts are sums over the aliases already saved.
-    if (ids.length)
-      await c.query(
-        `WITH touched AS (
-        SELECT DISTINCT store_product_id,source_id FROM store_product_aliases WHERE listing_id=ANY($1::uuid[])
-      ) INSERT INTO store_product_sources(store_product_id,source_id,price,highest_price,offer_count,retrieved_at)
-      SELECT a.store_product_id,o.source_id,min(o.price),max(o.price),count(*)::int,max(o.retrieved_at)
-      FROM touched t JOIN store_product_aliases a ON a.store_product_id=t.store_product_id AND a.source_id=t.source_id
-      JOIN offers o ON o.listing_id=a.listing_id AND o.source_id=t.source_id
-      GROUP BY a.store_product_id,o.source_id
-      ON CONFLICT(store_product_id,source_id) DO UPDATE SET price=excluded.price,highest_price=excluded.highest_price,offer_count=excluded.offer_count,retrieved_at=excluded.retrieved_at`,
-        [ids],
-      );
-    const completed = rows.length < matchingConfig().backfill_batch_size;
-    await c.query(
-      `UPDATE matching_state SET cursor=coalesce($1,cursor),completed=$2 WHERE key='store-products'`,
-      [rows.at(-1)?.id ?? null, completed],
-    );
-    if (completed) legacyConflicts = await auditGroups(c);
-    return { processed: rows.length, completed };
-  });
-  if (progressed) {
-    await logEvent(
-      "info",
-      "matching.backfill.checkpoint",
-      "Store product indexing checkpoint saved",
-      { ...result, ...changes, cursor, duration_ms: Date.now() - started },
-    );
-    if (legacyConflicts)
-      await logEvent(
-        "warn",
-        "matching.backfill.conflicts",
-        "Existing product connections need attention",
-        { legacy_conflict_records: legacyConflicts },
-      );
-  }
-  return result;
-}
-
-async function auditGroups(c: PoolClient) {
-  await c.query(`WITH conflicts AS (
-    SELECT sp.retailer,sp.external_key FROM store_products sp WHERE ${active}
-    GROUP BY sp.retailer,sp.external_key HAVING count(*)>1
-  ) UPDATE store_products sp SET branch_conflict=true,version=version+1,state='needs_info',last_reason='Branches disagree about this store article'
-    FROM conflicts c WHERE c.retailer=sp.retailer AND c.external_key=sp.external_key AND NOT sp.branch_conflict`);
-  // Existing connections are kept, including unsafe legacy groups. They are
-  // marked explicitly and cannot receive new members automatically.
-  await c.query(`UPDATE products p SET matching_conflict=true WHERE EXISTS(
-    SELECT 1 FROM store_products sp WHERE sp.group_id=p.id AND ${active}
-    GROUP BY sp.retailer HAVING count(*)>1)`);
-  await c.query(`UPDATE products p SET matching_conflict=true WHERE EXISTS(
-    SELECT 1 FROM store_products a JOIN store_products b ON b.group_id=a.group_id AND b.id>a.id
-    JOIN LATERAL jsonb_each(a.facts) af ON true JOIN LATERAL jsonb_each(b.facts) bf ON bf.key=af.key
-    WHERE a.group_id=p.id AND af.value->>'value'<>bf.value->>'value'
-      AND EXISTS(SELECT 1 FROM store_product_sources ss JOIN sources s ON s.id=ss.source_id AND s.active WHERE ss.store_product_id=a.id)
-      AND EXISTS(SELECT 1 FROM store_product_sources ss JOIN sources s ON s.id=ss.source_id AND s.active WHERE ss.store_product_id=b.id))`);
-  const flagged =
-    await c.query(`UPDATE store_products sp SET state='legacy_conflict',last_reason='Existing group contains conflicting store products'
-    FROM products p WHERE p.id=sp.group_id AND p.matching_conflict`);
-  return flagged.rowCount ?? 0;
-}
-
 export async function getProduct(id: string): Promise<StoreProduct> {
   const row = (
     await pool.query<StoreProduct>(
@@ -618,7 +520,9 @@ export async function groupMembers(
       `${productSelect} WHERE sp.group_id=$1 AND ${active} ORDER BY sp.id`,
       [groupId],
     )
-    .then((r) => r.rows.map(currentFacts));
+    .then((r) =>
+      withBrandCatalog(() => Promise.all(r.rows.map(currentFacts)), c ?? pool),
+    );
 }
 export async function findCandidates(
   query: StoreProduct,
@@ -691,7 +595,7 @@ export async function findCandidates(
       )
     ).rows[0];
     candidates.push({
-      product: currentFacts(row),
+      product: await currentFacts(row),
       members,
       group_version: p.version,
       reasons: row.reasons,
@@ -729,7 +633,7 @@ export async function saveClassification(
     generation_id: string | null;
   },
 ) {
-  const refreshed = currentFacts({
+  const refreshed = await currentFacts({
     ...product,
     classified_family: classification.family,
   });
@@ -788,60 +692,6 @@ export async function saveClassification(
 
 // Bounded background reconciliation when an excluded label is enabled later.
 // Existing connections and cached classifications are never reset.
-export async function requeueSelectedCategories(sourceId: string | null) {
-  if (!matchingConfig().ai_categories.length) return 0;
-  const result = await pool.query(
-    `WITH selected AS (
-    SELECT sp.id FROM store_products sp JOIN matching_work w ON w.store_product_id=sp.id
-    WHERE sp.state='category_excluded' AND w.state='completed' AND sp.classified_family=ANY($1::text[]) AND ${availableProductSql("sp")}
-      AND ($3::uuid IS NULL OR EXISTS(SELECT 1 FROM store_product_aliases a WHERE a.store_product_id=sp.id AND a.source_id=$3))
-    ORDER BY sp.id LIMIT $2 FOR UPDATE OF w SKIP LOCKED
-  ) UPDATE matching_work w SET state='pending',campaign_id=NULL,reason='Category selected for AI matching',updated_at=now()
-    FROM selected WHERE w.store_product_id=selected.id`,
-    [
-      matchingConfig().ai_categories,
-      matchingConfig().backfill_batch_size,
-      sourceId,
-    ],
-  );
-  if (result.rowCount)
-    await logEvent(
-      "info",
-      "matching.categories.requeued",
-      "Previously excluded products queued after their category was enabled",
-      { queued: result.rowCount, categories: matchingConfig().ai_categories },
-    );
-  return result.rowCount ?? 0;
-}
-
-// Products processed before category-first matching may have completed work but
-// no saved category, including manually connected products. Queue their first
-// categorization without resetting the group or reopening classified products.
-export async function requeueUnclassifiedProducts(sourceId: string | null) {
-  if (!matchingConfig().gateway.enabled) return 0;
-  const result = await pool.query(
-    `WITH selected AS (
-    SELECT sp.id FROM store_products sp LEFT JOIN matching_work w ON w.store_product_id=sp.id
-    WHERE sp.classification_key IS NULL AND sp.classification_attempt_key IS NULL AND sp.manual_family IS NULL AND NOT sp.ambiguous AND NOT sp.branch_conflict
-      AND sp.state<>'legacy_conflict' AND (w.id IS NULL OR w.state='completed') AND ${availableProductSql("sp")}
-      AND ($2::uuid IS NULL OR EXISTS(SELECT 1 FROM store_product_aliases a WHERE a.store_product_id=sp.id AND a.source_id=$2))
-    ORDER BY sp.id LIMIT $1 FOR UPDATE OF sp SKIP LOCKED
-  ) INSERT INTO matching_work(store_product_id,reason)
-    SELECT id,'Initial shared category needed' FROM selected
-    ON CONFLICT(store_product_id) DO UPDATE SET state='pending',campaign_id=NULL,reason=excluded.reason,updated_at=now()
-      WHERE matching_work.state='completed'`,
-    [matchingConfig().backfill_batch_size, sourceId],
-  );
-  if (result.rowCount)
-    await logEvent(
-      "info",
-      "matching.classification.queued",
-      "Existing products queued for their first shared category",
-      { queued: result.rowCount, source_id: sourceId },
-    );
-  return result.rowCount ?? 0;
-}
-
 export async function saveFacts(
   product: StoreProduct,
   facts: Facts,
@@ -861,7 +711,7 @@ export async function saveFacts(
           readableProductText(product.name, product.retailer),
           facts,
           product.ambiguous,
-          matchingConfig().local,
+          await matchingRules(pool, product.retailer),
         ),
         product.version,
       ],
@@ -908,177 +758,6 @@ export async function ensureCampaign(
   return campaign;
 }
 
-export async function startPending(sourceId: string | null, force = false) {
-  if (
-    !matchingConfig().enabled ||
-    (!matchingConfig().automatic_enabled && !force)
-  ) {
-    await logEvent(
-      "debug",
-      "matching.queue.skipped",
-      "Matching queue check skipped",
-      { source_id: sourceId, reason: "matching_disabled" },
-    );
-    return null;
-  }
-  await requeueUnclassifiedProducts(sourceId);
-  await requeueSelectedCategories(sourceId);
-  const state = (
-    await pool.query(
-      `SELECT completed FROM matching_state WHERE key='store-products'`,
-    )
-  ).rows[0];
-  if (!state.completed) {
-    await logEvent(
-      "debug",
-      "matching.queue.waiting",
-      "Matching is waiting for store product indexing",
-      { source_id: sourceId, reason: "indexing" },
-    );
-    return null;
-  }
-  if (
-    (
-      await pool.query(
-        `SELECT 1 FROM runs WHERE kind IN ('discover','catalog') AND status IN ('pending','queued','running') LIMIT 1`,
-      )
-    ).rowCount
-  ) {
-    await logEvent(
-      "debug",
-      "matching.queue.waiting",
-      "Matching is waiting for current price imports",
-      { source_id: sourceId, reason: "imports_in_progress" },
-    );
-    return null;
-  }
-  if (
-    !(
-      await pool.query(
-        `SELECT 1 FROM matching_work w JOIN store_products sp ON sp.id=w.store_product_id WHERE w.state IN ('pending','running','deferred') AND ${availableProductSql("sp")} LIMIT 1`,
-      )
-    ).rowCount
-  ) {
-    await logEvent(
-      "debug",
-      "matching.queue.skipped",
-      "No active pending products need matching",
-      { source_id: sourceId, reason: "no_pending_work" },
-    );
-    return null;
-  }
-  const initial = await ensureCampaign("initial");
-  const campaign =
-    initial.state === "completed"
-      ? await ensureCampaign("incremental", sourceId)
-      : initial;
-  if (campaign.state !== "running") {
-    await logEvent(
-      "debug",
-      "matching.queue.waiting",
-      "Matching campaign is paused",
-      {
-        source_id: sourceId,
-        campaign_id: campaign.id,
-        reason: campaign.reason,
-      },
-    );
-    return campaign;
-  }
-  let queued = false,
-    assigned = 0;
-  const result = await transaction(async (c) => {
-    await c.query(`SELECT id FROM matching_campaigns WHERE id=$1 FOR UPDATE`, [
-      campaign.id,
-    ]);
-    const assignment = await c.query(
-      `WITH batch AS (
-      SELECT w.id FROM matching_work w JOIN store_products sp ON sp.id=w.store_product_id
-      WHERE w.campaign_id IS NULL AND w.state IN ('pending','deferred') AND ${availableProductSql("sp")}
-        AND ($2::uuid IS NULL OR EXISTS(SELECT 1 FROM store_product_aliases a WHERE a.store_product_id=sp.id AND a.source_id=$2))
-      ORDER BY w.created_at,w.id LIMIT $3 FOR UPDATE OF w SKIP LOCKED
-    ) UPDATE matching_work w SET campaign_id=$1,updated_at=now() FROM batch WHERE batch.id=w.id`,
-      [campaign.id, sourceId, matchingConfig().backfill_batch_size],
-    );
-    assigned = assignment.rowCount ?? 0;
-    const unfinished = (
-      await c.query(
-        `SELECT 1 FROM matching_work w JOIN store_products sp ON sp.id=w.store_product_id WHERE w.campaign_id=$1 AND w.state IN ('pending','running','deferred') AND ${availableProductSql("sp")} LIMIT 1`,
-        [campaign.id],
-      )
-    ).rowCount;
-    if (!unfinished) {
-      await c.query(
-        `UPDATE matching_campaigns SET state='completed',completed_at=now(),reason='Matching completed' WHERE id=$1
-        AND (kind<>'initial' OR NOT EXISTS(SELECT 1 FROM matching_work w JOIN store_products sp ON sp.id=w.store_product_id WHERE w.campaign_id IS NULL AND w.state='pending' AND ${availableProductSql("sp")}))`,
-        [campaign.id],
-      );
-      return campaign;
-    }
-    if (
-      (
-        await c.query(
-          `SELECT 1 FROM runs WHERE kind='match' AND status IN ('pending','queued','running') LIMIT 1`,
-        )
-      ).rowCount
-    )
-      return campaign;
-    const run = (
-      await c.query(
-        `INSERT INTO runs(kind,status,source_id,checkpoint) VALUES('match','pending',$1,jsonb_build_object('campaign_id',$2::text)) RETURNING id`,
-        [sourceId, campaign.id],
-      )
-    ).rows[0];
-    await c.query("UPDATE matching_campaigns SET run_id=$2 WHERE id=$1", [
-      campaign.id,
-      run.id,
-    ]);
-    queued = true;
-    return { ...campaign, run_id: run.id };
-  });
-  if (queued)
-    await logEvent(
-      "info",
-      "matching.campaign.queued",
-      "Pending product matching queued",
-      {
-        campaign_id: campaign.id,
-        run_id: result.run_id,
-        source_id: sourceId,
-        assigned_products: assigned,
-      },
-    );
-  return result;
-}
-export async function campaignForRun(runId: string, sourceId: string | null) {
-  // Publishing the run's campaign reference and assigning its work must be one
-  // transaction: another worker must never observe the former without the latter.
-  return transaction(async (c) => {
-    await c.query("SELECT id FROM runs WHERE id=$1 FOR UPDATE", [runId]);
-    const existing = (
-      await c.query<Campaign>(
-        `SELECT mc.* FROM runs r JOIN matching_campaigns mc ON mc.id::text=r.checkpoint->>'campaign_id' WHERE r.id=$1`,
-        [runId],
-      )
-    ).rows[0];
-    const campaign =
-      existing ?? (await ensureCampaign("incremental", sourceId));
-    await c.query(
-      `UPDATE runs SET checkpoint=checkpoint||jsonb_build_object('campaign_id',$2::text) WHERE id=$1`,
-      [runId, campaign.id],
-    );
-    await c.query(
-      `WITH batch AS (
-      SELECT w.id FROM matching_work w JOIN store_products sp ON sp.id=w.store_product_id
-      WHERE w.campaign_id IS NULL AND w.state='pending' AND ${availableProductSql("sp")}
-        AND ($2::uuid IS NULL OR EXISTS(SELECT 1 FROM store_product_aliases a WHERE a.store_product_id=sp.id AND a.source_id=$2))
-      ORDER BY w.created_at,w.id LIMIT $3 FOR UPDATE OF w SKIP LOCKED
-    ) UPDATE matching_work w SET campaign_id=$1 FROM batch WHERE w.id=batch.id`,
-      [campaign.id, sourceId, matchingConfig().backfill_batch_size],
-    );
-    return campaign;
-  });
-}
 export async function claimWork(campaignId: string): Promise<Work[]> {
   const work = await transaction(async (c) => {
     await c.query(
@@ -1163,75 +842,6 @@ export async function pauseCampaign(campaignId: string, reason: string) {
       { campaign_id: campaignId, reason },
     );
 }
-export async function resumeMonthlyBudgets() {
-  const rows = await transaction(async (c) => {
-    const resumed = (
-      await c.query<{ id: string }>(
-        `UPDATE matching_campaigns SET state='running',reason='New monthly matching allowance',paused_at=NULL
-    WHERE kind='incremental' AND state='paused' AND reason='Paused: spending or request limit reached'
-      AND date_trunc('month',paused_at AT TIME ZONE $1)<date_trunc('month',now() AT TIME ZONE $1) RETURNING id`,
-        [settings.app.timezone],
-      )
-    ).rows;
-    if (resumed.length)
-      await c.query(
-        `UPDATE matching_work SET state='pending',error=NULL WHERE campaign_id=ANY($1::uuid[]) AND state='deferred'`,
-        [resumed.map((r) => r.id)],
-      );
-    return resumed;
-  });
-  for (const row of rows)
-    await logEvent(
-      "info",
-      "matching.campaign.resumed",
-      "Matching resumed with a new monthly allowance",
-      {
-        campaign_id: row.id,
-        reason: "new_calendar_month",
-        timezone: settings.app.timezone,
-      },
-    );
-}
-export async function controlCampaign(
-  action: "pause" | "resume",
-  sourceId: string | null,
-) {
-  const result = await transaction(async (c) => {
-    const campaigns = (
-      await c.query<Campaign>(
-        `UPDATE matching_campaigns SET state=$1,reason=$2 WHERE state=$3 AND ($4::uuid IS NULL OR source_id=$4) RETURNING *`,
-        [
-          action === "pause" ? "paused" : "running",
-          action === "pause" ? "Paused by you" : "Resumed by you",
-          action === "pause" ? "running" : "paused",
-          sourceId,
-        ],
-      )
-    ).rows;
-    if (action === "resume" && campaigns.length)
-      await c.query(
-        `UPDATE matching_work SET state='pending',error=NULL WHERE campaign_id=ANY($1::uuid[]) AND state='deferred'`,
-        [campaigns.map((r) => r.id)],
-      );
-    return campaigns;
-  });
-  for (const campaign of result)
-    await logEvent(
-      "info",
-      action === "pause"
-        ? "matching.campaign.paused"
-        : "matching.campaign.resumed",
-      action === "pause" ? "Matching paused by you" : "Matching resumed by you",
-      {
-        campaign_id: campaign.id,
-        campaign_kind: campaign.kind,
-        source_id: sourceId,
-        reason: campaign.reason,
-      },
-    );
-  return result;
-}
-
 export async function recordResult(
   query: StoreProduct,
   work: Work,
@@ -1338,7 +948,10 @@ export async function recordResult(
         : [...humanLinks.values()].includes("different")
           ? "These products were manually marked as different"
           : groupProblem(
-              members.map(currentFacts),
+              await withBrandCatalog(
+                () => Promise.all(members.map(currentFacts)),
+                c,
+              ),
               (a, b) => humanLinks.get(pairKey(a, b)) === "same",
             )
       : null;
@@ -1570,22 +1183,6 @@ export async function manuallySeparatedCandidates(
   });
 }
 
-export async function workRemaining(campaignId: string) {
-  return !!(
-    await pool.query(
-      `SELECT 1 FROM matching_work WHERE campaign_id=$1 AND state IN ('pending','running') LIMIT 1`,
-      [campaignId],
-    )
-  ).rowCount;
-}
-export async function campaignRunning(campaignId: string) {
-  return !!(
-    await pool.query(
-      `SELECT 1 FROM matching_campaigns WHERE id=$1 AND state='running'`,
-      [campaignId],
-    )
-  ).rowCount;
-}
 export async function recordDeferred(
   product: StoreProduct,
   work: Work,
@@ -1650,28 +1247,12 @@ export async function completeCampaign(campaignId: string) {
       { campaign_id: campaignId },
     );
 }
-export async function pauseDisabledCampaign(campaignId: string) {
-  const result = await pool.query(
-    `UPDATE matching_campaigns SET state='paused',paused_at=now(),reason='Gateway matching is disabled' WHERE id=$1 AND state='running'
-  AND NOT EXISTS(SELECT 1 FROM matching_work WHERE campaign_id=$1 AND state IN ('pending','running'))
-  AND EXISTS(SELECT 1 FROM matching_work WHERE campaign_id=$1 AND state='deferred')`,
-    [campaignId],
-  );
-  if (result.rowCount)
-    await logEvent(
-      "warn",
-      "matching.campaign.paused",
-      "Matching paused because Gateway calls are disabled",
-      { campaign_id: campaignId, reason: "gateway_disabled" },
-    );
-}
-
 export async function matchingStatus(savedCoverage?: {
   counts: Record<string, number>;
   work_counts: Record<string, number>;
 }) {
   const runtime = await readSettings();
-  const [campaigns, coverage, state] = await Promise.all([
+  const [campaigns, coverage] = await Promise.all([
     pool.query(
       `SELECT c.*,coalesce(sum(u.cost_usd),0)::text AS spent_usd FROM matching_campaigns c LEFT JOIN ai_usage u ON u.campaign_id=c.id GROUP BY c.id ORDER BY c.created_at DESC LIMIT 20`,
     ),
@@ -1688,7 +1269,6 @@ export async function matchingStatus(savedCoverage?: {
         coalesce((SELECT jsonb_object_agg(state,count) FROM product_counts),'{}'::jsonb) AS counts,
         coalesce((SELECT jsonb_object_agg(state,count) FROM work_counts),'{}'::jsonb) AS work_counts`,
         ),
-    pool.query(`SELECT * FROM matching_state WHERE key='store-products'`),
   ]);
   const monthly = (
     await pool.query(
@@ -1701,7 +1281,6 @@ export async function matchingStatus(savedCoverage?: {
       runtime.policy.matching === "automatic" && !runtime.policy.paused,
     gateway_enabled: runtime.policy.ai_enabled,
     ai_categories: runtime.policy.ai_categories,
-    indexing: state.rows[0],
     counts: coverage.rows[0].counts as Record<string, number>,
     work_counts: coverage.rows[0].work_counts as Record<string, number>,
     campaigns: campaigns.rows.map((c) => ({

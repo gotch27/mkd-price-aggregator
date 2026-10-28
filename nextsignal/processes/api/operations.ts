@@ -38,6 +38,7 @@ const query = z.object({
     .positive()
     .max(settings.dashboard.max_page_size),
   retailer: z.string().optional(),
+  brand_id: z.uuid().optional(),
   source_id: z.uuid().optional(),
   run_id: z.uuid().optional(),
   correlation_id: z.string().optional(),
@@ -78,62 +79,6 @@ export const readOperations = apiProcess<
       async () =>
         value(await ctx.services.operations.readDashboard(query.parse(input))),
     );
-  },
-});
-const ingestion = z.object({
-  retailer: z
-    .enum([
-      "kam",
-      "ramstore",
-      "stokomak",
-      "spar",
-      "zito",
-      "vero",
-      "zur",
-      "dim",
-      "reptil",
-    ])
-    .nullable(),
-});
-export const requestIngestion = apiProcess<
-  z.infer<typeof ingestion>,
-  unknown,
-  AppServices
->({
-  name: "operations.ingest",
-  auth: authorize,
-  validate: validateWith(ingestion),
-  async handle(ctx, input) {
-    return fail(
-      "Use Tasks to submit a reviewed task with its settings revision.",
-    );
-  },
-});
-export const retry = apiProcess<{ id: string }, unknown, AppServices>({
-  name: "operations.retry",
-  auth: authorize,
-  validate: validateWith(z.object({ id: z.uuid() })),
-  async handle(ctx, input) {
-    return fail(
-      "Use Tasks to review the scope and limits before restarting a legacy update.",
-    );
-  },
-});
-export const matchingRetry = apiProcess<
-  { source_id: string | null; action?: "process_pending" | "pause" | "resume" },
-  unknown,
-  AppServices
->({
-  name: "operations.match",
-  auth: authorize,
-  validate: validateWith(
-    z.object({
-      source_id: z.uuid().nullable(),
-      action: z.enum(["process_pending", "pause", "resume"]).optional(),
-    }),
-  ),
-  async handle(ctx, input) {
-    return fail("Use Tasks to submit or control an authorized matching task.");
   },
 });
 export const login = apiProcess<

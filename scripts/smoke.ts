@@ -116,7 +116,7 @@ if (anyProduct.data.rows.length) {
 }
 assert.equal(
   (
-    await fetch(new URL("/api/matching", base), {
+    await fetch(new URL("/api/tasks", base), {
       method: "POST",
       headers: {
         cookie,
@@ -138,6 +138,8 @@ assert.equal(
   400,
 );
 for (const path of [
+  "/api/brands?search=&page=1&size=1",
+  "/api/brands/options",
   "/api/task-settings",
   "/api/tasks?page=1&size=1",
   "/api/task-settings/history?page=1&size=1",
@@ -154,10 +156,8 @@ for (const path of [
   assert.equal((await response.json()).ok, true, path);
 }
 for (const path of [
+  "/api/brands",
   "/api/tasks",
-  "/api/ingestion",
-  "/api/matching",
-  "/api/categorization",
   "/api/review/agent-sessions",
 ]) {
   const response: Response = await fetch(new URL(path, base), {

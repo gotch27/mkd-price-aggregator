@@ -1,3 +1,4 @@
+import { referenceMatchingRules } from "./helpers/reference-matching-rules";
 import { expect, it } from "vitest";
 import {
   readableProductCategory,
@@ -133,7 +134,7 @@ it("uses readable names in both AI operations while keeping literal source evide
   expect(request.readable_category).toBe("ШЕЌЕР");
   const family = familyFromText(p, "spar", settings.matching.category_mappings);
   expect(family).toBe("dairy");
-  const facts = prepareFacts(p, family, settings.matching.local);
+  const facts = prepareFacts(p, family, referenceMatchingRules);
   expect(facts.type?.value).toBe("cheese");
   expect(facts.type?.quote).toBe(p.name);
   expect(supportedFact(p, facts.type!)).toBe(true);
@@ -191,10 +192,10 @@ it("separates explicit lower-case prepositions without splitting brands, models 
   ).toBe("HappyDay ABzaCD123 https://example.com/GELzaTU[IRAWE");
 });
 it("supports searching for either original encoded spelling or readable spelling", () => {
-  const encoded = expandNameSearch("SIREWE", settings.matching.local);
+  const encoded = expandNameSearch("SIREWE", referenceMatchingRules);
   expect(encoded).toContain("sirewe");
   expect(encoded).toContain("sirenje");
-  expect(expandNameSearch("Ф`СТАЦИ", settings.matching.local)).toContain(
+  expect(expandNameSearch("Ф`СТАЦИ", referenceMatchingRules)).toContain(
     "f staci",
   );
 });
@@ -207,7 +208,7 @@ it("reads SPAR H multipacks only with an explicit mass/volume/piece unit and ret
   expect(packCount("TORBA 24H24SM", "spar")).toBeNull();
   expect(packCount("MODEL QX-600H", "spar")).toBeNull();
   const p = product("PALMOLAJV TU[ GEL 2H250ML", "spar");
-  const facts = prepareFacts(p, "personal_care", settings.matching.local);
+  const facts = prepareFacts(p, "personal_care", referenceMatchingRules);
   expect(facts.pack?.value).toBe("2");
   expect(facts.quantity?.value).toBe("250");
   expect(supportedFact(p, facts.pack!)).toBe(true);

@@ -20,6 +20,8 @@ import {
 } from "@/components/ui/tooltip";
 import { storeNames } from "@/app/_components/dashboard/types";
 import type { DashboardQuery } from "@/nextsignal/domain/dashboard";
+import { BrandFilter } from "./brands-manager";
+
 export function Choice({
   label,
   value,
@@ -56,11 +58,13 @@ export function Filters({
   busy,
   onChange,
   onRefresh,
+  onUnauthorized,
 }: {
   query: DashboardQuery;
   busy: boolean;
   onChange: (patch: Partial<DashboardQuery>) => void;
   onRefresh: () => void;
+  onUnauthorized: () => void;
 }) {
   return (
     <div className="filter-bar">
@@ -130,6 +134,13 @@ export function Filters({
           onChange={(v) =>
             onChange({ name_quality: v as DashboardQuery["name_quality"] })
           }
+        />
+      )}
+      {query.view === "universal" && (
+        <BrandFilter
+          value={query.brand_id ?? ""}
+          onUnauthorized={onUnauthorized}
+          onChange={(brand_id) => onChange({ brand_id: brand_id || undefined })}
         />
       )}
       {query.view === "universal" && (

@@ -6,7 +6,7 @@ See [the data model and SQL examples](docs/data-model.md) when building the next
 See [the architecture and code map](docs/architecture.md) for imports and module responsibilities.
 See [the matching workflow and review guide](docs/matching.md) for the new Gateway integration, safety checks, budgets, and evaluation commands.
 
-The latest [category-first matching flow](docs/category-first-matching.md) categorizes unique store products once, permits code-based matches in every category, and limits AI comparisons to selected labels. Review the [external prompt files](prompts/README.md) before activation. `matching.ai_categories` is intentionally empty; automatic matching and Gateway access remain disabled.
+The latest [category-first matching flow](docs/category-first-matching.md) categorizes unique store products once, permits code-based matches in every category, and limits AI comparisons to selected labels. Review the [external prompt files](prompts/README.md) before activation. Automatic AI comparison categories start empty. A fresh deployment uses manual task modes with AI permission off; saved Settings choices govern later execution.
 
 Store product cards now support [manual detail corrections and edit history](docs/product-detail-editing.md). Corrections survive repeat imports, preserve the original store data, and are logged through the existing adapters. Saving details makes no AI request.
 
@@ -19,7 +19,7 @@ npm ci
 npm run setup
 # Review .env.local: generated administrator password, database credentials and ports.
 docker compose --env-file .env.local up -d --build
-# Explicit initial import; the configured weekly schedule handles subsequent runs.
+# Explicit initial import; enable later scheduling in Settings if desired.
 npm run ingest -- --all
 ```
 
@@ -39,19 +39,16 @@ Use `--build` after source or JSON configuration changes. Plain `up -d` can reus
 `config/default.json` is the explicit, committed configuration, despite the framework's conventional filename. **There are no application-level configuration fallbacks or schema defaults.** Root environment variables override it through Nextsignal's `NEXTSIGNAL_` provider. Missing or unknown values fail startup with the relevant configuration path. The web server, workers, scripts, migrations and tests use the same validation.
 
 ```dotenv
-NEXTSIGNAL_SCHEDULER__CRON=0 12 * * 1
 NEXTSIGNAL_APP__TIMEZONE=Europe/Skopje
-NEXTSIGNAL_SOURCES__SPAR__CRON=0 12 * * 1,4
-NEXTSIGNAL_MATCHING__AUTOMATIC_ENABLED=false
 NEXTSIGNAL_MATCHING__GATEWAY__ENABLED=false
 NEXTSIGNAL_MATCHING__GATEWAY__API_KEY=your-vercel-ai-gateway-key
 NEXTSIGNAL_MATCHING__GATEWAY__INITIAL_BUDGET_USD=25
 NEXTSIGNAL_MATCHING__GATEWAY__MONTHLY_BUDGET_USD=2
 ```
 
-An explicit source cron of `null` selects the configured global cron. The browser origin must be explicitly included in `auth.allowed_origins`, including its port. Apply environment changes with `docker compose --env-file .env.local up -d --force-recreate web worker`. A plain container restart keeps its previous environment. JSON configuration changes require rebuilding both runtimes. A changed schedule resets its persisted next occurrence.
+The import schedule, participating stores, task modes, AI permission, and spending limits are persisted in PostgreSQL and edited through Settings. Deployment configuration seeds a missing settings record once and does not overwrite saved choices. The browser origin must be explicitly included in `auth.allowed_origins`, including its port. Apply environment changes with `docker compose --env-file .env.local up -d --force-recreate web worker`. A plain container restart keeps its previous environment. JSON configuration changes require rebuilding both runtimes. Changing the schedule in Settings calculates its next future occurrence without starting an import immediately.
 
-**Automatic matching and Gateway calls are disabled pending implementation review and a jointly reviewed evaluation.** Supplying a key does not enable either switch. Do not start the full matching campaign until approved. An initial campaign shares one $25 allowance across all batches; subsequent updates share $2 per calendar month in Europe/Skopje. Interrupted requests retain their estimated reservation until billing can be reconciled. Usage is an application ledger, not an invoice. The former `matching.ai` configuration is accepted only for compatibility with existing environments; the retired OpenAI client is no longer used and its flag cannot activate this workflow.
+**A fresh deployment performs no automatic imports or paid AI work.** Configure the Vercel Gateway key privately, then explicitly authorize tasks or enable automation in Settings. Production uses Perplexity Decider for classification/comparison and optional Qwen Flash for targeted clarification, both through Vercel Gateway. An initial campaign shares one $25 allowance across all batches; subsequent updates share $2 per calendar month in Europe/Skopje. Interrupted requests retain their estimated reservation until billing can be reconciled. Usage is an application ledger, not an invoice. Removed settings are rejected at startup rather than accepted as inactive compatibility switches.
 
 Other explicit settings cover queue concurrency/retries/heartbeats, host request intervals, byte/time/page limits, source page sizes, identity policy, catalog reduction confirmation, logging, dashboard paging, matching rules, models, prompt versions, candidate scoring, and limits. `config/build.json` contains non-runtime validation values for image builds; runtime secrets remain required separately.
 
@@ -59,7 +56,7 @@ For internet-facing deployment, explicitly enable `auth.secure_cookie`, terminat
 
 Request intervals are required per host under `http.host_intervals_ms`; discovered hosts without configuration fail visibly. The SPAR API advertises a 1,000-request rate limit, and its configured interval is 200ms (at most five requests/second). Stokomak and Žito use 500ms; the remaining hosts use 1,000ms. The shared Žur/Dim endpoint has one shared limiter across workers.
 
-Schedules use five-field cron expressions. `scheduler.tick_cron` and `scheduler.tick_ms` explicitly configure the required one-minute framework bridge; retailer schedules are evaluated by those durable ticks. An existing discovery or catalog run blocks another scheduled ingestion for that retailer; after it finishes, the configured catch-up policy governs the missed occurrence. Matching does not block price refreshes.
+Schedules use five-field cron expressions. `scheduler.tick_cron` and `scheduler.tick_ms` explicitly configure the required one-minute framework bridge; the import schedule stored in operational settings is evaluated by those durable ticks. An existing authorized import blocks another scheduled import for that retailer; the saved catch-up policy governs missed occurrences. Matching does not block price refreshes.
 
 ## Data and processes
 
@@ -86,7 +83,7 @@ Each run pins its published source URL. Offers retain that URL, run ID, source u
 | --------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | KAM             | Branch API → PDF         | Poppler reconstructs wrapped product names and descriptions by table columns. Image-only or changed PDFs fail visibly.                                                                                                                                 |
 | Ramstore        | Branch HTML tables       | Discovers the site's button destinations; imports complete tables.                                                                                                                                                                                     |
-| Stokomak / Žito | Branch HTML pagination   | **Page size is explicitly 100.** The sites accept 500 but return only 100 while advancing by 500, which skips records. Unsupported sizes are rejected.                                                                                                 |
+| Stokomak / Žito | Branch HTML pagination   | Page sizes are explicitly 20 and 100 respectively. The sites accept 500 but return only 100 while advancing by 500, which skips records. Unsupported sizes are rejected.                                                                                                 |
 | SPAR            | Paginated JSON           | Validates advertised total against all staged rows. The API repeats some article codes with different prices, including in a single response. Preserve every occurrence and flag repeated identities as ambiguous; article codes remain source-scoped. |
 | Vero            | Static branch HTML pages | Follows every next-page link. Repeated indistinguishable descriptions remain separate.                                                                                                                                                                 |
 | Žur / Dim       | AJAX table fragments     | Configured to retrieve up to 20,000 rows per request. Smaller pages have unstable ordering and can duplicate/miss rows between requests. Native-code conflicts reject publication.                                                                     |
@@ -99,8 +96,7 @@ A source counted as discovered is not necessarily imported or fresh. `npm run co
 ```sh
 npm run ingest -- spar
 npm run coverage
-npm run retry:failed
-npm run run -- RUN_UUID         # execute a specific persisted run through its business process
+npm run run -- RUN_UUID         # execute a specific authorized catalog run through its business process
 npm run matching:evaluate       # small constructed controls, isolated DB, no paid calls
 npm run matching:sample -- review-1  # read-only sample; review labels before evaluation
 npm run probe -- spar ramstore  # live first-page diagnostics; updates captured fixtures
@@ -109,7 +105,9 @@ docker compose --env-file .env.local logs -f worker
 docker compose --env-file .env.local restart worker
 ```
 
-The shadcn/ui dashboard has five screens: Overview for statistics; Products for store → catalog → product browsing and universal product groups; Data updates for monitoring imports and matching jobs; Tasks for starting imports, matching and retries after choosing a scope and reviewing the work; and Logs for correlated events with severity colors. Browsing and monitoring never start background tasks directly. Product details show store listings, catalog prices and readable matching history. Only Logs exposes JSON. Filters and pagination survive reloads and browser navigation. It uses a single configured administrator with signed HttpOnly sessions. APIs are authenticated except health/login; mutation requests check their Origin.
+Use Run Tasks → Retry failed to review and retry selected stores while preserving checkpoints.
+
+The shadcn/ui dashboard separates Overview statistics, Products browsing, Review for human/agent category corrections, Run Tasks for reviewed task starts and pause/resume, Settings for operational controls, and Observability for data updates and correlated logs. Browsing and monitoring never start background tasks directly. Product details show store listings, catalog prices and readable matching history. Only Logs exposes JSON. Filters and pagination survive reloads and browser navigation. It uses a single configured administrator with signed HttpOnly sessions. APIs are authenticated except health/login; mutation requests check their Origin.
 
 PostgreSQL is configured with 1GB of shared memory in Compose; the container runtime's 64MB setting is insufficient for aggregate queries over the full branch catalog. Server memory, connection limits, WAL size, compression and checkpoint cadence are required `POSTGRES_` values in the environment templates. The initialized configuration uses 256MB shared buffers and an 8GB WAL limit to avoid continuous checkpoints during large imports. Review these explicit resource values for the deployment host.
 
@@ -170,8 +168,7 @@ Compose requires explicit `*_MEMORY_LIMIT` and `*_CPUS` values for each service.
 The initialized laptop profile caps PostgreSQL at 2 GB / 1.5 CPUs, web at 512 MB /
 1 CPU, and worker at 768 MB / 1 CPU. The one-shot migration service is capped at
 1 GB / 1 CPU. PostgreSQL uses 256 MB shared buffers, 4 MB work memory, and at most
-64 connections; app pools and queue concurrency are reduced accordingly. All
-consumer concurrency values are explicitly 1, and queue polling is 10 seconds.
+64 connections; app pools and queue concurrency are reduced accordingly. Queue consumer capacities are four download slots, one publication slot, and one task slot; live task settings further constrain them. Queue polling is one second.
 These limits apply to running services; Docker image builds and the Docker VM
 have their own resource settings.
 
@@ -188,7 +185,7 @@ running. To stop this project while keeping its database and logs:
 
 ```sh
 docker compose --env-file .env.local stop
-# Restart; configured catch-up handles missed scheduled work.
+# Restart; saved task permissions and catch-up settings remain in effect.
 docker compose --env-file .env.local up -d --wait
 ```
 
@@ -199,7 +196,7 @@ any global cleanup; never use volume pruning to make this application smaller.
 
 Start with a fresh database and review small manual tasks before enabling automation. Schema setup uses `npm run migrate`; successful imports create the store-product records used by categorization and matching. No separate preparation or backfill command is required. See [docs/matching.md](docs/matching.md) for the workflow and evaluation.
 
-The new engine keeps conservative free exact-signature/barcode checks before Decider. Configured Macedonian spelling normalization, reviewed brand aliases, source quotes, and group-wide conflict checks also apply to AI proposals. Both `matching.automatic_enabled` and `matching.gateway.enabled` must be enabled deliberately for automatic paid work. Tasks provides contextual process-pending, pause, and resume controls without resetting completed products. Products → Details → Matching also provides a [manual interface](docs/manual-matching.md) for saved connections, remembered separations and deliberate undo. These actions make no AI calls; the automatic workflow has no approval queue.
+The new engine keeps conservative free exact-signature/barcode checks before Decider. Configured Macedonian spelling normalization, reviewed brand aliases, source quotes, and group-wide conflict checks also apply to AI proposals. Run Tasks and Settings own production execution permission; automatic matching, AI permission, and comparison category selection must all allow the work. `matching.gateway.enabled` is the separate explicit switch used by isolated evaluation commands. Tasks provides contextual process-pending, pause, and resume controls without resetting completed products. Products → Details → Matching also provides a [manual interface](docs/manual-matching.md) for saved connections, remembered separations and deliberate undo. These actions make no AI calls; the automatic workflow has no approval queue.
 
 The bounded [Glyph versus Qwen comparison](docs/glyph-vs-qwen-2026-10-23.md) is available with `npm run matching:compare-models -- --paid`. The first attempt was blocked by Vercel account eligibility, without a charge; it produced no model accuracy comparison.
 

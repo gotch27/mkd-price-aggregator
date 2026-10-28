@@ -1,3 +1,4 @@
+import { matchingRules } from "./brand-catalog";
 import {
   matchingConfig,
   taskContext,
@@ -98,7 +99,7 @@ async function processProduct(
   const stage = taskContext()?.task.kind;
   const refreshed = refreshProductFacts(
     query,
-    matchingConfig().local,
+    await matchingRules(undefined, query.retailer),
     matchingConfig().category_mappings,
   );
   if (
@@ -127,7 +128,7 @@ async function processProduct(
     "Store product matching started",
     { product_name: query.name, revision: query.version, family: query.family },
   );
-  const classificationPlan = gateway.classificationRequest(query);
+  const classificationPlan = await gateway.classificationRequest(query);
   if (
     !query.manual_family &&
     stage !== "match" &&
@@ -567,117 +568,4 @@ async function logAnswers(
       })),
     },
   );
-}
-
-export async function matchStoreProductBatch(
-  runId: string,
-  sourceId: string | null,
-) {
-  return withLogContext({ data: { run_id: runId, source_id: sourceId } }, () =>
-    matchBatchScoped(runId, sourceId),
-  );
-}
-async function matchBatchScoped(runId: string, sourceId: string | null) {
-  await repository.backfillStoreProducts();
-  const campaign = await repository.campaignForRun(runId, sourceId);
-  return withLogContext({ data: { campaign_id: campaign.id } }, () =>
-    processBatch(campaign),
-  );
-}
-async function processBatch(campaign: repository.Campaign) {
-  const started = Date.now();
-  const work =
-    campaign.state === "running" ? await repository.claimWork(campaign.id) : [];
-  await logEvent(
-    work.length ? "info" : "debug",
-    "matching.batch.started",
-    "Matching batch started",
-    { claimed: work.length, campaign_state: campaign.state },
-  );
-  let matched = 0,
-    budgetLimited = false,
-    ambiguous = 0,
-    processed = 0;
-  for (let i = 0; i < work.length; i++) {
-    processed++;
-    try {
-      if ((await repository.getProduct(work[i].store_product_id)).ambiguous)
-        ambiguous++;
-      if (await processStoreProduct(work[i], campaign)) matched++;
-    } catch (error) {
-      if (error instanceof ProductUnavailable) {
-        await repository.releaseClaims([work[i]]);
-        await logEvent(
-          "debug",
-          "matching.product.unavailable",
-          "Product skipped because current availability is not confirmed",
-          { store_product_id: work[i].store_product_id, reason: error.message },
-        );
-        continue;
-      }
-      if (!(error instanceof gateway.GatewayDeferred)) {
-        await logEvent(
-          "error",
-          "matching.batch.failed",
-          "Matching batch failed",
-          {
-            work_id: work[i].id,
-            store_product_id: work[i].store_product_id,
-            processed,
-            duration_ms: Date.now() - started,
-          },
-          error,
-        );
-        await repository.releaseClaims(work.slice(i));
-        throw error;
-      }
-      const product = await repository.getProduct(work[i].store_product_id);
-      const key = hash([product.fingerprint, matchingConfig().rules_version]);
-      if (error.reason === "invalid") {
-        await repository.recordResult(
-          product,
-          work[i],
-          [],
-          key,
-          error.message,
-          "needs_info",
-        );
-        await repository.finishWork(work[i], key, "completed");
-        continue;
-      }
-      await repository.recordDeferred(product, work[i], key, error.message);
-      await repository.finishWork(work[i], key, "deferred", error.message);
-      if (
-        error.reason === "budget" ||
-        error.reason === "provider" ||
-        error.reason === "inflight"
-      ) {
-        budgetLimited = error.reason === "budget";
-        await repository.pauseCampaign(campaign.id, error.message);
-        await repository.releaseClaims(work.slice(i + 1));
-        break;
-      }
-    }
-  }
-  await repository.completeCampaign(campaign.id);
-  if (!matchingConfig().gateway.enabled)
-    await repository.pauseDisabledCampaign(campaign.id);
-  const summary = {
-    processed,
-    matched,
-    ambiguous,
-    ai_disabled: !matchingConfig().gateway.enabled,
-    ai_budget_limited: budgetLimited,
-    more:
-      !budgetLimited &&
-      (await repository.campaignRunning(campaign.id)) &&
-      (await repository.workRemaining(campaign.id)),
-  };
-  await logEvent(
-    work.length ? "info" : "debug",
-    "matching.batch.completed",
-    "Matching batch completed",
-    { ...summary, duration_ms: Date.now() - started },
-  );
-  return summary;
 }

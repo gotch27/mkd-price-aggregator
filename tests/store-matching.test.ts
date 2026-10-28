@@ -1,3 +1,5 @@
+import { campaignForRun, controlCampaign } from "@/tests/helpers/matching";
+import { referenceMatchingRules } from "./helpers/reference-matching-rules";
 import { beforeEach, afterAll, it, expect, vi } from "vitest";
 import { settings } from "@/nextsignal/config";
 import { pool } from "@/nextsignal/services/database";
@@ -7,7 +9,7 @@ import {
   publishCatalog,
 } from "@/nextsignal/services/catalog-repository";
 import { createRun, getRun } from "@/nextsignal/services/run-repository";
-import { matchBatch } from "@/nextsignal/services/matching";
+import { matchBatch } from "@/tests/helpers/matching";
 import {
   detailsForProduct,
   offersForProduct,
@@ -52,9 +54,6 @@ beforeEach(async () => {
   Object.assign(settings.matching, structuredClone(original));
   await pool.query("TRUNCATE retailers,products,runs,listings,sources CASCADE");
   await pool.query("DELETE FROM ai_cache");
-  await pool.query(
-    `UPDATE matching_state SET cursor=NULL,completed=false WHERE key='store-products'`,
-  );
   await seedRetailers();
 });
 afterAll(async () => {
@@ -100,7 +99,7 @@ function prepared(label: string, retailer = "kam"): StoreProduct {
       retailer,
       settings.matching.category_mappings,
     ),
-    facts = prepareFacts(input, family, settings.matching.local);
+    facts = prepareFacts(input, family, referenceMatchingRules);
   return {
     ...input,
     id: retailer,
@@ -111,7 +110,7 @@ function prepared(label: string, retailer = "kam"): StoreProduct {
     facts,
     family,
     category_hints: [],
-    local_key: localKey(label, facts, false, settings.matching.local),
+    local_key: localKey(label, facts, false, referenceMatchingRules),
     group_id: retailer,
     version: 1,
     state: "pending",
@@ -246,12 +245,10 @@ it("leaves competing same-store entries unresolved even when their wording diffe
 });
 it("the first campaign is resumable and automatic matching is off by default", async () => {
   await publish("kam", [row("a")]);
-  expect(await repo.startPending(null)).toBeNull();
-  await repo.backfillStoreProducts();
   const campaign = await repo.ensureCampaign("initial");
   expect((await repo.ensureCampaign("initial")).id).toBe(campaign.id);
   await repo.pauseCampaign(campaign.id, "Paused by you");
-  expect((await repo.controlCampaign("resume", null))[0].state).toBe("running");
+  expect((await controlCampaign("resume", null))[0].state).toBe("running");
 });
 it("matching continuation runs retain their initial campaign and its shared allowance", async () => {
   const campaign = await repo.ensureCampaign("initial");
@@ -261,7 +258,7 @@ it("matching continuation runs retain their initial campaign and its shared allo
     [run.id, campaign.id],
   );
   const continuation = await createRun("match", null, null, run.id);
-  expect((await repo.campaignForRun(continuation.id, null)).id).toBe(
+  expect((await campaignForRun(continuation.id, null)).id).toBe(
     campaign.id,
   );
   expect(
@@ -462,7 +459,7 @@ it("claims distinct work concurrently and recovers expired claims without accept
   await publish("kam", [row("a")]);
   await publish("spar", [row("a")]);
   const run = await createRun("match", null, null, null),
-    campaign = await repo.campaignForRun(run.id, null);
+    campaign = await campaignForRun(run.id, null);
   settings.matching.batch_size = 1;
   const [one, two] = await Promise.all([
     repo.claimWork(campaign.id),
@@ -507,7 +504,7 @@ it("records a stale answer without joining a changed product", async () => {
   await publish("kam", [row("a")]);
   await publish("spar", [row("a")]);
   const run = await createRun("match", null, null, null),
-    campaign = await repo.campaignForRun(run.id, null);
+    campaign = await campaignForRun(run.id, null);
   const work = (await repo.claimWork(campaign.id))[0],
     query = await repo.getProduct(work.store_product_id),
     candidates = await repo.findCandidates(query);
@@ -551,79 +548,6 @@ it("records a stale answer without joining a changed product", async () => {
     (await pool.query(`SELECT state FROM matching_work WHERE id=$1`, [work.id]))
       .rows[0].state,
   ).toBe("pending");
-});
-it("backfills in bounded restartable chunks while preserving original IDs and offers", async () => {
-  await publish("kam", [row("a"), row("b", "Pepsi Original 500 ml can")]);
-  await publish(
-    "kam",
-    [row("a"), row("b", "Pepsi Original 500 ml can")],
-    "two",
-  );
-  const originalRows = (
-    await pool.query("SELECT id,product_id FROM listings ORDER BY id")
-  ).rows;
-  await pool.query("TRUNCATE store_products CASCADE");
-  settings.matching.backfill_batch_size = 1;
-  let batches = 0;
-  while (!(await repo.backfillStoreProducts()).completed && batches++ < 10) {}
-  expect(batches).toBe(4);
-  expect(
-    (await pool.query("SELECT id,product_id FROM listings ORDER BY id")).rows,
-  ).toEqual(originalRows);
-  expect((await pool.query("SELECT * FROM store_products")).rowCount).toBe(2);
-  expect(
-    (await pool.query("SELECT * FROM store_product_aliases")).rowCount,
-  ).toBe(4);
-  expect((await pool.query("SELECT * FROM offers")).rowCount).toBe(4);
-  expect(await repo.backfillStoreProducts()).toEqual({
-    processed: 0,
-    completed: true,
-  });
-});
-it("preserves accepted legacy groups, redirects, branch prices and decision history during migration", async () => {
-  await publish("kam", [row("cola")]);
-  await publish("kam", [row("cola")], "two");
-  await publish("spar", [row("cola")]);
-  const rows = (await pool.query("SELECT * FROM listings ORDER BY retailer,id"))
-    .rows;
-  const root = rows[0].product_id,
-    redirect = rows[2].product_id;
-  await pool.query("TRUNCATE store_products CASCADE");
-  await pool.query(`UPDATE listings SET product_id=$1,match_status='matched'`, [
-    root,
-  ]);
-  await pool.query(`UPDATE products SET redirect_id=$2 WHERE id=$1`, [
-    redirect,
-    root,
-  ]);
-  await pool.query(
-    `UPDATE listings SET product_id=$2,match_status='separate' WHERE id=$1`,
-    [rows[1].id, rows[1].product_id],
-  );
-  for (const listing of [rows[0], rows[2]])
-    await pool.query(
-      `INSERT INTO match_decisions(listing_id,identity_hash,product_id,method,probability,evidence,prompt_version) VALUES($1,$2,$3,'local-rules',1,'{}','legacy')`,
-      [listing.id, listing.identity_hash, root],
-    );
-  const mock = vi.fn();
-  vi.stubGlobal("fetch", mock);
-  expect((await repo.backfillStoreProducts()).completed).toBe(true);
-  expect(
-    (await pool.query(`SELECT group_id,state FROM store_products`)).rows,
-  ).toEqual([
-    { group_id: root, state: "matched" },
-    { group_id: root, state: "matched" },
-  ]);
-  expect(await offersForProduct(redirect)).toHaveLength(3);
-  const details = await detailsForProduct(redirect);
-  expect(details?.product.id).toBe(root);
-  expect(details?.decisions).toHaveLength(2);
-  expect(
-    (await pool.query("SELECT id FROM listings ORDER BY retailer,id")).rows.map(
-      (r) => r.id,
-    ),
-  ).toEqual(rows.map((r) => r.id));
-  expect(mock).not.toHaveBeenCalled();
 });
 it("saves an old legacy revision before an import changes it during backfill", async () => {
   await publish("kam", [row("cola")]);

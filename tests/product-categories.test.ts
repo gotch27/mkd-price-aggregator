@@ -99,7 +99,7 @@ async function model(product: StoreProduct) {
     "INSERT INTO matching_prompt_versions(key,files) VALUES('manual-category-test','[]') ON CONFLICT DO NOTHING",
   );
   const answer = {
-    key: classificationRequest(current).key,
+    key: (await classificationRequest(current)).key,
     family: "unknown" as const,
     hints: [],
     model: "mock-decider",

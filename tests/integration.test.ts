@@ -17,11 +17,7 @@ import {
   getRun,
   restartCatalog,
 } from "@/nextsignal/services/run-repository";
-import {
-  enqueueDue,
-  nextOccurrence,
-  recoverOrphans,
-} from "@/nextsignal/services/scheduling";
+import { nextOccurrences } from "@/nextsignal/services/task-settings";
 import { withLock } from "@/nextsignal/services/database";
 import {
   redact,
@@ -141,27 +137,6 @@ it("rejects unknown configuration keys instead of ignoring misspellings", () => 
     }).success,
   ).toBe(false);
 });
-it("waits for active ingestion before issuing a single scheduled catch-up", async () => {
-  const active = await createRun("discover", "spar", null, null);
-  await pool.query(
-    "UPDATE retailers SET next_due='2026-10-19T10:00:00Z' WHERE slug='spar'",
-  );
-  const now = new Date("2026-10-20T10:00:00Z");
-  await enqueueDue(now);
-  expect(
-    (await pool.query("SELECT * FROM runs WHERE retailer='spar'")).rowCount,
-  ).toBe(1);
-  await pool.query("UPDATE runs SET status='success' WHERE id=$1", [active.id]);
-  await enqueueDue(now);
-  await enqueueDue(now);
-  expect(
-    (
-      await pool.query(
-        "SELECT * FROM runs WHERE retailer='spar' AND scheduled_for IS NOT NULL",
-      )
-    ).rowCount,
-  ).toBe(1);
-});
 async function catalog() {
   const parent = await createRun("discover", "spar", null, null);
   await saveDiscovery(parent, [
@@ -273,7 +248,6 @@ it("bulk-records genuinely conflicting descriptions with configured bounds and z
   const before = {
     ai: settings.matching.gateway.enabled,
     batch: settings.matching.batch_size,
-    ambiguity: settings.matching.ambiguity_batch_size,
   };
   const fetchMock = vi
     .fn()
@@ -281,9 +255,8 @@ it("bulk-records genuinely conflicting descriptions with configured bounds and z
   vi.stubGlobal("fetch", fetchMock);
   settings.matching.gateway.enabled = false;
   settings.matching.batch_size = 64;
-  settings.matching.ambiguity_batch_size = 64;
   try {
-    const { matchBatch } = await import("@/nextsignal/services/matching");
+    const { matchBatch } = await import("@/tests/helpers/matching");
     const batches = await Promise.all([
       matchBatch(matching.id, run.source_id),
       matchBatch(matching.id, run.source_id),
@@ -314,7 +287,6 @@ it("bulk-records genuinely conflicting descriptions with configured bounds and z
   } finally {
     settings.matching.gateway.enabled = before.ai;
     settings.matching.batch_size = before.batch;
-    settings.matching.ambiguity_batch_size = before.ambiguity;
     vi.unstubAllGlobals();
   }
 });
@@ -327,26 +299,6 @@ it("requires explicit rate configuration for every configured source host", () =
       http: { ...settings.http, host_intervals_ms: intervals },
     }).success,
   ).toBe(false);
-});
-it("creates retries with fresh source provenance and no partial checkpoint", async () => {
-  const run = await catalog();
-  await stagePage(run, {
-    rows: [row("a", "65.00")],
-    next: "2",
-    total: 2,
-    artifact: null,
-  });
-  await pool.query("UPDATE runs SET status='failed' WHERE id=$1", [run.id]);
-  await pool.query(
-    "UPDATE sources SET url='https://spar.mk/pricelist/2' WHERE id=$1",
-    [run.source_id],
-  );
-  const { retryRun } = await import("@/nextsignal/services/operations");
-  const retried = await retryRun(run.id);
-  expect(retried.checkpoint).toEqual({
-    source_url: "https://spar.mk/pricelist/2",
-  });
-  expect(retried.id).not.toBe(run.id);
 });
 it("rejects missing parser endpoints and unsupported page sizes at startup", () => {
   for (const patch of [{ api_url: null }, { page_size: 501 }])
@@ -418,65 +370,9 @@ it("serializes competing source workers", async () => {
   release();
   expect(await first).toBe(true);
 });
-it("queues one catch-up occurrence across concurrent scheduler ticks", async () => {
-  await pool.query(
-    "UPDATE retailers SET next_due='2020-01-01' WHERE slug='spar'",
-  );
-  await Promise.all([enqueueDue(new Date()), enqueueDue(new Date())]);
-  expect(
-    (await pool.query("SELECT * FROM runs WHERE kind='discover'")).rowCount,
-  ).toBe(1);
-});
-it("applies timezone and retailer cron changes without inventing a catch-up run", async () => {
-  const timezone = settings.app.timezone;
-  const expression = settings.sources.spar.cron;
-  const now = new Date("2026-10-20T10:00:00Z");
-  const due = async () =>
-    (
-      await pool.query("SELECT next_due FROM retailers WHERE slug='spar'")
-    ).rows[0].next_due.toISOString();
-  try {
-    await enqueueDue(now);
-    expect(await due()).toBe("2026-10-26T11:00:00.000Z");
-    settings.app.timezone = "UTC";
-    await seedRetailers();
-    await enqueueDue(now);
-    expect(await due()).toBe("2026-10-26T12:00:00.000Z");
-    settings.sources.spar.cron = "0 9 * * *";
-    await seedRetailers();
-    await enqueueDue(now);
-    expect(await due()).toBe("2026-10-21T09:00:00.000Z");
-    expect((await pool.query("SELECT * FROM runs")).rowCount).toBe(0);
-  } finally {
-    settings.app.timezone = timezone;
-    settings.sources.spar.cron = expression;
-  }
-});
-it("skips overdue runs when catch-up is explicitly disabled", async () => {
-  const catchUp = settings.scheduler.catch_up;
-  try {
-    settings.scheduler.catch_up = false;
-    await pool.query(
-      "UPDATE retailers SET next_due='2026-10-19T10:00:00Z' WHERE slug='spar'",
-    );
-    await enqueueDue(new Date("2026-10-20T10:00:00Z"));
-    expect((await pool.query("SELECT * FROM runs")).rowCount).toBe(0);
-    expect(
-      (
-        await pool.query("SELECT next_due FROM retailers WHERE slug='spar'")
-      ).rows[0].next_due.toISOString(),
-    ).toBe("2026-10-26T11:00:00.000Z");
-  } finally {
-    settings.scheduler.catch_up = catchUp;
-  }
-});
 it("keeps wall-clock schedules stable across DST", () => {
   expect(
-    nextOccurrence(
-      "0 12 * * 1",
-      "Europe/Skopje",
-      new Date("2026-10-23T00:00:00Z"),
-    ).toISOString(),
+    nextOccurrences("0 12 * * 1", new Date("2026-10-23T00:00:00Z"), 1)[0],
   ).toBe("2026-10-26T11:00:00.000Z");
 });
 it("fails validation on missing required settings and parses explicit false", () => {
@@ -546,18 +442,7 @@ it("preserves repeated indistinguishable source rows as separate listings", asyn
     ).rows.every((r) => r.ambiguous === "false"),
   ).toBe(true);
 });
-it("recovers an orphaned running job after a worker exits", async () => {
-  const run = await catalog();
-  await pool.query("UPDATE runs SET status='running' WHERE id=$1", [run.id]);
-  await recoverOrphans();
-  expect((await getRun(run.id)).status).toBe("pending");
-  await pool.query("UPDATE runs SET status='running' WHERE id=$1", [run.id]);
-  await withLock(`run:${run.id}`, async () => {
-    await recoverOrphans();
-    expect((await getRun(run.id)).status).toBe("running");
-  });
-});
-it("acknowledges duplicate delivery while preserving orphan recovery", async () => {
+it("acknowledges duplicate delivery without changing the active run", async () => {
   const run = await catalog();
   await pool.query("UPDATE runs SET status='running' WHERE id=$1", [run.id]);
   const { app } = await import("@/nextsignal/app");
@@ -567,8 +452,6 @@ it("acknowledges duplicate delivery while preserving orphan recovery", async () 
     );
     expect((await getRun(run.id)).status).toBe("running");
   });
-  await recoverOrphans();
-  expect((await getRun(run.id)).status).toBe("pending");
 });
 it("automatically queues a fresh snapshot after an upstream change without replacing current prices", async () => {
   const baseline = await catalog();
@@ -784,7 +667,7 @@ it("keeps distinct source articles within a single chain separate", async () => 
   const oldIds = (await pool.query("SELECT id FROM products")).rows.map(
     (r) => r.id,
   );
-  const { matchBatch } = await import("@/nextsignal/services/matching");
+  const { matchBatch } = await import("@/tests/helpers/matching");
   const matchRun = await createRun("match", "spar", run.source_id, run.id);
   await matchBatch(matchRun.id, run.source_id);
   expect(
@@ -818,7 +701,7 @@ it("connects listings from different retailers while preserving each offer", asy
   await stage(second, [
     { ...row("milk-zur", "60.00"), name: "Млеко", gtin: "4006381333931" },
   ]);
-  const { matchBatch } = await import("@/nextsignal/services/matching");
+  const { matchBatch } = await import("@/tests/helpers/matching");
   const matching = await createRun("match", "zur", second.source_id, second.id);
   await matchBatch(matching.id, second.source_id);
   const productIds = (
@@ -848,7 +731,7 @@ it("does not link conflicting variants even when a retailer repeats a barcode", 
       gtin: "4006381333931",
     },
   ]);
-  const { matchBatch } = await import("@/nextsignal/services/matching");
+  const { matchBatch } = await import("@/tests/helpers/matching");
   const m = await createRun("match", "spar", run.source_id, run.id);
   await matchBatch(m.id, run.source_id);
   expect(
@@ -862,7 +745,7 @@ it("keeps branch observations unchanged while processing a product without AI", 
   const run = await catalog();
   await stage(run, [row("unknown", "65.00")]);
   const before = (await pool.query("SELECT * FROM listings")).rows[0];
-  const { matchBatch } = await import("@/nextsignal/services/matching");
+  const { matchBatch } = await import("@/tests/helpers/matching");
   const match = await createRun("match", "spar", run.source_id, run.id);
   expect(await matchBatch(match.id, run.source_id)).toMatchObject({
     processed: 1,
@@ -921,7 +804,7 @@ it("reuses saved outcomes on repeat imports with zero provider calls", async () 
       gtin: "4006381333931",
     }));
     await stage(run, rows);
-    const { matchBatch } = await import("@/nextsignal/services/matching");
+    const { matchBatch } = await import("@/tests/helpers/matching");
     const first = await createRun("match", "spar", run.source_id, run.id);
     await matchBatch(first.id, run.source_id);
     expect(fetchMock).toHaveBeenCalledTimes(2);
@@ -1026,7 +909,7 @@ it("preserves a connection committed while an unchanged catalog is being publish
 it("keeps an unchanged outcome without repeating AI after a price update", async () => {
   const run = await catalog();
   await stage(run, [row("uncertain", "65.00")]);
-  const { matchBatch } = await import("@/nextsignal/services/matching");
+  const { matchBatch } = await import("@/tests/helpers/matching");
   const first = await createRun("match", "spar", run.source_id, run.id);
   await matchBatch(first.id, run.source_id);
   const repeat = await createRun("catalog", "spar", run.source_id, null);
@@ -1267,10 +1150,7 @@ it("matches equivalent retailer products with local rules and reuses the result 
   const { refreshBrowser } =
     await import("@/nextsignal/services/catalog-browser");
   await refreshBrowser();
-  const { indexLocalProducts } =
-    await import("@/nextsignal/services/local-matching");
-  await indexLocalProducts();
-  const { matchBatch } = await import("@/nextsignal/services/matching");
+  const { matchBatch } = await import("@/tests/helpers/matching");
   const fetchMock = vi
     .fn()
     .mockRejectedValue(new Error("Paid calls forbidden"));
@@ -1483,10 +1363,6 @@ it("reindexes legacy source names idempotently without changing source identity,
   const { reindexProductNames } =
     await import("@/nextsignal/services/name-index");
   const { readDashboard } = await import("@/nextsignal/services/operations");
-  const { indexLocalProducts } =
-    await import("@/nextsignal/services/local-matching");
-  const { localMatchingVersion } =
-    await import("@/nextsignal/domain/local-matching");
   await pool.query(
     "UPDATE listings SET normalized_name='milka leshnik ito gjese 100g'",
   );
@@ -1533,9 +1409,4 @@ it("reindexes legacy source names idempotently without changing source identity,
     if (!("rows" in page)) throw new Error("Expected product page");
     expect(page.rows[0].name).toBe(name);
   }
-  expect(await indexLocalProducts()).toBe(1);
-  expect(
-    (await pool.query("SELECT version,rule_key FROM local_product_keys"))
-      .rows[0],
-  ).toMatchObject({ version: localMatchingVersion(settings.matching.local) });
 });

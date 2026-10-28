@@ -1,3 +1,7 @@
+import {
+  requeueUnclassifiedProducts,
+  requeueSelectedCategories,
+} from "@/tests/helpers/matching";
 import { beforeEach, afterAll, it, expect, vi } from "vitest";
 import { settings } from "@/nextsignal/config";
 import { pool } from "@/nextsignal/services/database";
@@ -7,7 +11,7 @@ import {
   publishCatalog,
 } from "@/nextsignal/services/catalog-repository";
 import { createRun, getRun } from "@/nextsignal/services/run-repository";
-import { matchBatch } from "@/nextsignal/services/matching";
+import { matchBatch } from "@/tests/helpers/matching";
 import * as repository from "@/nextsignal/services/matching-repository";
 import { search, save } from "@/nextsignal/services/manual-matching";
 import { families, type Family } from "@/nextsignal/domain/matching";
@@ -26,9 +30,6 @@ beforeEach(async () => {
   settings.matching.ai_categories = [];
   await pool.query(
     "TRUNCATE retailers,products,runs,sources,listings,ai_cache CASCADE",
-  );
-  await pool.query(
-    "UPDATE matching_state SET cursor=NULL,completed=false WHERE key='store-products'",
   );
   await seedRetailers();
 });
@@ -271,17 +272,16 @@ it("categorizes previously completed manual products in bounded chunks without l
       "test-admin",
     ),
   ).toEqual({ ok: true, product_id: first.id });
-  expect(await repository.startPending(null)).toBeNull();
   expect(
     (await pool.query("SELECT 1 FROM matching_work WHERE state='pending'"))
       .rowCount,
   ).toBe(0);
-  const size = settings.matching.backfill_batch_size;
-  settings.matching.backfill_batch_size = 1;
-  expect(await repository.requeueUnclassifiedProducts(null)).toBe(1);
-  expect(await repository.requeueUnclassifiedProducts(null)).toBe(1);
-  expect(await repository.requeueUnclassifiedProducts(null)).toBe(0);
-  settings.matching.backfill_batch_size = size;
+  const size = settings.maintenance.batch_size;
+  settings.maintenance.batch_size = 1;
+  expect(await requeueUnclassifiedProducts(null)).toBe(1);
+  expect(await requeueUnclassifiedProducts(null)).toBe(1);
+  expect(await requeueUnclassifiedProducts(null)).toBe(0);
+  settings.maintenance.batch_size = size;
   await run();
   expect(mock.calls).toEqual({
     classification: 2,
@@ -296,7 +296,7 @@ it("categorizes previously completed manual products in bounded chunks without l
     (await pool.query("SELECT 1 FROM manual_product_links WHERE action='same'"))
       .rowCount,
   ).toBe(1);
-  expect(await repository.requeueUnclassifiedProducts(null)).toBe(0);
+  expect(await requeueUnclassifiedProducts(null)).toBe(0);
 });
 it("allows a validated conflict-free barcode match in an excluded category", async () => {
   const mock = provider({ kam: "household", spar: "household" });
@@ -339,7 +339,7 @@ it("does not automatically repeat an invalid first-category answer", async () =>
     classification_key: null,
     classification_attempt_key: expect.any(String),
   });
-  expect(await repository.requeueUnclassifiedProducts(null)).toBe(0);
+  expect(await requeueUnclassifiedProducts(null)).toBe(0);
 });
 it("enabling a category queues bounded work and reuses saved classifications", async () => {
   const mock = provider();
@@ -348,11 +348,11 @@ it("enabling a category queues bounded work and reuses saved classifications", a
   await run();
   expect(mock.calls.comparison).toBe(0);
   settings.matching.ai_categories = ["soft_drinks"];
-  const size = settings.matching.backfill_batch_size;
-  settings.matching.backfill_batch_size = 1;
-  expect(await repository.requeueSelectedCategories(null)).toBe(1);
-  settings.matching.backfill_batch_size = size;
-  await repository.requeueSelectedCategories(null);
+  const size = settings.maintenance.batch_size;
+  settings.maintenance.batch_size = 1;
+  expect(await requeueSelectedCategories(null)).toBe(1);
+  settings.maintenance.batch_size = size;
+  await requeueSelectedCategories(null);
   await run();
   expect(mock.calls.classification).toBe(2);
   expect(mock.calls.comparison).toBeGreaterThan(0);

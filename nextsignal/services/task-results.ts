@@ -29,7 +29,7 @@ export async function categorySnapshot(
     product &&
     expectedKey &&
     product.classification_key === expectedKey &&
-    classificationRequest(product).key === expectedKey;
+    (await classificationRequest(product, c)).key === expectedKey;
   if (product?.manual_family != null)
     return {
       source: product.category_review_source === "agent" ? "agent" : "manual",

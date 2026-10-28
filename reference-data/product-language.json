@@ -1,0 +1,78 @@
+{
+  "token_aliases": {
+    "can": [
+      "limenka",
+      "limenki",
+      "can",
+      "cans"
+    ],
+    "pet": [
+      "pet",
+      "plasticno shishe",
+      "plastic bottle"
+    ],
+    "zero": [
+      "zero sugar",
+      "zero shekjer",
+      "zero"
+    ],
+    "classic": [
+      "klasik",
+      "classic",
+      "original"
+    ],
+    "biscuit": [
+      "biskviti",
+      "biskvit",
+      "biscuits",
+      "biscuit",
+      "keks",
+      "bisk"
+    ],
+    "spread": [
+      "kakao krem",
+      "eurokrem",
+      "chokoladen krem",
+      "chocolate cream",
+      "krem"
+    ],
+    "shower-gel": [
+      "gel za tushiranje",
+      "gel za tush",
+      "shower gel"
+    ],
+    "creme-care": [
+      "krem kear",
+      "krem ker",
+      "creme care"
+    ],
+    "creme-soft": [
+      "krem soft",
+      "creme soft"
+    ],
+    "ground": [
+      "meleni",
+      "melena",
+      "melen",
+      "mlevena",
+      "ground"
+    ],
+    "family": [
+      "femili",
+      "family"
+    ],
+    "refill-bag": [
+      "kesa",
+      "sachet",
+      "refill bag"
+    ]
+  },
+  "ignored_tokens": [
+    "sok",
+    "gaziran",
+    "gazirano",
+    "pijalok",
+    "set",
+    "multipak"
+  ]
+}

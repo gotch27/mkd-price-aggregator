@@ -52,6 +52,7 @@ export function useDashboardData({
     });
     for (const field of [
       "retailer",
+      "brand_id",
       "source_id",
       "level",
       "run_id",
@@ -70,6 +71,7 @@ export function useDashboardData({
     query.page,
     query.size,
     query.retailer,
+    query.brand_id,
     query.source_id,
     query.level,
     query.run_id,

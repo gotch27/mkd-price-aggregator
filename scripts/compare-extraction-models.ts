@@ -1,3 +1,7 @@
+import {
+  readCatalog,
+  rulesFromCatalog,
+} from "@/nextsignal/services/brand-catalog";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { z } from "zod";
 import { settings } from "@/nextsignal/config";
@@ -16,10 +20,7 @@ import {
   type StoreProduct,
 } from "@/nextsignal/domain/matching";
 
-if (
-  !new URL(settings.database.url).pathname.endsWith("_matching_test") ||
-  settings.matching.automatic_enabled
-)
+if (!new URL(settings.database.url).pathname.endsWith("_matching_test"))
   throw new Error("Only the isolated matching test database is permitted");
 if (!process.argv.includes("--paid") || !settings.matching.gateway.enabled)
   throw new Error("Explicit --paid and isolated Gateway enablement required");
@@ -125,12 +126,14 @@ try {
     };
   });
   const campaign = await ensureCampaign("evaluation");
+  const brandCatalog = await readCatalog(pool);
   const results: Record<string, unknown>[] = [];
   await mkdir(".data/model-comparison", { recursive: true });
   const schema = z.toJSONSchema(clarificationSchema);
   delete schema.$schema;
   for (const [i, test] of cases.entries()) {
     const source = dataset.products[test.index];
+    const localRules = rulesFromCatalog(brandCatalog, source.retailer);
     const product = {
       ...source,
       family: familyFromText(
@@ -174,7 +177,7 @@ try {
           product,
           parsed.data.facts,
           fields,
-          settings.matching.local,
+          localRules,
         );
         const checks = fields.map((field) => {
           const expected = test.expected[field];
@@ -184,7 +187,7 @@ try {
               ? null
               : ["quantity", "pack", "size"].includes(field)
                 ? expected
-                : canonicalFactValue(field, expected!, settings.matching.local);
+                : canonicalFactValue(field, expected!, localRules);
           return {
             field,
             expected: normalized,

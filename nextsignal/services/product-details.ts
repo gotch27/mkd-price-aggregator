@@ -1,3 +1,4 @@
+import { matchingRules } from "./brand-catalog";
 import { grantChangedProducts } from "./task-automation";
 import { settings } from "@/nextsignal/config";
 import { transaction } from "@/nextsignal/services/database";
@@ -119,7 +120,7 @@ export async function save(
       const previous = current.manual_facts ?? {};
       const base = refreshProductFacts(
         { ...current, manual_facts: {} },
-        settings.matching.local,
+        await matchingRules(c, current.retailer),
         settings.matching.category_mappings,
       );
       const overrides =
@@ -140,12 +141,12 @@ export async function save(
         };
       const before = refreshProductFacts(
         current,
-        settings.matching.local,
+        await matchingRules(c, current.retailer),
         settings.matching.category_mappings,
       );
       const after = refreshProductFacts(
         { ...current, manual_facts: overrides },
-        settings.matching.local,
+        await matchingRules(c, current.retailer),
         settings.matching.category_mappings,
       );
       const changes = factNames

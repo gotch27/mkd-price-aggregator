@@ -44,7 +44,7 @@ export async function reindexProductNames(
     await pool.query(
       "UPDATE catalog_browser_state SET requested_at=clock_timestamp() WHERE key='catalog'",
     );
-    const size = settings.matching.local.index_batch_size;
+    const size = settings.maintenance.batch_size;
     for (let offset = 0; offset < changes.length; offset += size) {
       const batch = changes.slice(offset, offset + size);
       const updated = await transaction(async (client) => {

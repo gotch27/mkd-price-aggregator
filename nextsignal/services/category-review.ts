@@ -1,3 +1,4 @@
+import { matchingRules } from "./brand-catalog";
 import { settings } from "@/nextsignal/config";
 import { transaction } from "./database";
 import { classificationViews } from "./product-categories";
@@ -15,7 +16,7 @@ export async function readQueue(
 ): Promise<CategoryReviewPage> {
   const started = performance.now();
   const terms = normalizeName(input.search)
-    ? expandNameSearch(input.search, settings.matching.local).map(
+    ? expandNameSearch(input.search, await matchingRules()).map(
         (t) => `%${t.replace(/[\\%_]/g, "\\$&")}%`,
       )
     : [];

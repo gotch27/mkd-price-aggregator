@@ -1,3 +1,4 @@
+import { matchingRules } from "./brand-catalog";
 import { settings } from "@/nextsignal/config";
 import { hash } from "@/nextsignal/domain/normalize";
 import { packCount } from "@/nextsignal/domain/pack-count";
@@ -61,7 +62,7 @@ export async function repairPackBatch(options: {
           continue;
         const refreshed = refreshProductFacts(
           product,
-          settings.matching.local,
+          await matchingRules(c, product.retailer),
           settings.matching.category_mappings,
         );
         if (

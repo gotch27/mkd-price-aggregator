@@ -104,7 +104,7 @@ async function classify(
     "INSERT INTO matching_prompt_versions(key,files) VALUES('review-test','[]') ON CONFLICT DO NOTHING",
   );
   await saveClassification(p, {
-    key: classificationRequest(p).key,
+    key: (await classificationRequest(p)).key,
     family: assigned ? "soft_drinks" : "unknown",
     hints: [],
     model: "mock",

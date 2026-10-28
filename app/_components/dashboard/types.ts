@@ -67,12 +67,7 @@ export const views = {
 } as const;
 export type Screen = keyof typeof views;
 export type TaskRequest = {
-  endpoint:
-    | "/api/ingestion"
-    | "/api/matching"
-    | "/api/retry"
-    | "/api/tasks"
-    | "/api/tasks/control";
+  endpoint: "/api/tasks" | "/api/tasks/control";
   body: Record<string, unknown>;
   title: string;
   scope: string;

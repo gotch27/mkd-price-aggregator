@@ -116,12 +116,23 @@ function ReadableFields({ data }: { data: unknown }) {
     <p className="text-muted-foreground">No additional information recorded.</p>
   );
 }
-function ProductAttributes({ value }: { value: unknown }) {
+function ProductAttributes({
+  value,
+  brand,
+}: {
+  value: unknown;
+  brand: unknown;
+}) {
   const a = (value ?? {}) as Row;
   return (
     <dl className="detail-fields">
       {[
-        ["Brand", a.brand],
+        [
+          "Brand",
+          brand && typeof brand === "object" && "name" in brand
+            ? brand.name
+            : a.brand,
+        ],
         ["Size", a.quantity ? `${a.quantity} ${text(a.unit, "")}` : null],
         ["Pack size", a.pack],
         ["Variant", a.variant],
@@ -350,7 +361,7 @@ function ProductContent({
                       connections are retained.
                     </p>
                   )}
-                  <ProductAttributes value={l.attributes} />
+                  <ProductAttributes value={l.attributes} brand={l.brand} />
                   {l.availability !== "available" && (
                     <p className="mt-3 text-sm text-muted-foreground">
                       {l.availability === "unavailable"

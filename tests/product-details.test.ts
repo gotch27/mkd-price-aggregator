@@ -1,3 +1,4 @@
+import { referenceMatchingRules } from "./helpers/reference-matching-rules";
 import { beforeEach, afterAll, expect, it, vi } from "vitest";
 import { settings } from "@/nextsignal/config";
 import { pool } from "@/nextsignal/services/database";
@@ -16,7 +17,7 @@ import {
   getProduct,
   saveClassification,
 } from "@/nextsignal/services/matching-repository";
-import { matchBatch } from "@/nextsignal/services/matching";
+import { matchBatch } from "@/tests/helpers/matching";
 import { detailsForProduct } from "@/nextsignal/services/product-browser";
 import { refreshProductFacts, type Family } from "@/nextsignal/domain/matching";
 import { classificationRequest } from "@/nextsignal/services/ai-gateway";
@@ -37,9 +38,6 @@ beforeEach(async () => {
   );
   await pool.query(
     "TRUNCATE retailers,products,runs,sources,listings,logs CASCADE",
-  );
-  await pool.query(
-    "UPDATE matching_state SET cursor=NULL,completed=false WHERE key='store-products'",
   );
   await seedRetailers();
 });
@@ -179,7 +177,7 @@ it("preserves corrections over branch copies, price changes, disappearance and r
   expect(
     refreshProductFacts(
       product,
-      settings.matching.local,
+      referenceMatchingRules,
       settings.matching.category_mappings,
     ).facts.brand?.value,
   ).toBe("corrected brand");
@@ -312,13 +310,13 @@ it.each([
 );
 it("invalidates category request inputs for corrections without involving branch prices", async () => {
   const p = await publish("kam");
-  const original = classificationRequest(await getProduct(p.id));
+  const original = await classificationRequest(await getProduct(p.id));
   await edit((await read(p.group_id, p.id))!, { brand: "Corrected brand" });
-  const corrected = classificationRequest(await getProduct(p.id));
+  const corrected = await classificationRequest(await getProduct(p.id));
   expect(corrected.key).not.toBe(original.key);
   expect(corrected.state.product.facts.brand).toBe("corrected brand");
   await publish("kam", name, "one", "39.00");
-  expect(classificationRequest(await getProduct(p.id)).key).toBe(corrected.key);
+  expect((await classificationRequest(await getProduct(p.id))).key).toBe(corrected.key);
 });
 it("rolls back the audit and correction together if saving fails, and logs only the failure", async () => {
   const p = await publish("kam");
@@ -457,7 +455,7 @@ async function recordCategory(
     "INSERT INTO matching_prompt_versions(key,files) VALUES('detail-category-test','[]') ON CONFLICT DO NOTHING",
   );
   await saveClassification(product, {
-    key: classificationRequest(product).key,
+    key: (await classificationRequest(product)).key,
     family,
     hints: [],
     model: "test-decision-model",

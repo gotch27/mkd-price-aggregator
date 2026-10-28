@@ -25,27 +25,6 @@ export const executeRun = businessProcess<RunInput, unknown, AppServices>({
   handle: execute,
 });
 
-export const enqueueRun = businessProcess<
-  { retailer: Retailer | null },
-  unknown,
-  AppServices
->({
-  name: "catalog.request",
-  auth: () => ok(),
-  validate: () => ok(),
-  async handle(ctx, input) {
-    return ctx.services.withLogContext(
-      {
-        logger: ctx.logger,
-        process: ctx.metadata.processName,
-        correlationId: ctx.metadata.correlationId,
-      },
-      async () =>
-        value(await ctx.services.operations.requestIngestion(input.retailer)),
-    );
-  },
-});
-
 async function execute(ctx: Context, input: RunInput) {
   return ctx.services.withLogContext(
     {
@@ -77,8 +56,7 @@ async function executeLocked(ctx: Context, runId: string) {
     return ok();
   if (
     (run.retailer && !settings.sources[run.retailer].enabled) ||
-    (run.kind === "match" &&
-      (!settings.matching.enabled || !settings.matching.automatic_enabled))
+    run.kind === "match"
   ) {
     await ctx.services.runs.supersedeDisabled(run.id);
     return ok();
@@ -146,7 +124,10 @@ async function performRun(
     case "catalog":
       return retrieveCatalog(ctx, run);
     case "match":
-      return matchProducts(ctx, run);
+      throw new SourceError(
+        "Matching runs are retired. Start a reviewed matching task.",
+        false,
+      );
   }
 }
 
@@ -170,24 +151,6 @@ async function retrieveCatalog(ctx: Context, run: Run) {
     result.errors[0]?.message ?? "Catalog retrieval failed",
     result.meta.kind === "system",
   );
-}
-
-async function matchProducts(ctx: Context, run: Run) {
-  const summary = await ctx.services.withLock("matching", () =>
-    ctx.services.matching.matchBatch(run.id, run.source_id),
-  );
-  if (summary === null)
-    throw new SourceError("Another matcher is active", true);
-
-  await ctx.services.runs.completeRun(run.id, summary);
-  if (summary.more)
-    await ctx.services.runs.createRun(
-      "match",
-      run.retailer,
-      run.source_id,
-      run.parent_id ?? run.id,
-    );
-  return summary;
 }
 
 async function handleFailure(

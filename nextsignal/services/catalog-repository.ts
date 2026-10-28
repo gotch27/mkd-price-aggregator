@@ -30,21 +30,12 @@ import {
   synchronizeSource,
 } from "@/nextsignal/services/matching-repository";
 export async function seedRetailers() {
-  for (const [slug, c] of Object.entries(settings.sources)) {
-    const expression = c.cron === null ? settings.scheduler.cron : c.cron;
+  for (const [slug, source] of Object.entries(settings.sources))
     await pool.query(
-      `INSERT INTO retailers(slug,name,url,enabled,notice,schedule_expression,schedule_timezone) VALUES($1,$2,$3,$4,$5,$6,$7) ON CONFLICT(slug) DO UPDATE SET name=$2,url=$3,enabled=$4,notice=$5,next_due=CASE WHEN retailers.schedule_expression IS DISTINCT FROM $6 OR retailers.schedule_timezone IS DISTINCT FROM $7 THEN NULL ELSE retailers.next_due END,schedule_expression=$6,schedule_timezone=$7`,
-      [
-        slug,
-        c.name,
-        c.url,
-        c.enabled,
-        c.notice,
-        expression,
-        settings.app.timezone,
-      ],
+      `INSERT INTO retailers(slug,name,url,enabled,notice) VALUES($1,$2,$3,$4,$5)
+       ON CONFLICT(slug) DO UPDATE SET name=$2,url=$3,enabled=$4,notice=$5`,
+      [slug, source.name, source.url, source.enabled, source.notice],
     );
-  }
 }
 
 export async function getSource(id: string) {

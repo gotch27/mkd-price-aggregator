@@ -1,3 +1,4 @@
+import { withBrandCatalog } from "./brand-catalog";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { settings } from "@/nextsignal/config";
 import {
@@ -18,7 +19,7 @@ export const withTaskContext = <T>(
   task: TaskExecution,
   live: SavedTaskSettings,
   fn: () => Promise<T>,
-) => storage.run({ task, live }, fn);
+) => withBrandCatalog(() => storage.run({ task, live }, fn));
 export async function checkpoint(ai = false) {
   const context = taskContext();
   if (!context) return;
@@ -70,8 +71,6 @@ export function matchingConfig() {
     l = live.policy;
   return {
     ...settings.matching,
-    enabled: true,
-    automatic_enabled: false,
     ai_categories: task.manual_authorized
       ? task.options.categories
       : task.options.categories.filter((category) =>

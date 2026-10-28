@@ -248,7 +248,8 @@ export async function productTask(task: TaskExecution) {
       const categorized =
         current === null ||
         current.manual_family != null ||
-        current.classification_key === classificationRequest(current).key;
+        current.classification_key ===
+          (await classificationRequest(current)).key;
       if (categorized)
         await pool.query(
           `UPDATE store_products SET ${flag}=false WHERE id=$1 AND fingerprint=$2 AND manual_facts=$3::jsonb AND manual_family IS NOT DISTINCT FROM $4`,

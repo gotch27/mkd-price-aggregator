@@ -1,3 +1,4 @@
+import { campaignForRun, controlCampaign } from "@/tests/helpers/matching";
 import { randomUUID } from "node:crypto";
 import { beforeEach, afterAll, it, expect, vi } from "vitest";
 import type { LoggerAdapter, LogEntry } from "@gotch/nextsignal";
@@ -13,7 +14,7 @@ import {
 } from "@/nextsignal/services/catalog-repository";
 import { createRun, getRun } from "@/nextsignal/services/run-repository";
 import * as repository from "@/nextsignal/services/matching-repository";
-import { matchBatch } from "@/nextsignal/services/matching";
+import { matchBatch } from "@/tests/helpers/matching";
 import { decide, clarify } from "@/nextsignal/services/ai-gateway";
 import { normalizeName } from "@/nextsignal/domain/normalize";
 import { families, type StoreProduct } from "@/nextsignal/domain/matching";
@@ -121,9 +122,6 @@ beforeEach(async () => {
   settings.logging.level = "debug";
   await pool.query(
     "TRUNCATE retailers,products,runs,listings,sources,logs,ai_cache CASCADE",
-  );
-  await pool.query(
-    `UPDATE matching_state SET cursor=NULL,completed=false WHERE key='store-products'`,
   );
   await seedRetailers();
 });
@@ -547,30 +545,8 @@ it("logs the actual matching threshold and the reason a positive AI answer was n
     ).rows[0].n,
   ).toBe(2);
 });
-it("records campaign transitions once and checkpoint progress only after commit", async () => {
+it("records campaign transitions once", async () => {
   await publish("kam");
-  const observed: { completed: boolean; cursor: string | null }[] = [];
-  const logger = recordingLogger().logger;
-  logger.info = async (entry) => {
-    if (
-      (entry.data as Record<string, unknown>)?.event ===
-      "matching.backfill.checkpoint"
-    )
-      observed.push(
-        (
-          await pool.query(
-            `SELECT completed,cursor FROM matching_state WHERE key='store-products'`,
-          )
-        ).rows[0],
-      );
-  };
-  await withLogContext({ logger }, async () => {
-    await repository.backfillStoreProducts();
-    await repository.backfillStoreProducts();
-  });
-  expect(observed).toHaveLength(1);
-  expect(observed[0].completed).toBe(true);
-  expect(observed[0].cursor).not.toBeNull();
   const campaign = await repository.ensureCampaign("initial");
   await repository.ensureCampaign("initial");
   expect(await events("matching.campaign.created")).toHaveLength(1);
@@ -583,7 +559,7 @@ it("records campaign transitions once and checkpoint progress only after commit"
     "Paused: spending or request limit reached",
   );
   expect(await events("matching.campaign.paused")).toHaveLength(1);
-  await repository.controlCampaign("resume", null);
+  await controlCampaign("resume", null);
   expect((await events("matching.campaign.resumed"))[0]).toMatchObject({
     level: "info",
     data: { campaign_id: campaign.id },
@@ -592,7 +568,7 @@ it("records campaign transitions once and checkpoint progress only after commit"
 it("warns when expired work is reclaimed without exposing the claim token", async () => {
   await publish("kam");
   const run = await createRun("match", null, null, null),
-    campaign = await repository.campaignForRun(run.id, null);
+    campaign = await campaignForRun(run.id, null);
   const [claimed] = await repository.claimWork(campaign.id);
   await pool.query(
     `UPDATE matching_work SET lease_until=now()-interval '1 second' WHERE id=$1`,
@@ -643,9 +619,9 @@ it("warns on incompatible group proposals while keeping stale answers at debug l
   await pool.query(
     `UPDATE matching_work SET campaign_id=NULL,state='pending',token=NULL`,
   );
-  await repository.controlCampaign("resume", null);
+  await controlCampaign("resume", null);
   const run = await createRun("match", null, null, null),
-    campaign = await repository.campaignForRun(run.id, null),
+    campaign = await campaignForRun(run.id, null),
     [work] = await repository.claimWork(campaign.id),
     query = await repository.getProduct(work.store_product_id),
     candidates = await repository.findCandidates(query);
@@ -723,38 +699,4 @@ it("keeps product tracing out of info-level logs while retaining batch summaries
   expect(
     (await pool.query(`SELECT 1 FROM logs WHERE level='debug'`)).rowCount,
   ).toBe(0);
-});
-it("logs a monthly allowance resume only after deferred work becomes pending", async () => {
-  await publish("kam");
-  const run = await createRun("match", null, null, null),
-    campaign = await repository.campaignForRun(run.id, null);
-  await pool.query(
-    `UPDATE matching_work SET state='deferred' WHERE campaign_id=$1`,
-    [campaign.id],
-  );
-  await pool.query(
-    `UPDATE matching_campaigns SET state='paused',reason='Paused: spending or request limit reached',paused_at=(date_trunc('month',now() AT TIME ZONE $2)-interval '1 second') AT TIME ZONE $2 WHERE id=$1`,
-    [campaign.id, settings.app.timezone],
-  );
-  const observed: string[] = [];
-  const logger = recordingLogger().logger;
-  logger.info = async (entry) => {
-    if (
-      (entry.data as Record<string, unknown>)?.event ===
-      "matching.campaign.resumed"
-    )
-      observed.push(
-        (
-          await pool.query(
-            "SELECT state FROM matching_work WHERE campaign_id=$1",
-            [campaign.id],
-          )
-        ).rows[0].state,
-      );
-  };
-  await withLogContext({ logger }, async () => {
-    await repository.resumeMonthlyBudgets();
-    await repository.resumeMonthlyBudgets();
-  });
-  expect(observed).toEqual(["pending"]);
 });

@@ -1,10 +1,25 @@
 # Matching the same product across stores
 
-## Current delivery state
+## Activation and saved work
 
-Production automatic matching and Vercel Gateway calls are **off**. The AI category selection is empty pending review. Existing connections are preserved. Schema migrations through `019` are applied to the application database; they launch no matching or backfill. No full application backfill, import or matching campaign has been started. Read [the category-first implementation guide](category-first-matching.md) for the latest changes and [the prompt files](../prompts/README.md) to review model instructions. The [manual product detail editor](product-detail-editing.md) is available in the dashboard.
+Fresh deployments use manual operation modes with AI permission off. The saved
+Settings record controls later activation; this document does not assert the
+current settings of a running deployment. Categorization, code matching and
+AI-assisted matching are separately reviewed tasks. Category selection, product
+limits, allowances and the reviewed settings revision are captured before work
+starts. Setting an API key alone does not authorize a task or full campaign.
 
-The [normalization fixes and independent evaluation](matching-fixes-2026-10-23.md) improved the reviewed development examples from 17 to 75 of 101 pair connections and from zero to 12 complete groups out of 20. The independent sample formed **zero of 13 expected pairs**, exposing insufficient coverage of unfamiliar brands/types and remaining category errors. Both tests made zero incorrect joins, but useful matching on fresh products remains inadequate. Production activation is still blocked by evaluation results. The [original baseline report](matching-evaluation-2026-10-23.md) is preserved. Changing a key alone cannot start matching. The automatic workflow has no approval queue. A separate [manual matching interface](manual-matching.md) now supports saved human connections and remembered separations.
+Publication prepares unique store products directly. There is no migration or
+backfill action required before categorization or matching. Saved connections,
+manual corrections and decision history survive removed offers and restarts.
+
+Read [the category-first implementation guide](category-first-matching.md),
+[operational controls](task-controls.md), [brand reference data](brands.md) and
+[the prompt files](../prompts/README.md) for the current implementation. Dated
+[evaluation reports](matching-evaluation-2026-10-23.md) and
+[normalization investigations](matching-fixes-2026-10-23.md) describe those
+specific datasets and code versions; they are not a general accuracy guarantee
+or a statement that production automation is enabled.
 
 ## One product, several stores, many branch prices
 
@@ -16,9 +31,12 @@ flowchart TD
   B --> C{Did product information change?}
   C -->|Only price or availability| D[Keep the saved connection]
   C -->|New or changed description| E[Save a store-product revision and pending work]
-  E --> F[Read explicit facts and store category]
-  F --> G[Decider categorizes each unique store product once]
-  G --> H[Code checks exact signatures and barcodes in every category]
+  E --> P{Task or automatic change authorized?}
+  P -->|No| W[Wait for reviewed work]
+  P -->|Categorization| G[Reuse category result or ask Decider]
+  P -->|Matching| F[Read saved category and supported facts]
+  G --> S[Save category and review scores]
+  F --> H[Code checks exact signatures and barcodes in every category]
   H -->|Supported match| L[Check every member of the proposed group]
   H -->|No code match| I{Category selected for AI matching?}
   I -->|No| N[Keep separate and save the reason]
@@ -32,17 +50,19 @@ flowchart TD
   L -->|Conflict or missing detail| N[Keep separate and save the reason]
 ```
 
+Unavailable products stay outside categorization and matching. If an unchanged product becomes available again, it reuses saved results; any still-pending category or matching work may run only under the applicable task/automation permission. Availability changes do not create another descriptive product revision.
+
 Categories control which products may use paid comparisons; code-based matching remains available in every category. A high model probability is a proposal and still requires enough product information. Conflicting source identities are parked before using models. Saved categories and connections avoid repeating work for unchanged branch copies.
 
 ## Code reading order
 
 1. `nextsignal/domain/matching.ts`: input fingerprints, product families, facts with exact source quotes, distinguishing differences, sufficient identity proof and full-group validation. Uses shared legacy-character decoding/transliteration and reviewed local brand/token rules.
-2. `nextsignal/services/matching-repository.ts`: canonical records and aliases, resumable migration, current source-price summaries, candidate search, work claims, campaigns, safe group commits and history.
+2. `nextsignal/services/matching-repository.ts`: canonical records and aliases, current source-price summaries, candidate search, work claims, spending campaigns, safe group commits and history.
 3. `nextsignal/services/ai-gateway.ts`: authenticated native HTTP, response schemas, independent decision questions, optional extraction, cache and spending reservations. Secrets stay server-side.
-4. `nextsignal/services/matching-workflow.ts`: connects the stages without SQL or provider-specific response parsing. `matching.ts` is its compatibility entry point.
+4. `nextsignal/services/matching-workflow.ts`: connects product-processing stages without SQL or provider-specific response parsing. `task-products.ts` executes them within the task's captured limits and current permissions; there is no run-based compatibility entry point.
 5. `nextsignal/services/catalog-repository.ts`: `publishCatalog` writes source changes and pending work in the publication transaction.
-6. `nextsignal/processes/recurring/catalog.ts` and `business/catalog.ts`: disabled-by-default automatic launch and queue execution guards.
-7. `nextsignal/services/product-browser.ts`, `dashboard-read.ts` and `app/_components/dashboard/matching-progress.tsx`: readable facts/history, cross-store groups, campaign controls and spending.
+6. `nextsignal/services/tasks.ts`, `task-settings.ts` and `processes/distributed/tasks.ts`: reviewed task creation, schedule/change authorization, checkpoints, pause/resume and queue dispatch.
+7. `nextsignal/services/product-browser.ts`, `dashboard-read.ts` and `app/_components/dashboard/tasks.tsx`: readable facts/history, cross-store groups, task controls and spending.
 8. `nextsignal/services/matching-prompts.ts` and `prompts/`: startup-validated external instructions, store/category guidance and content hashes archived with each decision.
 
 ## Facts and candidate decisions
@@ -55,9 +75,9 @@ Rules read explicit amounts, units, pack counts, barcodes, reviewed brands, vari
 
 Candidate retrieval searches other chains through indexed names, reviewed brands, amounts, validated barcodes and exact local signatures. It considers unmatched products and existing groups, collapses candidates already in the same group, and keeps at most 20 groups. It records deterministic retrieval reasons and scores.
 
-For selected categories, Perplexity Decider V1.2 answers a separate typed choice question for each of five candidate groups: **same**, **different**, or **not enough information**. SPAR and Vero can both answer “same” for KAM. An AI “same” requires probability at least **0.75**, sufficient supported identity facts, no explicit differences, and full-group compatibility. Provider confidence is a separate field. Missing information never becomes a proven permanent difference. The lower cutoff still needs a reviewed live evaluation before activation.
+For selected categories, Perplexity Decider V1.2 answers a separate typed choice question for each of five candidate groups: **same**, **different**, or **not enough information**. SPAR and Vero can both answer “same” for KAM. An AI “same” requires probability at least **0.75**, sufficient supported identity facts, no explicit differences, and full-group compatibility. Provider confidence is a separate field. Missing information never becomes a proven permanent difference. Both thresholds are editable operational settings; any acceptance still requires source-supported facts and full-group validation.
 
-Every valid unique store product uses Decider classification once, with a separate 0.80 category acceptance threshold and alternative hints. Saved unchanged classifications are reused. `matching.ai_categories` explicitly selects which labels may use comparisons and Qwen. Other labels remain unmatched unless code establishes a safe connection. Qwen3.7 Flash is limited to one targeted clarification round where source text contains a useful answer. Its strict output includes a source field and exact quote for every fact. Code verifies allowed fields, source identifiers, literal quotes and numeric conversions. It does not repeatedly ask models to guess omitted information. Instructions live in external prompt files; only relevant store/category guides enter each request, and their source snapshots are preserved by hash.
+An authorized categorization task uses Decider for unique store products without reusable results, with an initial 0.80 category acceptance threshold and saved alternative scores. Saved unchanged classifications are reused. AI matching uses saved categories: manual tasks capture their own selection and automatic matching uses the selection in operational settings. Uncategorized products wait for categorization rather than triggering it implicitly. Other labels remain unmatched unless code establishes a safe connection. Qwen3.7 Flash is limited to one targeted clarification round where source text contains a useful answer. Its strict output includes a source field and exact quote for every fact. Code verifies allowed fields, source identifiers, literal quotes and numeric conversions. It does not repeatedly ask models to guess omitted information. Instructions live in external prompt files; only relevant store/category guides enter each request, and their source snapshots are preserved by hash.
 
 The final short transaction checks work ownership, active sources, product/group versions, every pair of group members and chain uniqueness. It can create a group, enlarge it, or merge compatible existing groups. Conflicts remain separate. Slow HTTP requests never hold database transactions open.
 
@@ -79,16 +99,16 @@ Spelling/case changes that normalize to the same input reuse the revision. Price
 
 ## Budgets and controls
 
-All required values live in `config/default.json` and `nextsignal/config.ts`; root `NEXTSIGNAL_` environment overrides use double underscores. `.env.production.local.example` documents the current switches. The old `matching.ai` block remains accepted for environment compatibility only; its OpenAI client has been retired.
+Deployment values and initial task settings live in `config/default.json` and `nextsignal/config.ts`; root `NEXTSIGNAL_` environment overrides use double underscores. Saved operational settings in PostgreSQL govern reviewed tasks and automation without a restart. `.env.production.local.example` documents deployment configuration. Vercel Gateway is the only production AI integration: Perplexity Decider handles classification/comparison, and Qwen Flash handles optional targeted clarification. Removed configuration fields are rejected; there is no retired model compatibility block.
 
 - Initial database campaign: one lifetime **$25** allowance, shared across every batch and restart.
 - Subsequent new/changed products: one **$2/calendar month** allowance across incremental campaigns, using Europe/Skopje.
 - Explicit isolated paid evaluations: separate **$0.25/evaluation** allowance.
 - Reserve before HTTP; reconcile actual reported usage afterward. Uncertain billing keeps its reservation and request key, pauses progress, and prevents silent duplicate calls. Usage is not an invoice and exactly-once external API execution is not promised.
 
-Tasks owns expensive actions. “Process pending matches” queues promptly; it does not reset existing records. Pause/resume retains progress, cache and connections. Status includes waiting, processed, connected, unresolved, outside selected categories and deferred products plus campaign spending. Newly selected excluded products can be requeued in bounded chunks without reclassifying them. Browser refresh is read-only. JSON stays in Logs.
+Run Tasks owns expensive actions. A reviewed matching request queues promptly and does not reset existing records. Pause/resume retains progress, cache and connections. Status includes waiting, processed, connected, unresolved and deferred products plus spending. Deliberate recheck tasks can revisit selected products using saved categories and cache responses; changing categories alone does not sweep completed work. Browser refresh is read-only. JSON stays in Logs.
 
-Both `matching.automatic_enabled` and `matching.gateway.enabled` must be deliberately enabled for automatic paid work. Keep both false until review. Budget exhaustion pauses work rather than dropping it. Incremental budget pauses can resume after a local-calendar month changes; initial allowance never resets with a month or batch. Provider/uncertain-billing cases need inspection before resume. Billing reconciliation currently requires an operator to check the saved generation/request metadata; no automatic ledger-repair tool is provided.
+Settings owns automatic matching and AI permission; fresh deployments keep both manual/off until deliberately configured. Isolated evaluation commands separately require the Gateway enablement switch plus an explicit `--paid` argument. Budget exhaustion pauses work rather than dropping it. Incremental budget pauses may be explicitly resumed when the local-calendar allowance permits; a month change does not bypass a paused task. The initial allowance never resets with a month or batch. Provider/uncertain-billing cases need inspection before resume. Billing reconciliation currently requires an operator to check the saved generation/request metadata; no automatic ledger-repair tool is provided.
 
 ## Operational logs
 
@@ -126,7 +146,7 @@ npm run matching:evaluate -- --dataset .data/matching-evaluation/review-1.json -
 
 Check the sampler's printed output path; it refuses to overwrite existing files. The harness seeds only its disposable evaluation database, then exercises actual retrieval, provider decisions (only with `--paid`), validation and grouping. Reports show correct/incorrect joins, unresolved positives, positive-candidate coverage, calls, cost and representative names/reasons. It requires useful positive connections as well as zero incorrect joins. Keep entire groups together across development and untouched evaluation splits. Sampling never starts production matching; paid evaluation requires the explicit opt-in above.
 
-Sampling uses a read-only transaction and also works before migration `016`: it reads the existing compact `catalog_browser` when the new store-product view is absent. It does not apply migrations or backfill the application database. Suggested counterparts are only a review aid; independently search for missing counterparts before using a dataset to measure retrieval coverage. Hand-selected diagnostic cases help find bugs but cannot establish overall accuracy.
+Sampling uses a read-only transaction. It does not apply migrations, import products or prepare old records in the application database. Suggested counterparts are only a review aid; independently search for missing counterparts before using a dataset to measure retrieval coverage. Hand-selected diagnostic cases help find bugs but cannot establish overall accuracy.
 
 Fresh deployment setup is separate from activation:
 

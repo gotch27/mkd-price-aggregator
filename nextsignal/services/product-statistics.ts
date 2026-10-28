@@ -54,7 +54,7 @@ export async function refreshProductStatistics(force = false) {
         const result = (
           await c.query(
             `WITH active AS MATERIALIZED (
-            SELECT sp.id,sp.group_id AS product_id,sp.retailer,sp.normalized_name ~ '[a-z]' AS usable_name,sp.state,
+            SELECT sp.id,sp.group_id AS product_id,sp.retailer,sp.normalized_name ~ '[a-z]' AS usable_name,sp.state,sp.local_key,
               (SELECT availability FROM store_product_availability WHERE store_product_id=sp.id) AS availability
             FROM store_products sp WHERE EXISTS(
               SELECT 1 FROM store_product_sources ss JOIN sources s ON s.id=ss.source_id AND s.active WHERE ss.store_product_id=sp.id
@@ -82,11 +82,10 @@ export async function refreshProductStatistics(force = false) {
             (SELECT coalesce(jsonb_object_agg(retailer,count),'{}'::jsonb) FROM
               (SELECT retailer,count(*)::int AS count FROM active GROUP BY retailer) per_retailer) AS retailer_counts,
             (SELECT count(*)::int FROM store_products WHERE state='matched') AS matched,
-            (SELECT count(*)::int FROM local_product_keys WHERE version=$1) AS local_indexed,
-            (SELECT count(*)::int FROM local_product_keys WHERE version=$1 AND rule_key IS NOT NULL) AS local_eligible,
+            (SELECT count(*)::int FROM active) AS local_indexed,
+            (SELECT count(*)::int FROM active WHERE local_key IS NOT NULL) AS local_eligible,
             coalesce((SELECT jsonb_object_agg(state,count) FROM product_counts),'{}'::jsonb) AS matching_counts,
             coalesce((SELECT jsonb_object_agg(state,count) FROM work_counts),'{}'::jsonb) AS work_counts`,
-            [localMatchingVersion(settings.matching.local)],
           )
         ).rows[0];
         const {

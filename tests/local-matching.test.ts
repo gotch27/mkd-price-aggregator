@@ -1,11 +1,11 @@
 import { expect, it } from "vitest";
-import configuration from "../config/default.json" with { type: "json" };
+import { referenceMatchingRules } from "./helpers/reference-matching-rules";
 import {
   localRuleKey,
   expandNameSearch,
 } from "@/nextsignal/domain/local-matching";
 import { attributes } from "@/nextsignal/domain/normalize";
-const rules = configuration.matching.local;
+const rules = referenceMatchingRules;
 const key = (name: string) =>
   localRuleKey(name, attributes({ name, category: null, gtin: null }), rules);
 it("searches configured brand spellings without dropping variant words", () => {

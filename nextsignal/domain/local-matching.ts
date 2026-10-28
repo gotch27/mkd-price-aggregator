@@ -7,7 +7,6 @@ import { readableProductText } from "@/nextsignal/domain/product-text";
 export type LocalMatchingRules = {
   enabled: boolean;
   version: string;
-  index_batch_size: number;
   brands: { canonical: string; aliases: string[] }[];
   token_aliases: Record<string, string[]>;
   ignored_tokens: string[];

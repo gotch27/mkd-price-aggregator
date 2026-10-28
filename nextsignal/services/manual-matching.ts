@@ -1,3 +1,4 @@
+import { matchingRules } from "./brand-catalog";
 import { settings } from "@/nextsignal/config";
 import { pool, transaction } from "@/nextsignal/services/database";
 import {
@@ -45,7 +46,7 @@ export async function search(
     };
     if (!group || normalizeName(search).length < limits.search_min_length)
       return empty;
-    const terms = wholeNameSearchPatterns(search, settings.matching.local);
+    const terms = wholeNameSearchPatterns(search, await matchingRules());
     const result = await c.query<{
       total: number;
       page: number;

@@ -5,7 +5,6 @@ import {
   jsonConfigProvider,
 } from "@gotch/nextsignal";
 import { z } from "zod";
-import { CronExpressionParser } from "cron-parser";
 import { families } from "@/nextsignal/domain/matching";
 import { operationalSchema } from "@/nextsignal/domain/task-settings";
 nextEnv.loadEnvConfig(process.cwd());
@@ -34,17 +33,8 @@ const nullable = <S extends z.ZodType>(schema: S) =>
 const bool = z
   .union([z.boolean(), z.enum(["true", "false"])])
   .transform((v) => v === true || v === "true");
-const cap = nullable(numeric(z.number().nonnegative()));
-const cron = z.string().refine((v) => {
-  try {
-    if (v.trim().split(/\s+/).length !== 5) return false;
-    CronExpressionParser.parse(v);
-    return true;
-  } catch {
-    return false;
-  }
-}, "A valid five-field cron expression is required");
 export const configSchema = object({
+  maintenance: object({ batch_size: integer }),
   tasks: object({
     defaults: z.preprocess(
       (v) => (typeof v === "string" ? JSON.parse(v) : v),
@@ -110,14 +100,12 @@ export const configSchema = object({
     login_client_header: z.string().regex(/^[a-z][a-z0-9-]*$/),
   }),
   scheduler: object({
-    cron,
     tick_cron: z.literal("* * * * *"),
     run_on_start: bool,
     tick_ms: integer.refine(
       (v) => v === 60000,
       "Scheduler requires a 60000ms tick",
     ),
-    catch_up: bool,
   }),
   queue: object({
     concurrency: z.preprocess(
@@ -131,7 +119,6 @@ export const configSchema = object({
     ),
     scheduler_concurrency: integer,
     database_pool_size: integer,
-    recover_orphans: bool,
     dispatch_batch: integer,
     dispatch_lease_seconds: integer,
     retry_backoff: bool,
@@ -174,8 +161,6 @@ export const configSchema = object({
     freshness_hours: integer,
   }),
   matching: object({
-    enabled: bool,
-    automatic_enabled: bool,
     ai_categories: z.preprocess(
       (v) => (typeof v === "string" ? JSON.parse(v) : v),
       z
@@ -208,7 +193,6 @@ export const configSchema = object({
     evaluation: object({ sample_per_store: integer, holdout_divisor: integer }),
     candidate_batch_size: integer,
     category_threshold: numeric(z.number().min(0).max(1)),
-    backfill_batch_size: integer,
     lease_seconds: integer,
     rules_version: z.string().min(1),
     category_mappings_version: z.string().min(1),
@@ -262,20 +246,7 @@ export const configSchema = object({
     local: object({
       enabled: bool,
       version: z.string().min(1),
-      index_batch_size: integer,
-      brands: z.array(
-        object({
-          canonical: z.string().min(1),
-          aliases: z.array(z.string().min(1)).min(1),
-        }),
-      ),
-      token_aliases: z.record(
-        z.string().min(1),
-        z.array(z.string().min(1)).min(1),
-      ),
-      ignored_tokens: z.array(z.string().min(1)),
     }),
-    ambiguity_batch_size: integer,
     batch_size: integer,
     candidate_limit: integer,
     candidate_weights: object({
@@ -287,24 +258,7 @@ export const configSchema = object({
     }),
     candidate_similarity: numeric(z.number().min(0).max(1)),
     threshold: numeric(z.number().min(0).max(1)),
-    retry_hours: integer,
     prompt_version: z.string().min(1),
-    ai: object({
-      enabled: bool,
-      api_key: z.string().min(1),
-      base_url: z.string().url(),
-      model: z.string().min(1),
-      extraction: bool,
-      reasoning_effort: z.enum(["low", "medium", "high", "xhigh", "max"]),
-      max_output_tokens: integer,
-      timeout_ms: integer,
-      run_budget_usd: cap,
-      monthly_budget_usd: cap,
-      max_requests_per_run: integer,
-      max_requests_per_month: integer,
-      input_per_million: numeric(z.number().nonnegative()),
-      output_per_million: numeric(z.number().nonnegative()),
-    }),
   }),
   logging: object({
     level: z.enum(["debug", "info", "warn", "error"]),
@@ -352,7 +306,6 @@ export const configSchema = object({
       page_size: integer,
       name: z.string().min(1),
       url: z.string().url(),
-      cron: nullable(cron),
       api_url: nullable(z.string().url()),
       catalog_api_url: nullable(z.string().url()),
       action: nullable(z.string()),
@@ -484,12 +437,6 @@ export const configSchema = object({
         path: ["sources", key],
         message: "Source configuration is required",
       });
-  if (v.matching.ai.enabled && v.matching.ai.api_key === "disabled")
-    ctx.addIssue({
-      code: "custom",
-      path: ["matching", "ai", "api_key"],
-      message: "Configure an API key before enabling AI",
-    });
 });
 export const config = createConfig({
   providers: [

@@ -22,6 +22,7 @@ export function initialNavigation(
     name_quality: nameQuality,
     availability: availability,
     retailer: undefined,
+    brand_id: undefined,
     source_id: undefined,
     source_name: undefined,
     run_id: undefined,
@@ -82,6 +83,7 @@ export function readNavigation(
   };
   for (const k of [
     "retailer",
+    "brand_id",
     "source_id",
     "source_name",
     "run_id",
@@ -110,6 +112,8 @@ export function readNavigation(
     !["all", "matched", "unmatched"].includes(next.match_filter)
   )
     next.match_filter = undefined;
+  if (next.brand_id && !/^[0-9a-f-]{36}$/i.test(next.brand_id))
+    next.brand_id = undefined;
   if (next.source_id && !/^[0-9a-f-]{36}$/i.test(next.source_id))
     next.source_id = undefined;
   if (next.run_id && !/^[0-9a-f-]{36}$/i.test(next.run_id))

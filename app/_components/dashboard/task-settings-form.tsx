@@ -48,12 +48,14 @@ import {
   Link2,
   Wallet,
   SlidersHorizontal,
+  Tags,
 } from "lucide-react";
 import { taskApi } from "./task-api";
 
 import { WorkspaceSections } from "./workspace-sections";
 import { PageActions } from "./page-actions";
 import { TaskSettingsHistory } from "./task-settings-history";
+import { BrandsManager } from "./brands-manager";
 
 export function CategoryChoices({
   categories,
@@ -128,6 +130,12 @@ const sections = [
     label: "Spending",
     detail: "Allowances and request caps",
     icon: Wallet,
+  },
+  {
+    id: "brands",
+    label: "Brands",
+    detail: "Names and store spellings",
+    icon: Tags,
   },
   {
     id: "advanced",
@@ -758,6 +766,9 @@ export function TaskSettingsForm({
               A smaller allowance takes effect at the next safe checkpoint.
               Increasing it cannot expand an already reviewed task.
             </p>
+          </TabsContent>
+          <TabsContent value="brands">
+            <BrandsManager onUnauthorized={onUnauthorized} />
           </TabsContent>
           <TabsContent value="advanced" className="flex flex-col gap-4">
             <Card>
