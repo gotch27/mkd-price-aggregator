@@ -43,6 +43,7 @@ export const configSchema = object({
   }),
   llm_review: object({
     instructions_file: z.string().min(1),
+    categories_file: z.string().min(1),
     max_output_tokens: integer,
     reasoning_enabled: bool,
   }),

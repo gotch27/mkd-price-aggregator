@@ -409,6 +409,7 @@
   },
   "llm_review": {
     "instructions_file": "llm-category-review.md",
+    "categories_file": "category-review-definitions.json",
     "max_output_tokens": 256,
     "reasoning_enabled": false
   }

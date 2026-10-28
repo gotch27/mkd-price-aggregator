@@ -1019,7 +1019,7 @@ export async function reviewCategoryWithLlm(
         messages: [
           {
             role: "system",
-            content: `${prompt.instructions}\nCategory definitions:\n${JSON.stringify(matchingPrompts.categories)}`,
+            content: `${prompt.instructions}\nCategory definitions:\n${JSON.stringify(matchingPrompts.reviewCategories)}`,
           },
           { role: "user", content: JSON.stringify(plan.state) },
         ],

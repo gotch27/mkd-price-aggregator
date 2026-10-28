@@ -131,7 +131,7 @@ export async function readContext(actor: string): Promise<AgentReviewContext> {
     categories: families.map((id) => ({
       id,
       label: id.replaceAll("_", " "),
-      description: matchingPrompts.categories[id],
+      description: matchingPrompts.reviewCategories[id],
     })),
     session: latest ? await readSession(latest.id, actor) : null,
   };

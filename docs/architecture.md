@@ -295,3 +295,17 @@ skipped and deferred results. Logs summarize task/batch progress; normal Gateway
 calls remain debug-level, while provider failures and budget pauses stay visible.
 
 Deploying this feature applies the additive migration but starts no LLM task.
+
+Category review boundaries are defined in `prompts/category-review-definitions.json`
+through the required `llm_review.categories_file` configuration. Internal LLM and
+WebMCP agent review share these definitions. They specify priority between food,
+tobacco/supplements, cleaning tools, household decorations, personal care, infant
+products and miscellaneous goods. The LLM review instructions also warn against
+mistranslated store categories and unsupported inferred facts.
+
+The original decision-model criteria remain in `prompts/categories.json`. Revising
+review definitions changes the LLM prompt/cache key and archives the new content,
+but does not invalidate existing decision-model classifications or saved human,
+agent or LLM choices. This is a review-policy refinement using the same category
+IDs, not an automatic historical relabeling. Previously uncertain products can
+be explicitly selected for another bounded review task.

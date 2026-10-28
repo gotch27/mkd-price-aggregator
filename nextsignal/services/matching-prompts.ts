@@ -25,6 +25,10 @@ export function loadPromptCatalog(config: PromptSettings) {
     return { path, content };
   }
   const llmReview = read(settings.llm_review.instructions_file);
+  const reviewCategoriesFile = read(settings.llm_review.categories_file);
+  const reviewCategories = z
+    .record(z.enum(families), z.string().min(1))
+    .parse(JSON.parse(reviewCategoriesFile.content));
   const agentReview = read(settings.agent_review.instructions_file);
   const classification = read(config.classification),
     comparison = read(config.comparison),
@@ -69,11 +73,13 @@ export function loadPromptCatalog(config: PromptSettings) {
     ];
     const files = [
       ...text,
-      ...(operation === "classification" || operation === "llm_review"
-        ? [categoriesFile]
-        : operation === "comparison"
-          ? [answersFile, question]
-          : []),
+      ...(operation === "llm_review"
+        ? [reviewCategoriesFile]
+        : operation === "classification"
+          ? [categoriesFile]
+          : operation === "comparison"
+            ? [answersFile, question]
+            : []),
     ];
     return {
       operation,
@@ -84,6 +90,7 @@ export function loadPromptCatalog(config: PromptSettings) {
   }
   return {
     categories,
+    reviewCategories,
     answers,
     question: question.content,
     bundle,

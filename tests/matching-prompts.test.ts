@@ -80,3 +80,42 @@ it("requires explicit category selection and complete prompt configuration", () 
     }).success,
   ).toBe(false);
 });
+
+it("versions review definitions independently without invalidating decision-model categories", async () => {
+  const root = await mkdtemp(join(tmpdir(), "review-definitions-"));
+  try {
+    await cp(settings.matching.prompts.root, root, { recursive: true });
+    const config = { ...structuredClone(settings.matching.prompts), root };
+    const before = loadPromptCatalog(config);
+    const reviewPath = join(root, settings.llm_review.categories_file);
+    const definitions = JSON.parse(await readFile(reviewPath, "utf8"));
+    definitions.household += " Test an updated review boundary.";
+    await writeFile(reviewPath, JSON.stringify(definitions));
+    const after = loadPromptCatalog(config);
+    expect(after.reviewCategories.household).toEqual(definitions.household);
+    expect(after.categories).toEqual(before.categories);
+    expect(after.bundle("llm_review", ["spar"], []).key).not.toEqual(
+      before.bundle("llm_review", ["spar"], []).key,
+    );
+    expect(after.bundle("classification", ["spar"], [])).toEqual(
+      before.bundle("classification", ["spar"], []),
+    );
+    expect(after.bundle("comparison", ["spar"], ["dairy"])).toEqual(
+      before.bundle("comparison", ["spar"], ["dairy"]),
+    );
+    expect(
+      after
+        .bundle("llm_review", ["spar"], [])
+        .files.some(
+          (f) =>
+            f.path === settings.llm_review.categories_file &&
+            f.content.includes("Test an updated review boundary"),
+        ),
+    ).toBe(true);
+    delete definitions.unknown;
+    await writeFile(reviewPath, JSON.stringify(definitions));
+    expect(() => loadPromptCatalog(config)).toThrow();
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
