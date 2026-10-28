@@ -378,9 +378,11 @@ export function TaskResults({
                       </Badge>
                       {row.manual_category !== null && (
                         <p className="mt-1 text-xs text-muted-foreground">
-                          {row.classification?.source === "agent"
-                            ? "Agent selected"
-                            : "Human confirmed"}{" "}
+                          {row.classification?.source === "llm"
+                            ? "LLM selected"
+                            : row.classification?.source === "agent"
+                              ? "Agent selected"
+                              : "Human confirmed"}{" "}
                           · Original result:{" "}
                           {categoryName(row.assigned_category)}
                         </p>
@@ -425,9 +427,11 @@ export function TaskResults({
                     <TableCell className="max-w-64 whitespace-normal">
                       <p>
                         {row.manual_category !== null
-                          ? row.classification?.source === "agent"
-                            ? "Agent selected"
-                            : "Human confirmed"
+                          ? row.classification?.source === "llm"
+                            ? "LLM selected"
+                            : row.classification?.source === "agent"
+                              ? "Agent selected"
+                              : "Human confirmed"
                           : row.outcome === "assigned"
                             ? "Assigned"
                             : row.outcome === "skipped"

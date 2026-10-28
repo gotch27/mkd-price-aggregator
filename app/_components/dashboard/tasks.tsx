@@ -103,7 +103,7 @@ function TaskProgress({ task }: { task: Run }) {
           {task.connected} connected · {task.unresolved} unresolved
         </p>
       )}
-      {task.kind === "categorize" && (
+      {["categorize", "llm_review"].includes(task.kind) && (
         <p className="text-xs text-muted-foreground">
           {task.processed - task.unresolved} category results saved ·{" "}
           {task.unresolved} without a result
@@ -403,7 +403,9 @@ export function Tasks({
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-wrap gap-2">
-                            {task.kind === "categorize" && (
+                            {["categorize", "llm_review"].includes(
+                              task.kind,
+                            ) && (
                               <TaskResults
                                 id={task.id}
                                 updatedAt={task.updated_at}
@@ -470,7 +472,7 @@ export function Tasks({
                                         ? "Continue unfinished work?"
                                         : "Pause this task?",
                                       scope: `${taskLabels[task.kind]} · ${task.options.retailers.map(storeName).join(", ")}`,
-                                      effect: `${["import", "discover"].includes(task.kind) && ["paused", "failed"].includes(task.state) ? `Review download limits: ${view.policy.parallel_imports} overall, up to ${view.policy.per_store_downloads} from each store, and one final save at a time. ` : ""}${task.options.use_ai ? `AI is allowed for this task${task.kind === "match" ? ` in these saved categories: ${task.options.categories.join(", ")}` : ""}.` : "Code only; no AI calls."} ${task.kind === "match" || task.kind === "categorize" ? `Keep the original ${task.options.product_limit ?? "all pending"} product limit and $${task.options.max_cost_usd.toFixed(2)} total allowance.` : "Keep the reviewed stores and catalogs. Completed catalogs stay saved; failed downloads get a new bounded retry cycle."} Saved progress and connections remain. ${["paused", "failed"].includes(task.state) ? "Continue explicitly under the current permissions." : "The current request may finish."}`,
+                                      effect: `${["import", "discover"].includes(task.kind) && ["paused", "failed"].includes(task.state) ? `Review download limits: ${view.policy.parallel_imports} overall, up to ${view.policy.per_store_downloads} from each store, and one final save at a time. ` : ""}${task.options.use_ai ? `AI is allowed for this task${task.kind === "match" ? ` in these saved categories: ${task.options.categories.join(", ")}` : ""}.` : "Code only; no AI calls."} ${task.kind === "match" || ["categorize", "llm_review"].includes(task.kind) ? `Keep the original ${task.options.product_limit ?? "all pending"} product limit and $${task.options.max_cost_usd.toFixed(2)} total allowance.` : "Keep the reviewed stores and catalogs. Completed catalogs stay saved; failed downloads get a new bounded retry cycle."} Saved progress and connections remain. ${["paused", "failed"].includes(task.state) ? "Continue explicitly under the current permissions." : "The current request may finish."}`,
                                       submitLabel: [
                                         "paused",
                                         "failed",

@@ -95,7 +95,7 @@ export type StoreProduct = ProductInput & {
   last_reason: string;
   classified_family?: Family | null;
   manual_family?: Family | null;
-  category_review_source?: "human" | "agent" | null;
+  category_review_source?: "human" | "agent" | "llm" | null;
   category_review_actor?: string | null;
   category_reviewed_at?: string | null;
   category_review_reason?: string | null;

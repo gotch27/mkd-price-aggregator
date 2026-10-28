@@ -190,8 +190,8 @@ export function ProductCategoryEditor({
                   </SelectContent>
                 </Select>
                 <FieldDescription>
-                  Human and agent choices are kept through imports and future AI
-                  runs until you change or remove them.
+                  Human, agent and LLM choices are kept through imports and
+                  future AI runs until you change or remove them.
                 </FieldDescription>
               </Field>
               <Field data-disabled={saving}>
@@ -232,9 +232,11 @@ export function ProductCategoryEditor({
                               ? "Approved suggestion"
                               : entry.action === "reset"
                                 ? "Removed reviewed choice"
-                                : entry.source === "agent"
-                                  ? "Agent choice"
-                                  : "Human choice"}{" "}
+                                : entry.source === "llm"
+                                  ? "LLM choice"
+                                  : entry.source === "agent"
+                                    ? "Agent choice"
+                                    : "Human choice"}{" "}
                             · {entry.actor} ·{" "}
                             {new Date(entry.created_at).toLocaleString(
                               "en-GB",

@@ -55,13 +55,14 @@ export type ProductClassification = {
     | "outdated"
     | "not_categorized"
     | "manual"
-    | "agent";
+    | "agent"
+    | "llm";
   category: string | null;
   suggested_category: string | null;
   probability: number | null;
   threshold: number | null;
   manual_category: string | null;
-  source?: "human" | "agent" | "decision_model" | null;
+  source?: "human" | "agent" | "llm" | "decision_model" | null;
   reviewed_by?: string | null;
   reviewed_at?: string | null;
   review_reason?: string | null;

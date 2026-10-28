@@ -3,10 +3,11 @@ export const taskLabels: Record<TaskKind, string> = {
   discover: "Discover catalogs",
   import: "Import prices",
   categorize: "Categorize products",
+  llm_review: "LLM category review",
   match: "Run matching",
 };
 export const operation = (kind: TaskKind) =>
-  kind === "categorize"
+  kind === "categorize" || kind === "llm_review"
     ? "categorization"
     : kind === "match"
       ? "matching"

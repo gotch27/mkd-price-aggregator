@@ -23,7 +23,7 @@ export type CategoryEditView = {
   history: {
     id: string;
     actor: string;
-    source: "human" | "agent";
+    source: "human" | "agent" | "llm";
     action: string;
     before_category: string | null;
     after_category: string | null;

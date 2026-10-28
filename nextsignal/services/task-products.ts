@@ -1,3 +1,5 @@
+import type { CategoryResult } from "@/nextsignal/domain/task-results";
+import { reviewCategory } from "./llm-category-review";
 import { randomUUID } from "node:crypto";
 import { settings } from "@/nextsignal/config";
 import {
@@ -61,7 +63,9 @@ async function selectItems(task: TaskExecution) {
       ${task.origin === "automatic" && task.kind === "categorize" ? "AND sp.category_pending AND sp.manual_family IS NULL" : ""}
       AND ${availableProductSql("sp", "$2")}
       AND NOT EXISTS(SELECT 1 FROM task_items ti WHERE ti.task_id=$3 AND (ti.input_id=sp.id OR ti.store_product_id=sp.id))
-      AND ($4 OR sp.${stageFlag}) AND ($5=false OR sp.classified_family=ANY($6::text[]))
+      AND ($4::boolean OR ${task.kind === "llm_review" ? "true" : `sp.${stageFlag}`})
+      ${task.kind === "llm_review" ? `AND sp.manual_family IS NULL AND EXISTS(SELECT 1 FROM store_product_classifications model WHERE model.store_product_id=sp.id AND model.input_key=sp.classification_key AND model.acceptance_threshold=sp.classification_threshold AND model.family='unknown')` : ""}
+      AND ($5=false OR sp.classified_family=ANY($6::text[]))
       AND ($7::text='manual' OR ${notHeldProductSql("$8", "$3")})
       AND ($7::text='manual' OR ($8='categorize' AND sp.manual_family IS NULL AND ($14 OR w.auto_category_epoch=$9)) OR ($8='match' AND w.auto_match_epoch=$10 AND (NOT $5 OR w.auto_ai_epoch=$11)))
     ORDER BY sp.id LIMIT $13`,
@@ -129,7 +133,7 @@ export async function productTask(task: TaskExecution) {
       await logEvent(
         "info",
         "tasks.batch.started",
-        task.kind === "categorize"
+        ["categorize", "llm_review"].includes(task.kind)
           ? `Categorizing ${items.length} products`
           : "Product task batch started",
         {
@@ -183,8 +187,12 @@ export async function productTask(task: TaskExecution) {
         )
       ).rows[0];
       let connected = false;
+      let llmResult: CategoryResult | null = null;
       try {
-        connected = await processStoreProduct(work, campaign);
+        if (task.kind === "llm_review") {
+          llmResult = await reviewCategory(task, campaign, product);
+          await matching.releaseClaims([work]);
+        } else connected = await processStoreProduct(work, campaign);
       } catch (error) {
         await matching.releaseClaims([work]);
         if (error instanceof ProductUnavailable) {
@@ -237,6 +245,20 @@ export async function productTask(task: TaskExecution) {
         [task.id],
       );
       await checkpoint();
+      if (llmResult) {
+        await finishItem(
+          task,
+          item,
+          false,
+          llmResult.reason,
+          llmResult.outcome !== "assigned",
+          null,
+          false,
+          undefined,
+          llmResult,
+        );
+        continue;
+      }
       const flag =
         task.kind === "categorize"
           ? "category_pending"
@@ -304,7 +326,7 @@ export async function productTask(task: TaskExecution) {
     await logEvent(
       "info",
       "tasks.batch.completed",
-      task.kind === "categorize"
+      ["categorize", "llm_review"].includes(task.kind)
         ? complete
           ? "Categorization finished"
           : "Categorization progress saved"
@@ -313,7 +335,7 @@ export async function productTask(task: TaskExecution) {
         task_id: task.id,
         ...row,
         kind: task.kind,
-        ...(task.kind === "categorize"
+        ...(["categorize", "llm_review"].includes(task.kind)
           ? {
               category_results_saved: row.processed - row.unresolved,
               without_result: row.unresolved,
@@ -321,7 +343,7 @@ export async function productTask(task: TaskExecution) {
           : {}),
         completed: complete,
         duration_ms: Date.now() - started,
-        ...(task.kind === "categorize"
+        ...(["categorize", "llm_review"].includes(task.kind)
           ? (
               await pool.query(
                 `SELECT
@@ -357,26 +379,35 @@ async function finishItem(
   classificationKey: string | null = null,
   skipped = false,
   deferred?: GatewayDeferred,
+  llmResult?: CategoryResult,
 ) {
   await transaction(async (c) => {
     let snapshot =
-      task.kind === "categorize"
+      llmResult ??
+      (task.kind === "categorize" || task.kind === "llm_review"
         ? await categorySnapshot(
             c,
             item.store_product_id,
             classificationKey,
             reason,
           )
-        : null;
+        : null);
     if (skipped) {
       if (snapshot) snapshot = { ...snapshot, outcome: "skipped", reason };
       withoutResult = false;
     }
     if (deferred && snapshot)
-      snapshot = { ...snapshot, outcome: "deferred", reason };
+      snapshot = {
+        ...snapshot,
+        source: task.kind === "llm_review" ? "llm" : snapshot.source,
+        outcome: "deferred",
+        reason,
+      };
     if (snapshot) {
       withoutResult =
-        snapshot.outcome === "no_category" || snapshot.outcome === "deferred";
+        snapshot.outcome === "no_category" ||
+        snapshot.outcome === "deferred" ||
+        (task.kind === "llm_review" && snapshot.outcome !== "assigned");
       reason = snapshot.reason;
     }
     const changed = await c.query(
@@ -402,7 +433,7 @@ async function finishItem(
           withoutResult || (!connected && task.kind === "match") ? 1 : 0,
         ],
       );
-      if (deferred && item.store_product_id) {
+      if (deferred && item.store_product_id && task.kind !== "llm_review") {
         const current = (
           await c.query<{
             fingerprint: string;

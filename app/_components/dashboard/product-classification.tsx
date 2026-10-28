@@ -19,7 +19,10 @@ export function ProductClassificationLabel({
         <span className="text-xs text-muted-foreground">Category</span>
         <Badge
           variant={
-            state === "assigned" || state === "manual" || state === "agent"
+            state === "assigned" ||
+            state === "manual" ||
+            state === "agent" ||
+            state === "llm"
               ? "success"
               : state === "not_categorized"
                 ? "secondary"
@@ -40,10 +43,14 @@ export function ProductClassificationLabel({
             </span>
           )}
       </div>
-      {(state === "manual" || state === "agent") && (
+      {(state === "manual" || state === "agent" || state === "llm") && (
         <div className="flex flex-col gap-1 text-xs text-muted-foreground">
           <span>
-            {state === "agent" ? "Selected by Agent" : "Confirmed by Human"}
+            {state === "llm"
+              ? "Selected by LLM"
+              : state === "agent"
+                ? "Selected by Agent"
+                : "Confirmed by Human"}
             {classification?.reviewed_by
               ? ` · ${classification.reviewed_by}`
               : ""}

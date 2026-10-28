@@ -184,7 +184,7 @@ export function CategoryReview({
     if (!active || inFlight.current || busy) return;
     if (
       category === undefined &&
-      ["assigned", "agent"].includes(active.classification.state)
+      ["assigned", "agent", "llm"].includes(active.classification.state)
     )
       category = active.classification.category ?? undefined;
     if (category === undefined && !active.classification.can_accept_suggestion)
@@ -328,7 +328,9 @@ export function CategoryReview({
     suggested = active?.classification.suggested_category,
     selectedCategory =
       active &&
-      ["manual", "agent", "assigned"].includes(active.classification.state)
+      ["manual", "agent", "llm", "assigned"].includes(
+        active.classification.state,
+      )
         ? active.classification.category
         : null;
   return (
@@ -362,6 +364,7 @@ export function CategoryReview({
             ["needs_review", "Needs review"],
             ["assigned", "Decision model"],
             ["agent", "Agent"],
+            ["llm", "LLM"],
             ["reviewed", "Human"],
             ["all", "All labeled"],
           ].map(([value, title]) => (
@@ -596,13 +599,15 @@ export function CategoryReview({
                 <Separator />
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    {["manual", "agent"].includes(
+                    {["manual", "agent", "llm"].includes(
                       active.classification.state,
                     ) ? (
                       <p>
-                        {active.classification.source === "agent"
-                          ? "Agent selected"
-                          : "Human confirmed"}
+                        {active.classification.source === "llm"
+                          ? "LLM selected"
+                          : active.classification.source === "agent"
+                            ? "Agent selected"
+                            : "Human confirmed"}
                         :{" "}
                         <strong>
                           {label(active.classification.category ?? "unknown")}
@@ -636,7 +641,7 @@ export function CategoryReview({
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {(active.classification.can_accept_suggestion ||
-                      ["assigned", "agent"].includes(
+                      ["assigned", "agent", "llm"].includes(
                         active.classification.state,
                       )) && (
                       <Button disabled={busy} onClick={() => void choose()}>
@@ -648,7 +653,7 @@ export function CategoryReview({
                         ) : (
                           <Check data-icon="inline-start" />
                         )}
-                        {["assigned", "agent"].includes(
+                        {["assigned", "agent", "llm"].includes(
                           active.classification.state,
                         )
                           ? "Confirm category"

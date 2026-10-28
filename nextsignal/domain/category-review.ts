@@ -2,7 +2,7 @@ import type { ProductClassification } from "./dashboard";
 import type { ProductAvailability } from "./availability";
 
 export type CategoryReviewStatus =
-  "needs_review" | "assigned" | "reviewed" | "agent" | "all";
+  "needs_review" | "assigned" | "reviewed" | "agent" | "llm" | "all";
 export type CategoryReviewQuery = {
   status: CategoryReviewStatus;
   retailer?: string;
@@ -30,6 +30,7 @@ export type CategoryReviewPage = {
     assigned: number;
     reviewed: number;
     agent: number;
+    llm: number;
   };
   total: number;
   page: number;

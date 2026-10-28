@@ -31,7 +31,7 @@ export async function readQueue(
         `
       WITH classified AS MATERIALIZED (
         SELECT sp.id,sp.name,model.selected_family,model.probability,
-          CASE WHEN sp.manual_family IS NOT NULL AND sp.category_review_source='agent' THEN 'agent' WHEN sp.manual_family IS NOT NULL THEN 'reviewed' WHEN model.family='unknown' THEN 'needs_review' ELSE 'assigned' END AS status
+          CASE WHEN sp.manual_family IS NOT NULL AND sp.category_review_source='agent' THEN 'agent' WHEN sp.manual_family IS NOT NULL AND sp.category_review_source='llm' THEN 'llm' WHEN sp.manual_family IS NOT NULL THEN 'reviewed' WHEN model.family='unknown' THEN 'needs_review' ELSE 'assigned' END AS status
         FROM store_products sp LEFT JOIN store_product_classifications model
           ON model.store_product_id=sp.id AND model.input_key=sp.classification_key AND model.acceptance_threshold=sp.classification_threshold
         WHERE (model.id IS NOT NULL OR sp.manual_family IS NOT NULL)
@@ -45,11 +45,11 @@ export async function readQueue(
         ) listed ON true
       ), counts AS (
         SELECT count(*)::int total,count(*) FILTER(WHERE status='needs_review')::int needs_review,
-          count(*) FILTER(WHERE status='assigned')::int assigned,count(*) FILTER(WHERE status='reviewed')::int reviewed,count(*) FILTER(WHERE status='agent')::int agent FROM eligible
+          count(*) FILTER(WHERE status='assigned')::int assigned,count(*) FILTER(WHERE status='reviewed')::int reviewed,count(*) FILTER(WHERE status='agent')::int agent,count(*) FILTER(WHERE status='llm')::int llm FROM eligible
       ), selected AS (
         SELECT * FROM eligible WHERE $4='all' OR status=$4
         ORDER BY (selected_family='unknown') ASC NULLS LAST,probability DESC NULLS LAST,name,id
-        LIMIT $5 OFFSET (SELECT (LEAST($6::numeric,GREATEST(ceil((CASE $4 WHEN 'all' THEN total WHEN 'needs_review' THEN needs_review WHEN 'assigned' THEN assigned WHEN 'agent' THEN agent ELSE reviewed END)::numeric/$5),1))-1)::int*$5 FROM counts)
+        LIMIT $5 OFFSET (SELECT (LEAST($6::numeric,GREATEST(ceil((CASE $4 WHEN 'all' THEN total WHEN 'needs_review' THEN needs_review WHEN 'assigned' THEN assigned WHEN 'agent' THEN agent WHEN 'llm' THEN llm ELSE reviewed END)::numeric/$5),1))-1)::int*$5 FROM counts)
       )
       SELECT counts.*,selected.id FROM counts LEFT JOIN selected ON true
       ORDER BY (selected.selected_family='unknown') ASC NULLS LAST,selected.probability DESC NULLS LAST,selected.name,selected.id`,
@@ -69,8 +69,9 @@ export async function readQueue(
       assigned,
       reviewed,
       agent,
+      llm,
     } = selection[0];
-    const counts = { total: all, needs_review, assigned, reviewed, agent };
+    const counts = { total: all, needs_review, assigned, reviewed, agent, llm };
     const total = counts[input.status === "all" ? "total" : input.status],
       pages = Math.ceil(total / size),
       page = Math.min(input.page, Math.max(1, pages)),

@@ -406,5 +406,10 @@
   },
   "maintenance": {
     "batch_size": 10000
+  },
+  "llm_review": {
+    "instructions_file": "llm-category-review.md",
+    "max_output_tokens": 256,
+    "reasoning_enabled": false
   }
 }

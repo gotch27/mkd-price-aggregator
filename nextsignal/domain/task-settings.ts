@@ -3,7 +3,13 @@ import { CronExpressionParser } from "cron-parser";
 import { families } from "@/nextsignal/domain/matching";
 
 export const operationModes = ["off", "manual", "automatic"] as const;
-export const taskKinds = ["discover", "import", "categorize", "match"] as const;
+export const taskKinds = [
+  "discover",
+  "import",
+  "categorize",
+  "llm_review",
+  "match",
+] as const;
 export const retailerIds = [
   "kam",
   "ramstore",
@@ -93,13 +99,13 @@ export const taskCommandSchema = z
     idempotency_key: z.uuid(),
   })
   .superRefine((v, ctx) => {
-    if (v.kind === "categorize" && !v.use_ai)
+    if (["categorize", "llm_review"].includes(v.kind) && !v.use_ai)
       ctx.addIssue({
         code: "custom",
         path: ["use_ai"],
         message: "Categorization uses AI",
       });
-    if (!["categorize", "match"].includes(v.kind) && v.use_ai)
+    if (!["categorize", "llm_review", "match"].includes(v.kind) && v.use_ai)
       ctx.addIssue({
         code: "custom",
         path: ["use_ai"],
@@ -167,7 +173,7 @@ export class GatewayCoolingDown extends TaskPaused {
 }
 export class TaskConflict extends Error {}
 export function operationFor(kind: TaskKind) {
-  return kind === "categorize"
+  return kind === "categorize" || kind === "llm_review"
     ? "categorization"
     : kind === "match"
       ? "matching"

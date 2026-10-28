@@ -41,6 +41,11 @@ export const configSchema = object({
       operationalSchema,
     ),
   }),
+  llm_review: object({
+    instructions_file: z.string().min(1),
+    max_output_tokens: integer,
+    reasoning_enabled: bool,
+  }),
   agent_review: object({
     default_products: integer,
     max_products: integer,

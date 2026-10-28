@@ -262,3 +262,36 @@ unique store products rather than branch copies. One-click choices, quick approv
 checks, and Undo reuse the authenticated category-edit process and its durable
 audit history. See [Manual category review](manual-category-review.md) for score
 ordering, checkpoints against concurrent changes, and keyboard controls.
+
+### Internal LLM category review
+
+`llm_review` is a manually authorized product task in Run Tasks. It selects only
+available store products with a saved, uncertain decision-model classification and
+no accepted human, agent or LLM choice. Store/catalog scope, the explicit product
+limit (50 by default), request limits, task allowance and shared initial/monthly
+budgets apply across checkpoints and restarts. Enabling automatic categorization
+does not create LLM review tasks.
+
+The task uses `matching.gateway.extraction_model` (the same Qwen model as matching
+clarification) through the production Gateway request boundary. Its instructions
+are in `prompts/llm-category-review.md`; definitions and store naming guidance use
+the existing prompt catalog. Reasoning and output limits are required centralized
+`llm_review` configuration. The global clarification permission is independent;
+LLM review requires categorization permission and AI permission.
+
+Each request supplies one readable product with source details and category
+definitions. It accepts a structured allowed category, short reason and exact
+source quote. Unknown answers stay in Review; invalid or unsupported answers are
+set aside for explicit recovery. Quotes establish source provenance, not a proof
+of semantic correctness. No model-generated confidence is treated as probability.
+
+Accepted choices use the shared transactional category-save boundary, guarded by
+the exact category/product snapshot and current availability. A concurrent human
+correction wins. Category edits retain `source=llm`, task ID, model, prompt key and
+Gateway generation ID alongside the original decision-model scores. Human changes
+and resets continue through the existing category editor. Review includes separate
+Decision model, Human, Agent and LLM filters. Task results retain assigned, uncertain,
+skipped and deferred results. Logs summarize task/batch progress; normal Gateway
+calls remain debug-level, while provider failures and budget pauses stay visible.
+
+Deploying this feature applies the additive migration but starts no LLM task.

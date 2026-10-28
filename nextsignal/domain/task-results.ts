@@ -1,6 +1,6 @@
 import type { ProductClassification } from "./dashboard";
 export type CategoryResult = {
-  source: "ai" | "manual" | "agent";
+  source: "ai" | "manual" | "agent" | "llm";
   name: string;
   retailer: string;
   source_category: string | null;

@@ -134,6 +134,7 @@ it("lists one product per chain, with saved scores and no provider or task activ
     assigned: 0,
     reviewed: 0,
     agent: 0,
+    llm: 0,
   });
   expect(result.rows).toHaveLength(1);
   expect(result.rows[0].classification.options.slice(0, 2)).toMatchObject([
@@ -186,6 +187,7 @@ it("filters saved classifications by review state and advances after acceptance"
     assigned: 1,
     reviewed: 1,
     agent: 0,
+    llm: 0,
   });
   expect(
     (await readQueue({ ...query, status: "assigned" })).rows.map((r) => r.id),

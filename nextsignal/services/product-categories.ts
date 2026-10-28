@@ -68,7 +68,9 @@ async function classificationViewsScoped(
             row.manual_family != null
               ? row.category_review_source === "agent"
                 ? "agent"
-                : "manual"
+                : row.category_review_source === "llm"
+                  ? "llm"
+                  : "manual"
               : !recorded
                 ? "not_categorized"
                 : !current
@@ -210,7 +212,14 @@ export async function saveCategoryInTransaction(
   c: PoolClient,
   input: CategoryEditInput,
   actor: string,
-  origin: { source: "human" | "agent"; session_id?: string },
+  origin: {
+    source: "human" | "agent" | "llm";
+    session_id?: string;
+    task_id?: string;
+    model?: string;
+    prompt_key?: string;
+    generation_id?: string | null;
+  },
 ) {
   await c.query(
     "SELECT pg_advisory_xact_lock(hashtext('store-product-group-commit'))",
@@ -246,7 +255,7 @@ export async function saveCategoryInTransaction(
       "This suggestion is no longer available for approval. Reload its details.",
     );
   if (
-    origin.source === "agent" &&
+    origin.source !== "human" &&
     (current.manual_family != null || view.state !== "uncertain")
   )
     throw new ProductGroupConflict(
@@ -302,8 +311,8 @@ export async function saveCategoryInTransaction(
       )
     ).rows[0]?.id ?? null;
   await c.query(
-    `INSERT INTO product_category_edits(store_product_id,group_id,actor,action,before_manual,after_manual,before_category,after_category,classification_id,note,source,agent_session_id)
-        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
+    `INSERT INTO product_category_edits(store_product_id,group_id,actor,action,before_manual,after_manual,before_category,after_category,classification_id,note,source,agent_session_id,review_task_id,review_model,review_prompt_key,review_generation_id)
+        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`,
     [
       member.id,
       group.view.id,
@@ -317,6 +326,10 @@ export async function saveCategoryInTransaction(
       input.note,
       origin.source,
       origin.session_id ?? null,
+      origin.task_id ?? null,
+      origin.model ?? null,
+      origin.prompt_key ?? null,
+      origin.generation_id ?? null,
     ],
   );
   await c.query(
@@ -343,7 +356,9 @@ export async function saveCategoryInTransaction(
       member.id,
       origin.source === "agent"
         ? "Category reviewed by an agent"
-        : "Category corrected by a person",
+        : origin.source === "llm"
+          ? "Category reviewed by an LLM"
+          : "Category corrected by a person",
     ],
   );
   await grantChangedProducts(c, [member.id], "manual_edit");

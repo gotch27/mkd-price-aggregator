@@ -32,7 +32,12 @@ export async function categorySnapshot(
     (await classificationRequest(product, c)).key === expectedKey;
   if (product?.manual_family != null)
     return {
-      source: product.category_review_source === "agent" ? "agent" : "manual",
+      source:
+        product.category_review_source === "llm"
+          ? "llm"
+          : product.category_review_source === "agent"
+            ? "agent"
+            : "manual",
       name: product.name,
       retailer: product.retailer,
       source_category: product.category,
@@ -47,9 +52,11 @@ export async function categorySnapshot(
       prompt_key: null,
       outcome: "assigned",
       reason:
-        product.category_review_source === "agent"
-          ? "Category selected by an agent"
-          : "Category selected by a person",
+        product.category_review_source === "llm"
+          ? "Category selected by an LLM"
+          : product.category_review_source === "agent"
+            ? "Category selected by an agent"
+            : "Category selected by a person",
     };
   const classification = valid
     ? (
@@ -116,7 +123,7 @@ export async function taskResults(
   const task = (
     await pool.query(
       `SELECT t.id,t.state,t.reason,t.retry_at,t.options,t.processed,coalesce(u.spending_usd,0)::text AS spending_usd,coalesce(u.requests,0)::int AS requests
-    FROM task_executions t LEFT JOIN LATERAL(SELECT sum(cost_usd) spending_usd,count(*) requests FROM ai_usage WHERE task_id=t.id) u ON true WHERE t.id=$1 AND t.kind='categorize'`,
+    FROM task_executions t LEFT JOIN LATERAL(SELECT sum(cost_usd) spending_usd,count(*) requests FROM ai_usage WHERE task_id=t.id) u ON true WHERE t.id=$1 AND t.kind IN ('categorize','llm_review')`,
       [input.id],
     )
   ).rows[0];

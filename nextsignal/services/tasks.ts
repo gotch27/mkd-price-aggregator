@@ -39,6 +39,8 @@ export async function createTask(
   actor: string,
   origin: TaskExecution["origin"] = "manual",
 ) {
+  if (input.kind === "llm_review" && origin !== "manual")
+    throw new TaskConflict("LLM review must be explicitly started.");
   const options = taskCommandSchema.parse(input),
     saved = await readSettings();
   return transaction((c) => insertTask(c, options, actor, saved, origin));
@@ -252,7 +254,7 @@ async function controlTaskLocked(
     if (!task) throw new TaskConflict("Task not found");
     if (action === "retry_deferred") {
       if (
-        !["categorize", "match"].includes(task.kind) ||
+        !["categorize", "llm_review", "match"].includes(task.kind) ||
         task.state !== "completed"
       )
         throw new TaskConflict(
@@ -718,7 +720,7 @@ async function reservePendingTasks(
   return (
     await pool.query<{ id: string }>(
       `UPDATE task_executions SET dispatch_until=now()+$1*interval '1 second' WHERE id IN(SELECT id FROM task_executions WHERE ($3::uuid IS NULL OR id=$3) AND state IN ('queued','running')
-        AND (NOT $4 OR (id=$3 AND kind IN ('categorize','match') AND state='queued'))
+        AND (NOT $4 OR (id=$3 AND kind IN ('categorize','llm_review','match') AND state='queued'))
         AND (dispatch_until IS NULL OR dispatch_until<now()) ORDER BY created_at LIMIT $2 FOR UPDATE SKIP LOCKED) RETURNING id`,
       [
         settings.queue.dispatch_lease_seconds,

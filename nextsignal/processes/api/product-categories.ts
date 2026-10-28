@@ -13,7 +13,14 @@ const authorize = (
   ctx: import("@gotch/nextsignal").ProcessContext<AppServices>,
 ) => ctx.auth.requireUser!(ctx);
 const reviewSchema = z.strictObject({
-  status: z.enum(["needs_review", "assigned", "reviewed", "agent", "all"]),
+  status: z.enum([
+    "needs_review",
+    "assigned",
+    "reviewed",
+    "agent",
+    "llm",
+    "all",
+  ]),
   retailer: z
     .enum([
       "kam",

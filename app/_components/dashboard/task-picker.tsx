@@ -28,6 +28,13 @@ export const taskChoices = [
       "Use AI to categorize imported products. This task does not connect products together.",
   },
   {
+    id: "llm_review",
+    icon: Tags,
+    summary: "Review uncertain categories with Qwen.",
+    detail:
+      "Use the configured Qwen model to review available products left uncertain by the decision model. Unclear products remain in Review.",
+  },
+  {
     id: "match",
     icon: Link2,
     summary: "Connect the same product across stores.",

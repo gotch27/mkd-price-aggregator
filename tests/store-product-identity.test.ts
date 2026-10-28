@@ -129,7 +129,7 @@ it("ignores inactive or removed ambiguous observations and retains inactive prod
   await publish("clean", [row("item")]);
   const products = (
     await pool.query(
-      "SELECT id,external_key,group_id FROM store_products ORDER BY external_key",
+      "SELECT id,external_key,group_id FROM store_products ORDER BY external_key,name,id",
     )
   ).rows;
   const ids = products.map((p) => p.id);
@@ -145,7 +145,7 @@ it("ignores inactive or removed ambiguous observations and retains inactive prod
   expect(
     (
       await pool.query(
-        "SELECT id,external_key,group_id FROM store_products ORDER BY external_key",
+        "SELECT id,external_key,group_id FROM store_products ORDER BY external_key,name,id",
       )
     ).rows,
   ).toEqual(products);

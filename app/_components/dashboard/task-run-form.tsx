@@ -106,8 +106,9 @@ export function RunForm({
     ...c,
     count: scopeCounts?.counts.find((row) => row.family === c.id)?.count ?? 0,
   }));
-  const products = ["categorize", "match"].includes(kind),
-    usesAi = kind === "categorize" || (kind === "match" && ai),
+  const products = ["categorize", "llm_review", "match"].includes(kind),
+    usesAi =
+      ["categorize", "llm_review"].includes(kind) || (kind === "match" && ai),
     retailers =
       scope === "all"
         ? view.stores.filter((s) => s.enabled).map((s) => s.slug)
@@ -143,7 +144,7 @@ export function RunForm({
           ? (categories as TaskCommand["categories"])
           : [],
       max_cost_usd: usesAi ? cost : 0,
-      recheck,
+      recheck: kind === "llm_review" ? false : recheck,
       idempotency_key: crypto.randomUUID(),
     };
     const action =
@@ -151,9 +152,11 @@ export function RunForm({
         ? "Discover catalogs without downloading their prices."
         : kind === "import"
           ? "Retrieve, validate and publish complete catalogs. No product limit truncates an import."
-          : kind === "categorize"
-            ? "Categorize only the selected products. This task does not compare or connect products."
-            : "Check products for matches across different stores. Existing saved connections remain.";
+          : kind === "llm_review"
+            ? `Review uncertain categories using ${view.models.clarification}. Only products already needing review are selected; unclear products remain in Review. Saved human, agent and LLM choices are protected.`
+            : kind === "categorize"
+              ? "Categorize only the selected products. This task does not compare or connect products."
+              : "Check products for matches across different stores. Existing saved connections remain.";
     const automaticSteps =
       kind === "import"
         ? [
@@ -298,6 +301,20 @@ export function RunForm({
                   )}
                 </Field>
               )}
+              {kind === "llm_review" && (
+                <Alert>
+                  <AlertTitle>
+                    Review with {view.models.clarification}
+                  </AlertTitle>
+                  <AlertDescription>
+                    Only available products needing review after the decision
+                    model are selected. Saved human, agent and LLM choices are
+                    protected. Clear categories save as LLM; uncertain products
+                    stay in Review. Each product uses one request, subject to
+                    the task and shared spending limits.
+                  </AlertDescription>
+                </Alert>
+              )}
               {products && (
                 <>
                   <Field>
@@ -330,21 +347,23 @@ export function RunForm({
                       All pending products in this scope
                     </FieldLabel>
                   </Field>
-                  <Field orientation="horizontal">
-                    <Checkbox
-                      id="task-recheck"
-                      checked={recheck}
-                      onCheckedChange={(v) => setRecheck(v === true)}
-                    />
-                    <div>
-                      <FieldLabel htmlFor="task-recheck">
-                        Include previously checked products
-                      </FieldLabel>
-                      <FieldDescription>
-                        Use this when reviewing new prompts or matching rules.
-                      </FieldDescription>
-                    </div>
-                  </Field>
+                  {kind !== "llm_review" && (
+                    <Field orientation="horizontal">
+                      <Checkbox
+                        id="task-recheck"
+                        checked={recheck}
+                        onCheckedChange={(v) => setRecheck(v === true)}
+                      />
+                      <div>
+                        <FieldLabel htmlFor="task-recheck">
+                          Include previously checked products
+                        </FieldLabel>
+                        <FieldDescription>
+                          Use this when reviewing new prompts or matching rules.
+                        </FieldDescription>
+                      </div>
+                    </Field>
+                  )}
                 </>
               )}
               {kind === "match" && (

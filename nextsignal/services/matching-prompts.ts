@@ -8,7 +8,7 @@ import { hash } from "@/nextsignal/domain/normalize";
 type PromptSettings = typeof settings.matching.prompts;
 export type PromptFile = { path: string; content: string };
 export type PromptBundle = {
-  operation: "classification" | "comparison" | "clarification";
+  operation: "classification" | "comparison" | "clarification" | "llm_review";
   key: string;
   instructions: string;
   files: PromptFile[];
@@ -24,6 +24,7 @@ export function loadPromptCatalog(config: PromptSettings) {
     if (!content) throw new Error(`Prompt file is empty: ${path}`);
     return { path, content };
   }
+  const llmReview = read(settings.llm_review.instructions_file);
   const agentReview = read(settings.agent_review.instructions_file);
   const classification = read(config.classification),
     comparison = read(config.comparison),
@@ -48,11 +49,16 @@ export function loadPromptCatalog(config: PromptSettings) {
     families.map((id) => [id, read(config.families[id])]),
   );
   function bundle(
-    operation: "classification" | "comparison" | "clarification",
+    operation: "classification" | "comparison" | "clarification" | "llm_review",
     retailers: string[],
     selectedFamilies: Family[],
   ): PromptBundle {
-    const base = { classification, comparison, clarification }[operation];
+    const base = {
+      classification,
+      comparison,
+      clarification,
+      llm_review: llmReview,
+    }[operation];
     const text = [
       base,
       ...[...new Set(retailers)].sort().map((id) => {
@@ -63,7 +69,7 @@ export function loadPromptCatalog(config: PromptSettings) {
     ];
     const files = [
       ...text,
-      ...(operation === "classification"
+      ...(operation === "classification" || operation === "llm_review"
         ? [categoriesFile]
         : operation === "comparison"
           ? [answersFile, question]

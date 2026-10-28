@@ -991,3 +991,95 @@ async function clarifyScoped(
   );
   return facts;
 }
+
+export const llmCategorySchema = z.strictObject({
+  category: z.enum(families),
+  reason: z
+    .string()
+    .trim()
+    .min(1)
+    .max(settings.product_details.note_max_length),
+  quote: z.string().max(settings.product_details.note_max_length),
+});
+// Uses the same production request boundary as matching clarification: cache,
+// reservations, live permissions, task caps and cooldowns are shared.
+export async function reviewCategoryWithLlm(
+  campaign: Campaign,
+  product: StoreProduct,
+) {
+  const prompt = matchingPrompts.bundle("llm_review", [product.retailer], []);
+  const plan = await classificationRequest(product);
+  const schema = z.toJSONSchema(llmCategorySchema);
+  delete schema.$schema;
+  const result = await withAvailableProducts([product.id], product.id, () =>
+    request(
+      campaign,
+      "extraction",
+      {
+        messages: [
+          {
+            role: "system",
+            content: `${prompt.instructions}\nCategory definitions:\n${JSON.stringify(matchingPrompts.categories)}`,
+          },
+          { role: "user", content: JSON.stringify(plan.state) },
+        ],
+        temperature: 0,
+        stream: false,
+        reasoning: { enabled: settings.llm_review.reasoning_enabled },
+        max_tokens: settings.llm_review.max_output_tokens,
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: "product_category_review",
+            strict: true,
+            schema,
+          },
+        },
+        providerOptions: { gateway: { only: ["alibaba"] } },
+      },
+      undefined,
+      prompt,
+    ),
+  );
+  const choices = result.choices as
+    { message?: { content?: string } }[] | undefined;
+  const parsed = llmCategorySchema.safeParse(
+    (() => {
+      try {
+        return JSON.parse(choices?.[0]?.message?.content ?? "");
+      } catch {
+        return null;
+      }
+    })(),
+  );
+  if (!parsed.success)
+    throw new GatewayDeferred(
+      "LLM review response is invalid; category kept for review",
+      "invalid",
+    );
+  const answer = parsed.data;
+  const source = plan.state.product as Record<string, unknown>;
+  const texts = [
+    source.name,
+    source.readable_name,
+    source.description,
+    source.readable_description,
+    source.category,
+    source.readable_category,
+  ].filter((v): v is string => typeof v === "string");
+  if (
+    answer.category !== "unknown" &&
+    (!answer.quote.trim() || !texts.some((t) => t.includes(answer.quote)))
+  )
+    throw new GatewayDeferred(
+      "LLM supporting quote is missing from the supplied source; category kept for review",
+      "invalid",
+    );
+  return {
+    ...answer,
+    model: matchingConfig().gateway.extraction_model,
+    prompt_key: prompt.key,
+    generation_id: (result.__accounting as { generation_id: string | null })
+      .generation_id,
+  };
+}
