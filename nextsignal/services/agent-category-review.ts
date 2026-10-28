@@ -15,6 +15,7 @@ import { availableProductSql } from "./product-availability";
 import { ProductGroupConflict } from "./store-product-groups";
 import { logEvent } from "@/nextsignal/adapters/log-context";
 import type {
+  PreparedAgentReviewBatch,
   AgentReviewStart,
   AgentReviewSubmission,
   AgentReviewSession,
@@ -256,6 +257,26 @@ export async function startSession(input: AgentReviewStart, actor: string) {
   );
   return session;
 }
+// Two-call HTTP convenience: the same durable session/batch as WebMCP, with
+// the instructions and labels a browserless agent needs to make its own choice.
+export async function prepareBatch(
+  input: AgentReviewStart,
+  actor: string,
+): Promise<PreparedAgentReviewBatch> {
+  const session = await startSession(input, actor);
+  const [context, batch] = await Promise.all([
+    readContext(actor),
+    readBatch(session.id, actor),
+  ]);
+  return {
+    session,
+    batch,
+    limits: context.limits,
+    instructions: context.instructions,
+    categories: context.categories,
+  };
+}
+
 export async function readBatch(
   id: string,
   actor: string,

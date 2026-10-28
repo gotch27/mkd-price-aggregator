@@ -7,6 +7,7 @@ Open **Review** while signed in, then ask a connected browser agent:
 There is no activation or start button. Opening the page only registers tools and
 reads progress. It never starts a session, calls Vercel, or starts a worker task.
 The browser must support WebMCP. Without it, the normal human review UI still works.
+Agents without a browser can use the same workflow through the [category-review HTTP API](agent-review-api.md), authenticated with the existing administrator password.
 
 ## Tools
 

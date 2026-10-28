@@ -63,3 +63,21 @@ export const authAdapter: AuthAdapter = {
     return value({ username: settings.auth.username });
   },
 };
+
+// Temporary machine-agent access is scoped to category-review processes. The
+// ordinary auth adapter deliberately remains cookie-only for every other API.
+export function requireAgentReviewUser(
+  ctx: Parameters<NonNullable<AuthAdapter["requireUser"]>>[0],
+) {
+  const header = ctx.request?.headers.authorization;
+  if (header === undefined) return authAdapter.requireUser!(ctx);
+  const bearer = header.match(/^Bearer[ \t]+(.+)$/i);
+  if (!bearer || !safeEqual(bearer[1], settings.auth.password))
+    return authFail("Invalid agent review credentials");
+  if (ctx.request?.method !== "GET") {
+    const origin = ctx.request?.headers.origin;
+    if (origin && !settings.auth.allowed_origins.includes(origin))
+      return forbidden("Origin mismatch");
+  }
+  return value({ username: settings.auth.username });
+}
