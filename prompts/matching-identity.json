@@ -1,5 +1,5 @@
 {
-  "version": "identity-v2-decision-led",
+  "version": "identity-v3-routing-and-numeric-equality",
   "profiles": [
     {
       "id": "water",

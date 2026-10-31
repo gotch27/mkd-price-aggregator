@@ -1,4 +1,5 @@
 import Decimal from "decimal.js";
+import { numericFactValue } from "./numeric-facts";
 import { hash, normalizeName, validGtin } from "@/nextsignal/domain/normalize";
 import {
   localRuleKey,
@@ -487,7 +488,11 @@ export function differences(a: StoreProduct, b: StoreProduct): string[] {
   for (const key of factNames) {
     const x = valueOf(a.facts, key),
       y = valueOf(b.facts, key);
-    if (x !== null && y !== null && x !== y)
+    if (
+      x !== null &&
+      y !== null &&
+      numericFactValue(key, x) !== numericFactValue(key, y)
+    )
       output.push(`${key}: ${x} versus ${y}`);
   }
   return output;

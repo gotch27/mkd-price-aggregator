@@ -30,8 +30,10 @@ flowchart TD
  A[Reviewed matching task or authorized new change] --> B[Read saved categories and prepare source facts]
  B --> C[Retrieve up to 20 cross-store groups]
  C --> D[Reuse proofs and reject supported differences]
- D --> E[Interpret needed facts on either side within task limits]
- E --> F[Code proof or Decider questions in batches of five]
+ D --> F[Code proof or Decider comparison and detail routing]
+ F --> E[Interpret useful source details on either side within task limits]
+ E --> R[Reconsider changed pairs once]
+ R --> G
  F --> G[Hold ambiguous stores and verify every new group relationship]
  G --> H[Recheck live sources and commit compatible groups]
  G --> I[Keep unresolved products with specific reasons]
@@ -58,6 +60,10 @@ Categories control which products may use paid comparisons; code-based matching 
 
 Rules read explicit amounts, units, pack counts, barcodes, reviewed brands, variants, containers and selected family details. Quantities use exact decimal arithmetic. Diaper suitability weights are not package weights. Produce needs stated type, variety and sale unit; known grade/origin conflicts prevent connection. Unknown or unsupported distinctions remain unknown.
 
+Numeric identity facts (amount, pack count, fat and alcohol percentages) compare
+by exact decimal value: `1`, `1.0` and `1,00` agree. Original quotes are retained.
+Article/model codes, shades and categorical sizes retain significant formatting.
+
 `nextsignal/domain/product-facts.ts` keeps reviewed comparable values separate from original evidence: for example, НУТЕЛА/Nutela/Nutella share a brand value while their source quotes remain unchanged. Generic product type, product range, flavour/fragrance, whole/ground processing and cosmetic shade have separate fields. Name rules take precedence over misleading ingredient/category words, such as apple-scented dishwashing liquid. Matching-specific product identity profiles recognize the validated soft-drink/dairy types and their distinguishing facts. Unrecognized free-text types cannot prove a conflict. Other families retain conservative checks pending evaluation. See [the current identity workflow](matching-identity.md).
 
 `nextsignal/domain/clarification.ts` validates each requested AI fact independently. Unsupported fields are logged and discarded while good fields survive. Amount and unit are validated as one source-supported fact and converted together. Canonicalization happens after literal source validation. Derived facts refresh only for work being processed; candidate/group checks use the same pure rules without mutating records during reads. Changed request inputs and relevant prompt contents invalidate affected request caches without resetting completed work.
@@ -65,6 +71,25 @@ Rules read explicit amounts, units, pack counts, barcodes, reviewed brands, vari
 Candidate retrieval searches other chains through indexed names, reviewed brands, amounts, validated barcodes and exact local signatures. It considers unmatched products and existing groups, collapses candidates already in the same group, and keeps at most 20 groups. It records deterministic retrieval reasons and scores.
 
 For selected categories, Perplexity Decider V1.2 answers a separate typed choice question for each of five candidate groups: **same**, **different**, or **not enough information**. SPAR and Vero can both answer “same” for KAM. An AI “same” requires probability at least **0.75**, sufficient supported identity facts, no explicit differences, and full-group compatibility. Provider confidence is a separate field. Missing information never becomes a proven permanent difference. Both thresholds are editable operational settings; any acceptance still requires source-supported facts and full-group validation.
+
+The acceptance threshold does not gate clarification. A lower-probability `same`
+or an `insufficient` answer can request useful interpretation of supplied text.
+The routed field and other relevant missing profile fields are requested together;
+`missing_from_source` skips interpretation. Only a newly validated answer meeting
+the acceptance threshold can authorize an AI connection after facts change.
+
+Comparison batches also respect the actual encoded Gateway input-size limit,
+including instructions and routing questions. Oversized batches split
+deterministically without truncating source text. An individually oversized pair
+is deferred, while other pairs can proceed. Successful pair answers remain cached.
+Provider/budget interruptions stop further paid work; independently verified code
+connections can pass the same transactional group checks before task recovery.
+Deferred candidate reasons remain visible in task results. Live permission removal
+and stale-source protections still stop work at their existing safe boundaries.
+
+Matching profile versions invalidate only matching preparation/pair caches and
+require a newly reviewed task for old unfinished matching work. They do not
+invalidate saved classifications or start a campaign.
 
 An authorized categorization task uses Decider for unique store products without reusable results, with an initial 0.80 category acceptance threshold and saved alternative scores. Saved unchanged classifications are reused. AI matching uses saved categories: manual tasks capture their own selection and automatic matching uses the selection in operational settings. Uncategorized products wait for categorization rather than triggering it implicitly. Other labels remain unmatched unless code establishes a safe connection. Qwen3.7 Flash performs targeted source interpretation on either side, with durable product/profile/requested-field caching and the reviewed counterpart limits. Its strict output includes a source field and exact quote for every fact. Code verifies allowed fields, source identifiers, literal quotes and numeric conversions. It does not repeatedly ask models to guess omitted information. Instructions live in external prompt files; only relevant store/category guides enter each request, and their source snapshots are preserved by hash.
 

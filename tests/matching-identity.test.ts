@@ -12,6 +12,7 @@ import {
 } from "@/nextsignal/domain/matching-identity";
 import {
   inputFingerprint,
+  differences,
   type StoreProduct,
   type Candidate,
 } from "@/nextsignal/domain/matching";
@@ -50,6 +51,48 @@ function product(
   };
 }
 const prepare = (p: StoreProduct) => prepareIdentity(p, rules, [], catalog);
+it("compares measurements numerically while retaining literal evidence and distinct codes", () => {
+  const a = prepare(product("МЛЕКО ЗБРЕГОВ 1% 1Л", "kam", "dairy"));
+  const b = prepare(product("МЛЕКО ЗБРЕГОВ 1.0% 1Л", "spar", "dairy"));
+  expect(identityDifferences(a, b, catalog)).not.toContain("fat: 1 versus 1.0");
+  expect(b.facts.fat?.value).toBe("1");
+  expect(b.facts.fat?.quote).toContain("1.0%");
+  const manual = prepare({ ...b, manual_facts: { fat: "1,00%" } });
+  expect(manual.facts.fat?.value).toBe("1");
+  expect(identityDifferences(a, manual, catalog)).toEqual([]);
+  for (const field of ["quantity", "pack", "fat", "alcohol"] as const) {
+    a.facts[field] = {
+      value: "1",
+      quote: "1",
+      source: "manual",
+      method: "manual",
+    };
+    b.facts[field] = {
+      value: "1.00",
+      quote: "1.00",
+      source: "manual",
+      method: "manual",
+    };
+  }
+  expect(differences(a, b)).toEqual([]);
+  b.facts.fat = { ...b.facts.fat!, value: "1.5" };
+  expect(differences(a, b)).toContain("fat: 1 versus 1.5");
+  for (const field of ["model", "shade", "size", "gtin"] as const) {
+    a.facts[field] = {
+      value: "01",
+      quote: "01",
+      source: "manual",
+      method: "manual",
+    };
+    b.facts[field] = {
+      value: "1",
+      quote: "1",
+      source: "manual",
+      method: "manual",
+    };
+    expect(differences(a, b)).toContain(`${field}: 01 versus 1`);
+  }
+});
 it("recognizes water and its carbonation without an invented generic variant", () => {
   const a = product("ВОДА ХЕБА ГАЗИРАНА 1.5Л"),
     b = product("VODA HEBA 1.5L GAZIRANA", "spar");

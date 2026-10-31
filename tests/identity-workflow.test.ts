@@ -12,7 +12,10 @@ import {
   getProduct,
   saveClassification,
 } from "@/nextsignal/services/matching-repository";
-import { classificationRequest } from "@/nextsignal/services/ai-gateway";
+import {
+  classificationRequest,
+  comparisonRequest,
+} from "@/nextsignal/services/ai-gateway";
 import {
   readSettings,
   saveSettings,
@@ -47,6 +50,7 @@ afterAll(async () => {
 async function publish(
   retailer: TaskCommand["retailers"][number],
   names: string[],
+  description: string | null = null,
 ) {
   const source = (
     await pool.query(
@@ -59,7 +63,7 @@ async function publish(
     rows: names.map((name, i) => ({
       key: String(i),
       name,
-      description: null,
+      description,
       category: "ГАЗИРАНИ БЕЗАЛКОХОЛНИ ПИЈАЛОЦИ",
       gtin: null,
       price: "50.00",
@@ -101,7 +105,11 @@ async function publish(
   }
   return products.map((p) => p.id);
 }
-function provider(route = "brand", choice = "same") {
+function provider(
+  route = "brand",
+  choice = "same",
+  sameProbability = (_body: Record<string, unknown>) => 0.98,
+) {
   const calls: { kind: string; body: Record<string, unknown> }[] = [];
   const fetcher = vi.fn(async (_url: unknown, init: RequestInit) => {
     const body = JSON.parse(String(init.body));
@@ -114,6 +122,9 @@ function provider(route = "brand", choice = "same") {
               (q as { criteria: Record<string, string> }).criteria,
             );
             const selected = k.startsWith("detail_") ? route : choice;
+            const probability = k.startsWith("detail_")
+              ? 0.98
+              : sameProbability(body);
             return [
               k,
               {
@@ -122,7 +133,9 @@ function provider(route = "brand", choice = "same") {
                 probabilities: Object.fromEntries(
                   criteria.map((c) => [
                     c,
-                    c === selected ? 0.98 : 0.02 / (criteria.length - 1),
+                    c === selected
+                      ? probability
+                      : (1 - probability) / (criteria.length - 1),
                   ]),
                 ),
                 confidence: 0.4,
@@ -272,6 +285,197 @@ it("uses the Decider's missing-from-source route without spending on repeated in
       )
     ).rows[0].n,
   ).toBe(0);
+});
+it("clarifies a useful same answer below 75% and accepts only the reconsidered result", async () => {
+  const [a] = await publish("kam", ["ВОДА ХЕБА ГАЗИРАНА 1.5Л"]);
+  const [b] = await publish("spar", ["ВОДА ХЕБА ГАЗИРАНА 1.5Л"]);
+  const mocked = provider("brand", "same", (body) => {
+    const state = body.state as {
+      products: Record<string, { supported_facts: Record<string, unknown> }>;
+    };
+    return Object.values(state.products).every((p) => p.supported_facts.brand)
+      ? 0.98
+      : 0.65;
+  });
+  const t = await task(a);
+  await executeTask(t.id);
+  expect(mocked.calls.map((c) => c.kind)).toEqual([
+    "decision",
+    "clarification",
+    "clarification",
+    "decision",
+  ]);
+  expect((await getProduct(a)).group_id).toBe((await getProduct(b)).group_id);
+  const decisions = (
+    await pool.query("SELECT answer FROM matching_pair_answers")
+  ).rows;
+  expect(decisions.map((d) => d.answer.probabilities.same).sort()).toEqual([
+    0.65, 0.98,
+  ]);
+});
+it("does not accept a clarified same answer that still stays below 75%", async () => {
+  const [a] = await publish("kam", ["ВОДА ХЕБА ГАЗИРАНА 1.5Л"]);
+  const [b] = await publish("spar", ["ВОДА ХЕБА ГАЗИРАНА 1.5Л"]);
+  const mocked = provider("brand", "same", () => 0.65);
+  const t = await task(a);
+  await executeTask(t.id);
+  expect(mocked.calls.filter((c) => c.kind === "clarification")).toHaveLength(
+    2,
+  );
+  expect((await getProduct(a)).group_id).not.toBe(
+    (await getProduct(b)).group_id,
+  );
+});
+it("splits encoded comparisons without truncating source text or repeating cached pairs", async () => {
+  const [a] = await publish("kam", ["ВОДА ХЕБА ГАЗИРАНА 1.5Л"]);
+  const targets: string[] = [];
+  for (const store of ["spar", "vero", "zito", "dim", "zur"] as const)
+    targets.push(
+      ...(await publish(
+        store,
+        ["ВОДА ХЕБА ГАЗИРАНА 1.5Л"],
+        "Source details ".repeat(100),
+      )),
+    );
+  const query = await getProduct(a);
+  const candidates = await Promise.all(
+    targets.map(async (id) => {
+      const product = await getProduct(id);
+      return {
+        product,
+        members: [product],
+        group_version: product.group_version!,
+        score: 1,
+        reasons: [],
+      };
+    }),
+  );
+  const single = Math.max(
+    ...candidates.map((c) => comparisonRequest(query, [c]).inputBytes),
+  );
+  settings.matching.gateway.max_input_bytes = single + 2000;
+  expect(comparisonRequest(query, candidates).inputBytes).toBeGreaterThan(
+    settings.matching.gateway.max_input_bytes,
+  );
+  const mocked = provider("missing_from_source", "insufficient");
+  const t = await task(a);
+  await executeTask(t.id);
+  expect(mocked.calls.length).toBeGreaterThan(1);
+  for (const call of mocked.calls) {
+    expect(Buffer.byteLength(JSON.stringify(call.body))).toBeLessThanOrEqual(
+      settings.matching.gateway.max_input_bytes,
+    );
+    const state = call.body.state as {
+      products: Record<string, { description: string }>;
+    };
+    // The full original text remains in the application-owned identity request.
+    expect(JSON.stringify(state)).toContain("Source details ".repeat(99));
+  }
+  expect(
+    (await pool.query("SELECT count(*)::int n FROM matching_pair_answers"))
+      .rows[0].n,
+  ).toBe(5);
+  const count = mocked.calls.length;
+  const recheck = await task(a, 50, t.id);
+  await executeTask(recheck.id);
+  expect(mocked.calls).toHaveLength(count);
+});
+it.each(["input limit", "budget"])(
+  "saves an independent code connection when paid work hits its %s",
+  async (failure) => {
+    const [a] = await publish("kam", ["Coca-Cola Original 330 ml can"]);
+    const [b] = await publish("vero", ["Coca-Cola Original 330 ml can"]);
+    await publish(
+      "spar",
+      ["Cola Original 330 ml can"],
+      failure === "input limit" ? "Source details ".repeat(8000) : null,
+    );
+    const mocked = provider("missing_from_source", "insufficient");
+    const t = await task(a);
+    if (failure === "budget")
+      await pool.query(
+        "UPDATE task_executions SET options=jsonb_set(options,'{max_cost_usd}','0') WHERE id=$1",
+        [t.id],
+      );
+    await executeTask(t.id);
+    expect((await getProduct(a)).group_id).toBe((await getProduct(b)).group_id);
+    expect(mocked.calls).toHaveLength(0);
+    expect(
+      (
+        await pool.query(
+          "SELECT count(*)::int n FROM store_match_decisions WHERE outcome='deferred'",
+        )
+      ).rows[0].n,
+    ).toBeGreaterThan(0);
+    const results = await taskResults({
+      id: t.id,
+      page: 1,
+      size: 10,
+      search: "",
+      category: "",
+      outcome: "",
+    });
+    expect(results?.rows[0].outcome).toBe("connected");
+    expect(results?.kind === "match" && results.summary.connected).toBe(1);
+  },
+);
+it("reports an individually oversized pair as deferred rather than no candidates", async () => {
+  const [a] = await publish("kam", ["ВОДА ХЕБА ГАЗИРАНА 1.5Л"]);
+  await publish(
+    "spar",
+    ["ВОДА ХЕБА ГАЗИРАНА 1.5Л"],
+    "Source details ".repeat(8000),
+  );
+  const mocked = provider();
+  const t = await task(a);
+  await executeTask(t.id);
+  expect(mocked.calls).toHaveLength(0);
+  const results = await taskResults({
+    id: t.id,
+    page: 1,
+    size: 10,
+    search: "",
+    category: "",
+    outcome: "",
+  });
+  expect(results?.rows[0].outcome).toBe("deferred");
+  expect(results?.kind === "match" && results.summary.deferred).toBe(1);
+});
+it("does not cache a local interpretation size rejection or allocate later counterparts", async () => {
+  const [a] = await publish("kam", ["ВОДА ХЕБА ГАЗИРАНА 1.5Л"]);
+  const [b] = await publish("spar", ["ВОДА ХЕБА ГАЗИРАНА 1.5Л"]);
+  const mocked = provider();
+  const implementation = mocked.fetcher.getMockImplementation()!;
+  mocked.fetcher.mockImplementationOnce(async (...args) => {
+    const response = await implementation(...args);
+    settings.matching.gateway.max_input_bytes = 1;
+    return response;
+  });
+  const first = await task(a);
+  await executeTask(first.id);
+  expect(mocked.calls.map((c) => c.kind)).toEqual(["decision"]);
+  expect(
+    (
+      await pool.query(
+        "SELECT count(*)::int n FROM matching_product_preparations WHERE attempted",
+      )
+    ).rows[0].n,
+  ).toBe(0);
+  expect(
+    (
+      await pool.query(
+        "SELECT count(*)::int n FROM matching_task_preparations WHERE task_id=$1",
+        [first.id],
+      )
+    ).rows[0].n,
+  ).toBe(0);
+  settings.matching.gateway.max_input_bytes = original.gateway.max_input_bytes;
+  const second = await task(a, 50, first.id);
+  await executeTask(second.id);
+  expect(mocked.calls.filter((c) => c.kind === "clarification")).toHaveLength(
+    2,
+  );
+  expect((await getProduct(a)).group_id).toBe((await getProduct(b)).group_id);
 });
 it("persists the counterpart cap and rechecks only the previous unresolved products", async () => {
   const [a] = await publish("kam", ["ВОДА ХЕБА ГАЗИРАНА 1.5Л"]),

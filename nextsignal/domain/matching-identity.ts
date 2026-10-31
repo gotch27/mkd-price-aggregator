@@ -3,6 +3,7 @@ import { hash, normalizeName } from "./normalize";
 import { readableProductText } from "./product-text";
 import { canonicalBrand, canonicalType, factLabels } from "./product-facts";
 import { identityValue, relevantBrandRules } from "./identity-values";
+import { numericFactValue } from "./numeric-facts";
 import {
   differences,
   evidenceGaps,
@@ -110,7 +111,7 @@ function canonical(
     Object.entries(aliases).find(
       ([name, list]) => name === v || list.some((a) => normalizeName(a) === t),
     );
-  return exact?.[0] ?? v;
+  return exact?.[0] ?? numericFactValue(field, v);
 }
 export function identityProfile(p: StoreProduct, c: IdentityCatalog) {
   return c.profiles.find((profile) =>

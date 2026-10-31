@@ -13,7 +13,7 @@ import { pool, transaction } from "./database";
 import { matchingRules } from "./brand-catalog";
 import { identityCatalog } from "./identity-catalog";
 import * as repository from "./matching-repository";
-import { clarify, GatewayDeferred } from "./ai-gateway";
+import { clarify, GatewayDeferred, GatewayInputTooLarge } from "./ai-gateway";
 import { checkpoint, taskContext, matchingConfig } from "./task-context";
 import { logEvent } from "@/nextsignal/adapters/log-context";
 import { assertProductAvailable } from "./product-availability";
@@ -237,6 +237,9 @@ export async function prepareForMatching(
         requested = [...new Set([...requested, ...fields])];
         reason = "Source interpretation saved";
       } catch (error) {
+        // A local size rejection is not a model abstention and must not poison
+        // the durable "already interpreted" cache for these source fields.
+        if (error instanceof GatewayInputTooLarge) throw error;
         if (!(error instanceof GatewayDeferred) || error.reason !== "invalid")
           throw error;
         attempted = true;

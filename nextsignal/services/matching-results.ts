@@ -52,13 +52,15 @@ export async function matchingSnapshot(
         ? "stale"
         : rows.length && rows.every((d) => d.outcome === "different")
           ? "different"
-          : rows.some((d) => d.outcome === "needs_info")
-            ? "needs_info"
-            : task.state === "running" && stores.length > 1
-              ? "already_connected"
-              : rows.length
-                ? "no_candidates"
-                : "waiting";
+          : rows.some((d) => d.outcome === "deferred")
+            ? "deferred"
+            : rows.some((d) => d.outcome === "needs_info")
+              ? "needs_info"
+              : task.state === "running" && stores.length > 1
+                ? "already_connected"
+                : rows.length
+                  ? "no_candidates"
+                  : "waiting";
   return {
     kind: "match",
     name: p
@@ -69,6 +71,7 @@ export async function matchingSnapshot(
     member_id: id ?? "",
     outcome,
     reason:
+      rows.find((d) => d.outcome === "matched")?.reason ??
       rows.find((d) => d.outcome !== "different")?.reason ??
       rows[0]?.reason ??
       fallback,
@@ -109,9 +112,9 @@ export async function matchingResults(
     const base = `WITH history AS MATERIALIZED(SELECT d.store_product_id,
       bool_or(d.outcome='matched') AS connected,bool_or(d.outcome='stale') AS stale,
       bool_or(d.reason ILIKE '%same store%' OR d.reason ILIKE '%competing%') AS ambiguous,
-      bool_and(d.outcome='different') AS different,bool_or(d.outcome='needs_info') AS needs_info
+      bool_and(d.outcome='different') AS different,bool_or(d.outcome='needs_info') AS needs_info,bool_or(d.outcome='deferred') AS deferred
       FROM store_match_decisions d WHERE d.task_id=$1 OR(d.task_id IS NULL AND d.campaign_id=$4 AND d.created_at>=$5 AND d.created_at<=$6) GROUP BY d.store_product_id)
-      SELECT ti.*,sp.name,sp.normalized_name,coalesce(ti.result->>'outcome',CASE WHEN ti.state='pending' THEN 'waiting' WHEN ti.state='deferred' THEN 'deferred' WHEN h.connected THEN 'connected' WHEN h.ambiguous THEN 'ambiguous_store' WHEN h.stale THEN 'stale' WHEN h.different THEN 'different' WHEN h.needs_info THEN 'needs_info' WHEN h.store_product_id IS NOT NULL THEN 'no_candidates' ELSE 'waiting' END) AS outcome
+      SELECT ti.*,sp.name,sp.normalized_name,coalesce(ti.result->>'outcome',CASE WHEN h.connected THEN 'connected' WHEN ti.state='pending' THEN 'waiting' WHEN ti.state='deferred' OR h.deferred THEN 'deferred' WHEN h.ambiguous THEN 'ambiguous_store' WHEN h.stale THEN 'stale' WHEN h.different THEN 'different' WHEN h.needs_info THEN 'needs_info' WHEN h.store_product_id IS NOT NULL THEN 'no_candidates' ELSE 'waiting' END) AS outcome
       FROM task_items ti LEFT JOIN store_products sp ON sp.id=ti.store_product_id LEFT JOIN history h ON h.store_product_id=ti.store_product_id WHERE ti.task_id=$1 AND $2::text IS NOT NULL AND $3::text IS NOT NULL`;
 
     const args = [

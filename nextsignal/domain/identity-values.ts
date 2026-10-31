@@ -1,5 +1,6 @@
 import { normalizeName } from "./normalize";
 import { canonicalBrand, canonicalType } from "./product-facts";
+import { numericFactValue } from "./numeric-facts";
 import type { FactName } from "./matching";
 import type { LocalMatchingRules } from "./local-matching";
 import type { IdentityCatalog } from "./matching-identity";
@@ -49,7 +50,8 @@ export function identityValue(
     }
     return { value: text, status: "unrecognized" };
   }
-  return { value: text, status: "known" };
+  const numeric = numericFactValue(field, literal);
+  return { value: numeric === literal ? text : numeric, status: "known" };
 }
 
 export function relevantBrandRules(texts: string[], rules: LocalMatchingRules) {

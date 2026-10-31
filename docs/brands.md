@@ -8,6 +8,30 @@ In **Products → All products**, use the Brand filter alongside store, availabi
 
 The dictionary does not make provider requests. Existing categories, confirmed product connections, and their decision history are retained.
 
+## Agent review with WebMCP
+
+Open **Review → Brands**, sign in, and keep the page open in the agent's
+WebMCP-capable browser. There is no agent-start button. Give the agent a bounded
+instruction, for example:
+
+> Use the brand WebMCP tools on this page to review 20 unresolved brand spelling
+> groups. Reuse existing brands, save only aliases supported by exact source
+> quotes, and skip uncertain cases. Do not start matching or make Gateway calls.
+
+The agent discovers the current page tools, reads `get_brand_review_context`,
+starts a bounded session with `start_brand_review`, and works through
+`get_brand_review_batch`. It uses `search_brands` before saving evidence with
+`submit_brand_review_batch`. Results, stop and conditional undo tools are also
+available. Previously skipped unchanged groups are excluded by default.
+
+Aliases normally apply to the quoted store; a global spelling needs evidence
+from two stores. Saving a brand queues a bounded local fact refresh, preserves
+saved categories and does not authorize matching. **Undo last batch** can undo an
+eligible batch; **OK** hides session results without deleting saved work/history.
+An external agent uses its own application/model allowance, not this app's
+Gateway budget. A small common-brand pass is useful before another isolated
+matching smoke test; a full-catalog pass is not required.
+
 ## Reference data and product evidence
 
 Migration `040_brands.sql` seeds the reviewed dictionary once and links existing brand facts to stable brand IDs. It does not rerun categorization, alter prices, change product groups, or erase raw source text and decisions. Later migrations/startups never replace names or aliases edited through the application.

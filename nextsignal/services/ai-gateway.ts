@@ -66,6 +66,14 @@ export class GatewayDeferred extends Error {
     super(message);
   }
 }
+export class GatewayInputTooLarge extends GatewayDeferred {
+  constructor(
+    public readonly inputBytes: number,
+    public readonly limitBytes: number,
+  ) {
+    super("Matching input exceeds its configured size limit", "invalid");
+  }
+}
 export type ChoiceAnswer = {
   type: "choice";
   choice: string;
@@ -245,10 +253,7 @@ async function requestOnce(
       "AI request skipped because the input exceeds its size limit",
       { ...trace, input_bytes: bytes, limit_bytes: g.max_input_bytes },
     );
-    throw new GatewayDeferred(
-      "Matching input exceeds its configured size limit",
-      "invalid",
-    );
+    throw new GatewayInputTooLarge(bytes, g.max_input_bytes);
   }
   const inputRate =
     experiment?.input_per_million ??
@@ -804,8 +809,7 @@ export async function classify(campaign: Campaign, product: StoreProduct) {
     result,
   };
 }
-export async function compare(
-  campaign: Campaign,
+export function comparisonRequest(
   query: StoreProduct,
   candidates: Candidate[],
 ) {
@@ -838,52 +842,71 @@ export async function compare(
         criteria: identityCatalog.routing,
       };
   }
+  const state = {
+    comparison_instructions: prompt.instructions,
+    identity_requirements: identityCatalog.profiles
+      .filter((profile) =>
+        all.some((p) => profile.types.includes(p.facts.type?.value ?? "")),
+      )
+      .map(({ id, required, identity_any }) => ({
+        profile: id,
+        required,
+        identity_any,
+      })),
+    query: query.id,
+    products: Object.fromEntries(
+      [...new Map(all.map((p) => [p.id, p])).values()].map((p) => [
+        p.id,
+        identityRequest(p, identityCatalog),
+      ]),
+    ),
+    candidates: Object.fromEntries(
+      candidates.map((candidate, i) => [
+        `candidate_${i}`,
+        {
+          representative: candidate.product.id,
+          members: candidate.members
+            .filter((p) => p.availability === "available")
+            .map((p) => p.id),
+        },
+      ]),
+    ),
+  };
+  return {
+    all,
+    prompt,
+    state,
+    questions,
+    inputBytes: Buffer.byteLength(
+      JSON.stringify({
+        state,
+        questions,
+        model: matchingConfig().gateway.decision_model,
+      }),
+    ),
+  };
+}
+export async function compare(
+  campaign: Campaign,
+  query: StoreProduct,
+  candidates: Candidate[],
+) {
+  const plan = comparisonRequest(query, candidates);
   const result = await withAvailableProducts(
-    all.map((p) => p.id),
+    plan.all.map((p) => p.id),
     query.id,
     () =>
       decide(
         campaign,
-        {
-          comparison_instructions: prompt.instructions,
-          identity_requirements: identityCatalog.profiles
-            .filter((profile) =>
-              all.some((p) =>
-                profile.types.includes(p.facts.type?.value ?? ""),
-              ),
-            )
-            .map(({ id, required, identity_any }) => ({
-              profile: id,
-              required,
-              identity_any,
-            })),
-          query: query.id,
-          products: Object.fromEntries(
-            [...new Map(all.map((p) => [p.id, p])).values()].map((p) => [
-              p.id,
-              identityRequest(p, identityCatalog),
-            ]),
-          ),
-          candidates: Object.fromEntries(
-            candidates.map((candidate, i) => [
-              `candidate_${i}`,
-              {
-                representative: candidate.product.id,
-                members: candidate.members
-                  .filter((p) => p.availability === "available")
-                  .map((p) => p.id),
-              },
-            ]),
-          ),
-        },
-        questions,
+        plan.state,
+        plan.questions,
         {
           operation: "compare",
           store_product_id: query.id,
           retailer: query.retailer,
           candidate_ids: candidates.map((c) => c.product.id),
         },
-        prompt,
+        plan.prompt,
       ),
   );
   return candidates.map((candidate, i) => ({

@@ -21,7 +21,13 @@ import {
   allocateCounterpart,
 } from "./matching-preparation";
 import { identityCatalog } from "./identity-catalog";
-import { comparePairs, pairInput, type PairProof } from "./identity-decisions";
+import {
+  comparePairs,
+  PairResponses,
+  pairInput,
+  type PairProof,
+} from "./identity-decisions";
+import { GatewayDeferred } from "./ai-gateway";
 import { logEvent } from "@/nextsignal/adapters/log-context";
 const pairId = (a: string, b: string) => [a, b].sort().join(":");
 function freeProof(a: StoreProduct, b: StoreProduct) {
@@ -45,6 +51,40 @@ export async function matchIdentityProduct(
   const currentMembers = await repository.groupMembers(initial.group_id);
   const primaryIds = new Set(currentMembers.map((p) => p.id));
   const comparisons: Comparison[] = [];
+  let interruption: GatewayDeferred | null = null;
+  async function compare(a: StoreProduct, targets: StoreProduct[]) {
+    if (interruption) {
+      const result = new PairResponses();
+      for (const target of targets)
+        result.deferred.set(target.id, interruption);
+      return result;
+    }
+    const result = await comparePairs(campaign, a, targets);
+    interruption = result.interruption;
+    return result;
+  }
+  async function interpret(
+    p: StoreProduct,
+    counterpart: boolean,
+    peers: StoreProduct[],
+    fields: FactName[],
+  ) {
+    if (interruption) return { product: p, limited: false };
+    try {
+      return await prepareForMatching(
+        p,
+        campaign,
+        true,
+        counterpart,
+        peers,
+        fields,
+      );
+    } catch (error) {
+      if (!(error instanceof GatewayDeferred)) throw error;
+      interruption = error;
+      return { product: await repository.getProduct(p.id), limited: false };
+    }
+  }
   let limited = false;
   let query = (await prepareForMatching(initial, campaign, false)).product;
   const free = await repository.findCandidates(query, "rules");
@@ -84,8 +124,7 @@ export async function matchIdentityProduct(
       [pairInput(query), pairInput(c.product)],
     ]),
   );
-  const answers = await comparePairs(
-    campaign,
+  const answers = await compare(
     query,
     targets.map((c) => c.product),
   );
@@ -95,9 +134,7 @@ export async function matchIdentityProduct(
       return (
         a &&
         a.clarification?.choice !== "missing_from_source" &&
-        (a.choice === "insufficient" ||
-          (a.choice === "same" &&
-            a.probabilities.same >= matchingConfig().threshold))
+        (a.choice === "insufficient" || a.choice === "same")
       );
     })
     .sort(
@@ -127,26 +164,32 @@ export async function matchIdentityProduct(
     : matchingConfig().identity.counterparts_per_product;
   const promising = useful.slice(0, cap);
   const peers = promising.flatMap((c) => c.members);
-  const requested = promising.flatMap(
-    (c) =>
-      routeFields(answers.get(c.product.id)?.answer.clarification?.choice) ??
-      identityFields(query, identityCatalog, c.members),
-  );
+  const requested = promising.flatMap((c) => [
+    ...(routeFields(answers.get(c.product.id)?.answer.clarification?.choice) ??
+      []),
+    ...identityFields(query, identityCatalog, c.members),
+  ]);
   if (promising.length)
-    query = (
-      await prepareForMatching(query, campaign, true, false, peers, [
-        ...new Set(requested),
-      ])
-    ).product;
+    query = (await interpret(query, false, peers, [...new Set(requested)]))
+      .product;
   const limitedGroups = new Set<string>();
   let fresh = 0;
   for (const candidate of useful) {
+    if (interruption) break;
     if (identityDifferences(query, candidate.product, identityCatalog).length)
       continue;
-    const fields = routeFields(
-      answers.get(candidate.product.id)?.answer.clarification?.choice,
-    );
+    const fields = [
+      ...new Set([
+        ...(routeFields(
+          answers.get(candidate.product.id)?.answer.clarification?.choice,
+        ) ?? []),
+        ...candidate.members.flatMap((m) =>
+          identityFields(m, identityCatalog, [query]),
+        ),
+      ]),
+    ];
     for (const member of candidate.members) {
+      if (interruption) break;
       if (!(await needsIdentityInterpretation(member, [query], fields)))
         continue;
       if (fresh >= cap || !(await allocateCounterpart(query.id, member.id))) {
@@ -155,14 +198,7 @@ export async function matchIdentityProduct(
         continue;
       }
       fresh++;
-      const p = await prepareForMatching(
-        member,
-        campaign,
-        true,
-        true,
-        [query],
-        fields,
-      );
+      const p = await interpret(member, true, [query], fields);
       if (p.limited) {
         limitedGroups.add(candidate.product.group_id);
         limited = true;
@@ -197,12 +233,16 @@ export async function matchIdentityProduct(
   // One reconsideration after validated interpretation. Never recurse into Qwen.
   if (changed.length) {
     await phase("comparing", query.id);
-    for (const [id, response] of await comparePairs(
-      campaign,
+    // Answers describe exact inputs. Never attach a pre-interpretation answer
+    // to changed facts when the reconsideration is deferred.
+    for (const c of changed) answers.delete(c.product.id);
+    const reconsidered = await compare(
       query,
       changed.map((c) => c.product),
-    ))
-      answers.set(id, response);
+    );
+    for (const [id, response] of reconsidered) answers.set(id, response);
+    for (const [id, error] of reconsidered.deferred)
+      answers.deferred.set(id, error);
   }
   const proofs = new Map<string, PairProof>();
   for (const candidate of preparedCandidates) {
@@ -247,7 +287,15 @@ export async function matchIdentityProduct(
         method: "rules",
         prompt_key: null,
       });
-    } else if (response) {
+    } else if (answers.deferred.has(candidate.product.id) || interruption)
+      comparisons.push({
+        ...base,
+        outcome: "deferred",
+        reason:
+          answers.deferred.get(candidate.product.id)?.message ??
+          interruption!.message,
+      });
+    else if (response) {
       const { answer, result } = response;
       const accepted =
         !gaps.length &&
@@ -307,6 +355,7 @@ export async function matchIdentityProduct(
   );
   const members = [...memberMap.values()];
   const held = new Set<string>();
+  const deferredGroups = new Map<string, string>();
   // Every new relationship requires its own proof. Existing groups remain atomic.
   for (const a of members) {
     const separations = await repository.manuallySeparatedCandidates(
@@ -355,11 +404,11 @@ export async function matchIdentityProduct(
         if (!primaryIds.has(b.id)) held.add(b.group_id);
       }
     }
-    const cross = await comparePairs(campaign, a, pending);
+    const cross = await compare(a, pending);
     for (const b of pending) {
-      const response = cross.get(b.id)!;
+      const response = cross.get(b.id);
       if (
-        response.answer.choice === "same" &&
+        response?.answer.choice === "same" &&
         response.answer.probabilities.same >= matchingConfig().threshold
       )
         proofs.set(pairId(a.id, b.id), {
@@ -372,6 +421,13 @@ export async function matchIdentityProduct(
           prompt_key: response.result.prompt_key,
         });
       else {
+        const deferred = cross.deferred.get(b.id);
+        if (deferred) {
+          if (!primaryIds.has(a.id))
+            deferredGroups.set(a.group_id, deferred.message);
+          if (!primaryIds.has(b.id))
+            deferredGroups.set(b.group_id, deferred.message);
+        }
         if (!primaryIds.has(a.id)) held.add(a.group_id);
         if (!primaryIds.has(b.id)) held.add(b.group_id);
       }
@@ -382,8 +438,12 @@ export async function matchIdentityProduct(
       comparison.outcome === "matched" &&
       held.has(comparison.candidate.product.group_id)
     ) {
-      comparison.outcome = "needs_info";
+      const deferred = deferredGroups.get(
+        comparison.candidate.product.group_id,
+      );
+      comparison.outcome = deferred ? "deferred" : "needs_info";
       comparison.reason =
+        deferred ??
         "The complete proposed group has an unverified or conflicting relationship";
     }
   await logEvent(
@@ -424,6 +484,10 @@ export async function matchIdentityProduct(
         : "no_candidates",
     [...proofs.values()],
   );
+  // A paid-stage failure must not discard independently verified code matches.
+  // Propagate it after the guarded commit so task cooldown/pause/recovery and
+  // uncertain-billing reservations keep their existing behavior.
+  if (interruption) throw interruption;
   if (!result.stale)
     await repository.finishWork(
       work,

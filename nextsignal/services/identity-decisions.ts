@@ -2,7 +2,14 @@ import type { StoreProduct, Candidate } from "@/nextsignal/domain/matching";
 import { hash } from "@/nextsignal/domain/normalize";
 import { identityRequest } from "@/nextsignal/domain/matching-identity";
 import { pool, transaction } from "./database";
-import { compare, type ChoiceAnswer, type GatewayResult } from "./ai-gateway";
+import {
+  compare,
+  comparisonRequest,
+  GatewayDeferred,
+  GatewayInputTooLarge,
+  type ChoiceAnswer,
+  type GatewayResult,
+} from "./ai-gateway";
 import { matchingConfig, taskContext } from "./task-context";
 import { matchingPrompts } from "./matching-prompts";
 import { identityCatalog } from "./identity-catalog";
@@ -18,6 +25,13 @@ export type PairProof = {
   prompt_key: string | null;
 };
 export type PairAnswer = ChoiceAnswer & { clarification?: ChoiceAnswer | null };
+export class PairResponses extends Map<
+  string,
+  { answer: PairAnswer; result: GatewayResult }
+> {
+  readonly deferred = new Map<string, GatewayDeferred>();
+  interruption: GatewayDeferred | null = null;
+}
 export const pairInput = (p: StoreProduct) =>
   hash(identityRequest(p, identityCatalog));
 export function pairKey(a: StoreProduct, b: StoreProduct) {
@@ -46,10 +60,7 @@ export async function comparePairs(
   query: StoreProduct,
   targets: StoreProduct[],
 ) {
-  const output = new Map<
-    string,
-    { answer: PairAnswer; result: GatewayResult }
-  >();
+  const output = new PairResponses();
   const pending: {
     target: StoreProduct;
     key: string;
@@ -85,26 +96,56 @@ export async function comparePairs(
       "UPDATE task_executions SET checkpoint=jsonb_set(checkpoint,'{pair_cache_hits}',to_jsonb(coalesce((checkpoint->>'pair_cache_hits')::int,0)+$2::int)) WHERE id=$1",
       [taskContext()!.task.id, reused],
     );
-  for (
-    let i = 0;
-    i < pending.length;
-    i += matchingConfig().candidate_batch_size
-  ) {
-    const batch = pending.slice(i, i + matchingConfig().candidate_batch_size);
-    const answers = await compare(
-      campaign,
-      query,
-      batch.map(
-        ({ target }) =>
-          ({
-            product: target,
-            members: [target],
-            group_version: target.group_version ?? 0,
-            reasons: ["Prepared cross-store product pair"],
-            score: 0,
-          }) satisfies Candidate,
-      ),
+  async function evaluate(batch: typeof pending): Promise<void> {
+    if (output.interruption) {
+      for (const { target } of batch)
+        output.deferred.set(target.id, output.interruption);
+      return;
+    }
+    const candidates = batch.map(
+      ({ target }) =>
+        ({
+          product: target,
+          members: [target],
+          group_version: target.group_version ?? 0,
+          reasons: ["Prepared cross-store product pair"],
+          score: 0,
+        }) satisfies Candidate,
     );
+    // Split the actual encoded payload, including prompts and routing questions.
+    // Nothing is truncated and no provider request is made for the oversized batch.
+    const plan = comparisonRequest(query, candidates);
+    if (
+      plan.inputBytes > matchingConfig().gateway.max_input_bytes &&
+      batch.length > 1
+    ) {
+      await logEvent(
+        "debug",
+        "matching.comparison.split",
+        "Comparison batch split to fit the Gateway input limit",
+        {
+          store_product_id: query.id,
+          candidates: batch.length,
+          input_bytes: plan.inputBytes,
+          limit_bytes: matchingConfig().gateway.max_input_bytes,
+        },
+      );
+      const middle = Math.ceil(batch.length / 2);
+      await evaluate(batch.slice(0, middle));
+      await evaluate(batch.slice(middle));
+      return;
+    }
+    let answers: Awaited<ReturnType<typeof compare>>;
+    try {
+      answers = await compare(campaign, query, candidates);
+    } catch (error) {
+      if (!(error instanceof GatewayDeferred)) throw error;
+      for (const { target } of batch) output.deferred.set(target.id, error);
+      // One impossible input need not block other pairs. Provider/budget failures
+      // stop paid work; the coordinator saves independent code proofs first.
+      if (!(error instanceof GatewayInputTooLarge)) output.interruption = error;
+      return;
+    }
     await transaction(async (c) => {
       for (let n = 0; n < answers.length; n++) {
         const prepared = batch[n],
@@ -128,5 +169,11 @@ export async function comparePairs(
       }
     });
   }
+  for (
+    let i = 0;
+    i < pending.length;
+    i += matchingConfig().candidate_batch_size
+  )
+    await evaluate(pending.slice(i, i + matchingConfig().candidate_batch_size));
   return output;
 }
