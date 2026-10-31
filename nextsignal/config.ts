@@ -47,6 +47,22 @@ export const configSchema = object({
     max_output_tokens: integer,
     reasoning_enabled: bool,
   }),
+  brand_review: object({
+    default_groups: integer,
+    default_include_previously_skipped: bool,
+    max_groups: integer,
+    batch_size: integer,
+    examples_per_group: integer,
+    scan_products: integer,
+    refresh_batch_size: integer,
+    refresh_ms: integer,
+    results_page_size: integer,
+    instructions_file: z.string().min(1),
+    language_file: z.string().min(1),
+  }).refine(
+    (v) => v.default_groups <= v.max_groups && v.batch_size <= v.max_groups,
+    "Brand review limits are inconsistent",
+  ),
   agent_review: object({
     default_products: integer,
     default_include_previously_skipped: bool,

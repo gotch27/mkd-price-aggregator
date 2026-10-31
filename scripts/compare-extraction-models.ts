@@ -1,3 +1,4 @@
+import { identityCatalog } from "@/nextsignal/services/identity-catalog";
 import {
   readCatalog,
   rulesFromCatalog,
@@ -175,9 +176,13 @@ try {
         if (!parsed.success) throw new Error("invalid_schema");
         const validated = validateClarification(
           product,
-          parsed.data.facts,
+          parsed.data.facts.map(({ literal, ...fact }) => ({
+            ...fact,
+            value: literal,
+          })),
           fields,
           localRules,
+          identityCatalog,
         );
         const checks = fields.map((field) => {
           const expected = test.expected[field];

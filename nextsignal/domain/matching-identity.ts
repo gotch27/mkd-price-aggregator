@@ -2,6 +2,7 @@ import { z } from "zod";
 import { hash, normalizeName } from "./normalize";
 import { readableProductText } from "./product-text";
 import { canonicalBrand, canonicalType, factLabels } from "./product-facts";
+import { identityValue, relevantBrandRules } from "./identity-values";
 import {
   differences,
   evidenceGaps,
@@ -16,9 +17,23 @@ import {
   type Candidate,
 } from "./matching";
 import type { LocalMatchingRules } from "./local-matching";
+export const identityRoutes = [
+  "none",
+  "brand",
+  "type",
+  "amount",
+  "flavour",
+  "formulation",
+  "pack",
+  "container",
+  "missing_from_source",
+  "other",
+] as const;
+export type IdentityRoute = (typeof identityRoutes)[number];
 
 export const identityCatalogSchema = z.strictObject({
   version: z.string().min(1),
+  routing: z.record(z.enum(identityRoutes), z.string().min(1)),
   profiles: z
     .array(
       z.strictObject({
@@ -46,7 +61,9 @@ export type IdentityState = {
 };
 export type IdentityProduct = StoreProduct & { identity?: IdentityState };
 const word = (text: string, phrase: string) =>
-  ` ${text} `.includes(` ${normalizeName(phrase)} `);
+  ` ${text.replace(/(?<=[a-z])[.]+/g, " ")} `.includes(
+    ` ${normalizeName(phrase)} `,
+  );
 const value = (p: StoreProduct, k: FactName) => p.facts[k]?.value ?? null;
 export function identityInputKey(
   p: StoreProduct,
@@ -58,7 +75,15 @@ export function identityInputKey(
     manual: p.manual_facts ?? {},
     family: p.manual_family ?? p.classified_family ?? p.family,
     catalog,
-    rules,
+    rules: relevantBrandRules(
+      [
+        p.name,
+        p.description ?? "",
+        p.category ?? "",
+        p.manual_facts?.brand ?? "",
+      ],
+      rules,
+    ),
   });
 }
 function canonical(
@@ -128,11 +153,28 @@ export function prepareIdentity(
   ) => {
     facts[field] = {
       value: v,
+      literal: source.raw,
+      status: "known",
       source: source.source,
       quote: source.raw,
       method: "rule",
     };
   };
+  // A leading brand in a descriptive product label is useful evidence. Do not
+  // infer a brand from a manufacturer/ingredient mentioned later in the text.
+  if (!facts.brand) {
+    const description = sources.find((s) => s.source === "description");
+    if (description) {
+      const brands = rules.brands.filter((b) =>
+        b.aliases.some(
+          (alias) =>
+            description.text === normalizeName(alias) ||
+            description.text.startsWith(`${normalizeName(alias)} `),
+        ),
+      );
+      if (brands.length === 1) put("brand", brands[0].canonical, description);
+    }
+  }
   const supportedFamilies = ["soft_drinks", "dairy"].includes(base.family);
   if (supportedFamilies) {
     // A fruit/flavour in a beverage name is not its generic product type.
@@ -216,15 +258,39 @@ export function prepareIdentity(
     )
       facts[field] = {
         ...fact,
-        value: canonical(field, fact.value, catalog, rules),
+        value:
+          field === "brand"
+            ? canonical(
+                field,
+                readableProductText(fact.literal ?? fact.value, p.retailer),
+                catalog,
+                rules,
+              )
+            : canonical(field, fact.value, catalog, rules),
       };
   }
   for (const field of factNames) {
-    if (facts[field])
+    if (facts[field]) {
+      const normalized = identityValue(
+        field,
+        facts[field]!.value,
+        catalog,
+        rules,
+      );
       facts[field] = {
         ...facts[field]!,
         value: canonical(field, facts[field]!.value, catalog, rules),
+        status: facts[field]!.method === "rule" ? "known" : normalized.status,
       };
+      if (field === "brand") {
+        const linked = rules.brands.find((b) =>
+          [b.canonical, ...b.aliases].some(
+            (a) => normalizeName(a) === normalizeName(facts.brand!.value),
+          ),
+        );
+        facts.brand = { ...facts.brand!, reference: linked?.canonical };
+      }
+    }
     const manual = p.manual_facts?.[field];
     if (manual === null) delete facts[field];
     else if (manual !== undefined)
@@ -233,6 +299,7 @@ export function prepareIdentity(
         quote: manual,
         source: "manual",
         method: "manual",
+        status: "known",
       };
   }
   const result = { ...base, facts };
@@ -241,7 +308,8 @@ export function prepareIdentity(
       k,
       !facts[k]
         ? "absent"
-        : k === "type" && !canonicalType(facts[k]!.value)
+        : facts[k]!.status === "unrecognized" ||
+            (k === "type" && !canonicalType(facts[k]!.value))
           ? "unrecognized"
           : "known",
     ]),
@@ -277,6 +345,19 @@ export function identityDifferences(
   c: IdentityCatalog,
 ) {
   return differences(a, b).filter((reason) => {
+    const field = reason.split(":")[0] as FactName;
+    if (
+      a.facts[field]?.status === "unrecognized" ||
+      b.facts[field]?.status === "unrecognized"
+    )
+      return false;
+    if (
+      field === "brand" &&
+      a.facts.brand?.method !== "manual" &&
+      b.facts.brand?.method !== "manual" &&
+      (!a.facts.brand?.reference || !b.facts.brand?.reference)
+    )
+      return false;
     if (!reason.startsWith("type:")) return true;
     const x = value(a, "type"),
       y = value(b, "type");
@@ -294,6 +375,21 @@ export function identityGaps(
   if (conflicts.length) return conflicts;
   if (value(a, "gtin") && value(a, "gtin") === value(b, "gtin")) return [];
   if (a.local_key && a.local_key === b.local_key) return [];
+  const unrecognized = factNames.filter(
+    (k) =>
+      a.facts[k]?.status === "unrecognized" ||
+      b.facts[k]?.status === "unrecognized",
+  );
+  if (unrecognized.length)
+    return unrecognized.map(
+      (k) => `Unrecognized ${factLabels[k]} needs interpretation`,
+    );
+  if (
+    a.facts.brand &&
+    b.facts.brand &&
+    a.facts.brand.value !== b.facts.brand.value
+  )
+    return ["Brand spellings need review"];
   const pa = identityProfile(a, c),
     pb = identityProfile(b, c);
   if (!["soft_drinks", "dairy"].includes(a.family) || !pa || !pb)
@@ -376,11 +472,22 @@ export function identityFields(
     "carbonation",
   ] as FactName[])
     if (peers.some((other) => other.facts[k])) wanted.add(k);
-  return [...wanted].filter(
+  const missing = [...wanted].filter(
     (k) =>
-      (!p.facts[k] || (k === "type" && !canonicalType(p.facts[k]!.value))) &&
+      (!p.facts[k] ||
+        p.facts[k]?.status === "unrecognized" ||
+        (k === "type" && !canonicalType(p.facts[k]!.value))) &&
       !Object.hasOwn(p.manual_facts ?? {}, k),
   );
+  if (missing.includes("quantity") || missing.includes("unit")) {
+    if (
+      !Object.hasOwn(p.manual_facts ?? {}, "quantity") &&
+      !Object.hasOwn(p.manual_facts ?? {}, "unit")
+    )
+      return [...new Set<FactName>([...missing, "quantity", "unit"])];
+    return missing.filter((k) => k !== "quantity" && k !== "unit");
+  }
+  return missing;
 }
 // Matching receives source evidence and unresolved fields. Classification uses
 // its own stable input and is unaffected by changes to these profiles.

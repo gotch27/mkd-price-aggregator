@@ -177,7 +177,37 @@ it("adds readable interpretation without expiring a saved category for the same 
     plan.questions,
     plan.prompt.key,
   ]);
-  expect(plan.key).toBe(priorKey);
+  await pool.query(
+    "INSERT INTO classification_source_snapshots(store_product_id,input_key,source,model,prompt_key) VALUES($1,$2,$3,$4,$5)",
+    [
+      input.id,
+      priorKey,
+      {
+        retailer: input.retailer,
+        name: input.name,
+        description: input.description,
+        category: input.category,
+        gtin: input.gtin,
+        manual_facts: input.manual_facts ?? {},
+      },
+      settings.matching.gateway.decision_model,
+      plan.prompt.key,
+    ],
+  );
+  const savedPlan = await classificationRequest({
+    ...input,
+    classification_key: priorKey,
+  });
+  expect(savedPlan.key).toBe(priorKey);
+  expect(
+    (
+      await classificationRequest({
+        ...input,
+        classification_key: priorKey,
+        name: input.name + " CHANGED",
+      })
+    ).key,
+  ).not.toBe(priorKey);
   expect(hash(plan.state)).not.toBe(hash(priorState));
   expect(fetch).not.toHaveBeenCalled();
 });

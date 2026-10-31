@@ -15,7 +15,10 @@
     "login_window_ms": 900000,
     "login_attempts": 10,
     "login_client_header": "cf-connecting-ip",
-    "allowed_origins": ["http://localhost:3000", "http://127.0.0.1:3000"]
+    "allowed_origins": [
+      "http://localhost:3000",
+      "http://127.0.0.1:3000"
+    ]
   },
   "scheduler": {
     "tick_ms": 60000,
@@ -257,7 +260,11 @@
     "max_page_size": 100,
     "refresh_ms": 60000,
     "search_debounce_ms": 350,
-    "auto_refresh_views": ["summary", "runs", "logs"],
+    "auto_refresh_views": [
+      "summary",
+      "runs",
+      "logs"
+    ],
     "product_name_quality": "named",
     "product_availability": "available",
     "summary_cache_ms": 60000,
@@ -427,5 +434,18 @@
     "categories_file": "category-review-definitions.json",
     "max_output_tokens": 256,
     "reasoning_enabled": false
+  },
+  "brand_review": {
+    "default_groups": 50,
+    "max_groups": 1000,
+    "batch_size": 10,
+    "examples_per_group": 6,
+    "scan_products": 5000,
+    "refresh_batch_size": 500,
+    "refresh_ms": 5000,
+    "results_page_size": 10,
+    "instructions_file": "brand-review.md",
+    "language_file": "brand-review-language.json",
+    "default_include_previously_skipped": false
   }
 }

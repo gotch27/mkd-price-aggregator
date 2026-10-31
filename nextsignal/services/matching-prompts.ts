@@ -30,6 +30,13 @@ export function loadPromptCatalog(config: PromptSettings) {
     .record(z.enum(families), z.string().min(1))
     .parse(JSON.parse(reviewCategoriesFile.content));
   const identityRules = read(settings.matching.identity.profiles_file);
+  const brandReview = read(settings.brand_review.instructions_file);
+  const brandLanguage = z
+    .strictObject({
+      version: z.string().min(1),
+      stop_words: z.array(z.string().min(1)),
+    })
+    .parse(JSON.parse(read(settings.brand_review.language_file).content));
   const agentReview = read(settings.agent_review.instructions_file);
   const classification = read(config.classification),
     comparison = read(config.comparison),
@@ -99,6 +106,8 @@ export function loadPromptCatalog(config: PromptSettings) {
     question: question.content,
     bundle,
     agentReview: agentReview.content,
+    brandReview: brandReview.content,
+    brandLanguage,
     storeGuidance: (retailer: string) => {
       if (!stores[retailer])
         throw new Error(`Store prompt missing: ${retailer}`);

@@ -64,6 +64,9 @@ export const factNames = [
 export type FactName = (typeof factNames)[number];
 export type Fact = {
   value: string;
+  literal?: string;
+  status?: "known" | "unrecognized";
+  reference?: string;
   quote: string;
   source: "name" | "description" | "category" | "gtin" | "manual";
   method: "rule" | "qwen" | "manual";
@@ -246,7 +249,7 @@ export function prepareFacts(
   const matched = (pattern: RegExp) => input.name.match(pattern);
   const brands = rules.brands.filter(
     (brand) =>
-      [brand.canonical, ...brand.aliases].some((alias) =>
+      brand.aliases.some((alias) =>
         has(text, normalizeName(alias).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
       ) &&
       !(

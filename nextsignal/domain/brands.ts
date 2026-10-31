@@ -6,6 +6,7 @@ export type Brand = {
   aliases: BrandAlias[];
   product_count: number;
   revision: number;
+  active: boolean;
 };
 export type BrandPage = {
   rows: Brand[];

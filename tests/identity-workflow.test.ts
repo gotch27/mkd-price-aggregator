@@ -101,7 +101,7 @@ async function publish(
   }
   return products.map((p) => p.id);
 }
-function provider() {
+function provider(route = "brand", choice = "same") {
   const calls: { kind: string; body: Record<string, unknown> }[] = [];
   const fetcher = vi.fn(async (_url: unknown, init: RequestInit) => {
     const body = JSON.parse(String(init.body));
@@ -109,19 +109,26 @@ function provider() {
     if (body.questions)
       return Response.json({
         answers: Object.fromEntries(
-          Object.keys(body.questions).map((k) => [
-            k,
-            {
-              type: "choice",
-              choice: "same",
-              probabilities: {
-                same: 0.98,
-                different: 0.01,
-                insufficient: 0.01,
+          Object.entries(body.questions).map(([k, q]) => {
+            const criteria = Object.keys(
+              (q as { criteria: Record<string, string> }).criteria,
+            );
+            const selected = k.startsWith("detail_") ? route : choice;
+            return [
+              k,
+              {
+                type: "choice",
+                choice: selected,
+                probabilities: Object.fromEntries(
+                  criteria.map((c) => [
+                    c,
+                    c === selected ? 0.98 : 0.02 / (criteria.length - 1),
+                  ]),
+                ),
+                confidence: 0.4,
               },
-              confidence: 0.4,
-            },
-          ]),
+            ];
+          }),
         ),
         usage: { inputTokens: 100, outputTokens: 1 },
         providerMetadata: {
@@ -134,7 +141,7 @@ function provider() {
           .properties.field.enum;
     expect(allowed).not.toContain("flavour");
     const facts = allowed.includes("brand")
-      ? [{ field: "brand", value: "ХЕБА", quote: "ХЕБА", source: "name" }]
+      ? [{ field: "brand", literal: "ХЕБА", quote: "ХЕБА", source: "name" }]
       : [];
     return Response.json({
       choices: [
@@ -204,6 +211,13 @@ it("prepares both stores, preserves category keys, saves useful matches and expo
   const mocked = provider(),
     t = await task(a);
   await executeTask(t.id);
+  expect(mocked.calls[0].kind).toBe("decision");
+  const firstState = mocked.calls[0].body.state as {
+    products: Record<string, { supported_facts: Record<string, unknown> }>;
+  };
+  expect(
+    Object.values(firstState.products).every((p) => !p.supported_facts.brand),
+  ).toBe(true);
   expect((await getProduct(a)).group_id).toBe((await getProduct(b)).group_id);
   expect(mocked.calls.filter((c) => c.kind === "clarification")).toHaveLength(
     2,
@@ -239,6 +253,25 @@ it("prepares both stores, preserves category keys, saves useful matches and expo
   ).rows[0];
   await comparePairs(campaign, await getProduct(b), [await getProduct(a)]);
   expect(mocked.calls).toHaveLength(count);
+});
+it("uses the Decider's missing-from-source route without spending on repeated interpretation", async () => {
+  const [a] = await publish("kam", ["ВОДА ХЕБА ГАЗИРАНА 1.5Л"]);
+  const [b] = await publish("spar", ["ВОДА ХЕБА ГАЗИРАНА 1.5Л"]);
+  const mocked = provider("missing_from_source", "insufficient"),
+    t = await task(a);
+  await executeTask(t.id);
+  expect(mocked.calls.map((c) => c.kind)).toEqual(["decision"]);
+  expect((await getProduct(a)).group_id).not.toBe(
+    (await getProduct(b)).group_id,
+  );
+  expect(
+    (
+      await pool.query(
+        "SELECT count(*)::int n FROM matching_task_preparations WHERE task_id=$1",
+        [t.id],
+      )
+    ).rows[0].n,
+  ).toBe(0);
 });
 it("persists the counterpart cap and rechecks only the previous unresolved products", async () => {
   const [a] = await publish("kam", ["ВОДА ХЕБА ГАЗИРАНА 1.5Л"]),
@@ -370,8 +403,11 @@ it("remembers unsupported clarification as an abstention instead of paying for i
   const [a] = await publish("kam", ["ВОДА ХЕБА ГАЗИРАНА 1.5Л"]);
   await publish("spar", ["ВОДА ХЕБА ГАЗИРАНА 1.5Л"]);
   const mocked = provider();
-  mocked.fetcher.mockImplementation(async () =>
-    Response.json({
+  const originalProvider = mocked.fetcher.getMockImplementation()!;
+  mocked.fetcher.mockImplementation(async (...args) => {
+    if (JSON.parse(String(args[1].body)).questions)
+      return originalProvider(...args);
+    return Response.json({
       choices: [
         {
           message: {
@@ -379,7 +415,7 @@ it("remembers unsupported clarification as an abstention instead of paying for i
               facts: [
                 {
                   field: "brand",
-                  value: "Invented",
+                  literal: "Invented",
                   quote: "never supplied",
                   source: "name",
                 },
@@ -390,12 +426,12 @@ it("remembers unsupported clarification as an abstention instead of paying for i
         },
       ],
       usage: { prompt_tokens: 20, completion_tokens: 5, cost: "0.000001" },
-    }),
-  );
+    });
+  });
   const first = await task(a);
   await executeTask(first.id);
   const count = mocked.fetcher.mock.calls.length;
-  expect(count).toBe(2);
+  expect(count).toBe(3);
   const second = await task(a, 50, first.id);
   await executeTask(second.id);
   expect(mocked.fetcher).toHaveBeenCalledTimes(count);

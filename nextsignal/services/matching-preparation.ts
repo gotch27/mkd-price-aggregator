@@ -1,13 +1,14 @@
-import { settings } from "@/nextsignal/config";
 import { hash } from "@/nextsignal/domain/normalize";
 import {
   prepareIdentity,
   identityFields,
-  identityDifferences,
   type IdentityProduct,
 } from "@/nextsignal/domain/matching-identity";
-import type { StoreProduct, Facts } from "@/nextsignal/domain/matching";
-import type { TaskExecution } from "@/nextsignal/domain/task-settings";
+import type {
+  StoreProduct,
+  Facts,
+  FactName,
+} from "@/nextsignal/domain/matching";
 import { pool, transaction } from "./database";
 import { matchingRules } from "./brand-catalog";
 import { identityCatalog } from "./identity-catalog";
@@ -34,6 +35,7 @@ const preparationKey = (p: IdentityProduct) =>
 export async function needsIdentityInterpretation(
   product: StoreProduct,
   peers: StoreProduct[],
+  requestedFields?: readonly FactName[],
 ) {
   const p = prepareIdentity(
     product,
@@ -48,120 +50,82 @@ export async function needsIdentityInterpretation(
     )
   ).rows[0];
   return identityFields(p, identityCatalog, peers).some(
-    (f) => !previous?.attempted || !previous.requested_fields.includes(f),
+    (f) =>
+      (!requestedFields || requestedFields.includes(f)) &&
+      (!previous?.attempted || !previous.requested_fields.includes(f)),
   );
 }
-export async function planCounterparts(task: TaskExecution, ids: string[]) {
-  if (!task.options.use_ai) return;
-  const scored = new Map<string, { rank: number; hits: number }>();
-  const primary = new Set(
-    (
-      await pool.query<{ store_product_id: string }>(
-        "SELECT store_product_id FROM task_items WHERE task_id=$1",
-        [task.id],
-      )
-    ).rows.map((p) => p.store_product_id),
-  );
-  for (const id of [...ids].sort()) {
-    await checkpoint();
-    const p = await repository.getProduct(id),
-      rules = await matchingRules(undefined, p.retailer);
-    const prepared = prepareIdentity(
-      p,
-      rules,
-      matchingConfig().category_mappings,
-      identityCatalog,
-    );
-    const candidates = await repository.findCandidates(prepared, "ai");
-    let rank = 0;
-    for (const candidate of candidates) {
-      if (
-        identityDifferences(prepared, candidate.product, identityCatalog)
-          .length ||
-        candidate.members.every(
-          (m) => !identityFields(m, identityCatalog, [prepared]).length,
-        )
-      )
-        continue;
-      for (const member of candidate.members) {
-        if (
-          primary.has(member.id) ||
-          !identityFields(member, identityCatalog, [prepared]).length
-        )
-          continue;
-        const previous = (
-          await pool.query<SavedPreparation>(
-            "SELECT attempted,requested_fields FROM matching_product_preparations WHERE store_product_id=$1 AND input_key=$2",
-            [
-              member.id,
-              preparationKey(
-                prepareIdentity(
-                  member,
-                  await matchingRules(undefined, member.retailer),
-                  matchingConfig().category_mappings,
-                  identityCatalog,
-                ),
-              ),
-            ],
-          )
-        ).rows[0];
-        if (
-          previous?.attempted &&
-          identityFields(member, identityCatalog, [prepared]).every((f) =>
-            previous.requested_fields.includes(f),
-          )
-        )
-          continue;
-        if (
-          rank >=
-          Math.min(
-            task.policy.counterparts_per_product,
-            taskContext()!.live.policy.counterparts_per_product,
-          )
-        )
-          break;
-        rank++;
-        const old = scored.get(member.id);
-        scored.set(member.id, {
-          rank: Math.min(old?.rank ?? rank, rank),
-          hits: (old?.hits ?? 0) + 1,
-        });
-      }
-    }
-  }
-  await transaction(async (c) => {
+// Allocate only after a useful Decider response. Claims survive restarts.
+export async function allocateCounterpart(primaryId: string, targetId: string) {
+  const context = taskContext();
+  if (!context) return true;
+  await checkpoint(true);
+  return transaction(async (c) => {
+    const { task, live } = context;
     await c.query("SELECT id FROM task_executions WHERE id=$1 FOR UPDATE", [
       task.id,
     ]);
     const existing = (
-      await c.query<{ store_product_id: string; position: number }>(
-        "SELECT store_product_id,position FROM matching_task_preparations WHERE task_id=$1 ORDER BY position",
-        [task.id],
-      )
-    ).rows;
-    const seen = new Set(existing.map((p) => p.store_product_id));
-    const cap = Math.min(
-      task.options.counterpart_limit!,
-      task.policy.counterpart_limit,
-      taskContext()!.live.policy.counterpart_limit,
-    );
-    let position = existing.length;
-    for (const [id] of [...scored].sort(
-      (a, b) =>
-        a[1].rank - b[1].rank ||
-        b[1].hits - a[1].hits ||
-        a[0].localeCompare(b[0]),
-    )) {
-      if (seen.has(id) || position >= cap) continue;
       await c.query(
-        "INSERT INTO matching_task_preparations(task_id,store_product_id,position) VALUES($1,$2,$3) ON CONFLICT DO NOTHING",
-        [task.id, id, position++],
+        "SELECT 1 FROM matching_primary_preparations WHERE task_id=$1 AND primary_id=$2 AND store_product_id=$3",
+        [task.id, primaryId, targetId],
+      )
+    ).rowCount;
+    const used = (
+      await c.query(
+        "SELECT count(*)::int count FROM matching_primary_preparations WHERE task_id=$1 AND primary_id=$2",
+        [task.id, primaryId],
+      )
+    ).rows[0].count;
+    if (
+      !existing &&
+      used >=
+        Math.min(
+          task.policy.counterparts_per_product,
+          live.policy.counterparts_per_product,
+        )
+    )
+      return false;
+    const primary = (
+      await c.query(
+        "SELECT 1 FROM task_items WHERE task_id=$1 AND store_product_id=$2",
+        [task.id, targetId],
+      )
+    ).rowCount;
+    if (!primary) {
+      const found = (
+        await c.query(
+          "SELECT position FROM matching_task_preparations WHERE task_id=$1 AND store_product_id=$2",
+          [task.id, targetId],
+        )
+      ).rows[0];
+      const count = (
+        await c.query(
+          "SELECT count(*)::int count FROM matching_task_preparations WHERE task_id=$1",
+          [task.id],
+        )
+      ).rows[0].count;
+      const cap = Math.min(
+        task.options.counterpart_limit!,
+        task.policy.counterpart_limit,
+        live.policy.counterpart_limit,
       );
+      if (found ? found.position >= cap : count >= cap) return false;
+      if (!found)
+        await c.query(
+          "INSERT INTO matching_task_preparations(task_id,store_product_id,position) VALUES($1,$2,$3)",
+          [task.id, targetId, count],
+        );
     }
     await c.query(
-      "UPDATE task_executions SET checkpoint=checkpoint||jsonb_build_object('matching_phase','preparing','counterparts_planned',$2::int) WHERE id=$1",
-      [task.id, position],
+      "INSERT INTO matching_primary_preparations(task_id,primary_id,store_product_id) VALUES($1,$2,$3) ON CONFLICT DO NOTHING",
+      [task.id, primaryId, targetId],
     );
+    await c.query(
+      "UPDATE task_executions SET checkpoint=checkpoint||jsonb_build_object('counterparts_planned',(SELECT count(*)::int FROM matching_task_preparations WHERE task_id=$1)) WHERE id=$1",
+      [task.id],
+    );
+    return true;
   });
 }
 export async function prepareForMatching(
@@ -170,6 +134,7 @@ export async function prepareForMatching(
   interpret: boolean,
   counterpart = false,
   peers: StoreProduct[] = [],
+  requestedFields?: readonly FactName[],
 ): Promise<{ product: IdentityProduct; limited: boolean }> {
   const rules = await matchingRules(undefined, product.retailer);
   let p = prepareIdentity(
@@ -194,7 +159,9 @@ export async function prepareForMatching(
       identityCatalog,
     );
   const fields = identityFields(p, identityCatalog, peers).filter(
-    (f) => !saved?.attempted || !saved.requested_fields.includes(f),
+    (f) =>
+      (!requestedFields || requestedFields.includes(f)) &&
+      (!saved?.attempted || !saved.requested_fields.includes(f)),
   );
   const context = taskContext();
   const canInterpret =
@@ -242,6 +209,19 @@ export async function prepareForMatching(
     } else {
       await checkpoint(true);
       await assertProductAvailable(p.id);
+      const beforeRequest = await repository.getProduct(p.id);
+      if (
+        prepareIdentity(
+          beforeRequest,
+          rules,
+          matchingConfig().category_mappings,
+          identityCatalog,
+        ).identity!.key !== sourceKey
+      )
+        throw new GatewayDeferred(
+          "Product changed before identity interpretation; review the current source revision",
+          "invalid",
+        );
       await phase("preparing", p.id);
       // Save an attempted marker only for a validated response/abstention. The
       // Gateway's durable reservation protects interrupted, possibly billed calls.

@@ -1,5 +1,5 @@
 {
-  "version": "identity-v1",
+  "version": "identity-v2-decision-led",
   "profiles": [
     {
       "id": "water",
@@ -231,20 +231,26 @@
       "chocolate": [
         "chokolado",
         "chokolada",
-        "chocolate"
+        "chocolate",
+        "choko",
+        "choco"
       ],
       "vanilla": [
         "vanila",
         "vanilla"
       ],
       "mixed-fruit": [
-        "multivitamin",
-        "multivitaminski",
-        "mesano ovosje"
+        "mesano ovosje",
+        "ovoshen miks",
+        "mixed fruit"
       ],
       "mystic-dragon": [
         "mistik dragon",
         "mystic dragon"
+      ],
+      "guarana": [
+        "guarana",
+        "guaran"
       ]
     },
     "variant": {
@@ -271,6 +277,21 @@
         "bez laktoza",
         "bezlaktozno",
         "lactose free"
+      ],
+      "multivitamin": [
+        "multivit",
+        "multivitamin",
+        "multivitamins",
+        "multivitaminsko",
+        "multivitaminska",
+        "multivitam"
+      ],
+      "barista": [
+        "barista"
+      ],
+      "gluten-free": [
+        "bez gluten",
+        "gluten free"
       ]
     },
     "carbonation": {
@@ -305,6 +326,62 @@
       ],
       "meal": [
         "obrok"
+      ],
+      "toast": [
+        "tost",
+        "toast"
+      ]
+    },
+    "form": {
+      "can": [
+        "can",
+        "cans",
+        "limenka"
+      ],
+      "bottle": [
+        "bottle",
+        "bottles",
+        "shishe",
+        "pet"
+      ],
+      "tetra": [
+        "tetra",
+        "tetrapak",
+        "tetra pak",
+        "carton",
+        "cartons"
+      ],
+      "cup": [
+        "cup",
+        "chasha"
+      ],
+      "jar": [
+        "jar",
+        "tegla"
+      ],
+      "bag": [
+        "bag",
+        "kesa"
+      ],
+      "box": [
+        "box",
+        "kutija"
+      ],
+      "tube": [
+        "tube",
+        "tuba"
+      ],
+      "vacuum": [
+        "vakum",
+        "vacuum"
+      ],
+      "sachet": [
+        "sachet",
+        "kesichka"
+      ],
+      "tray": [
+        "tray",
+        "tacna"
       ]
     }
   },
@@ -326,5 +403,17 @@
       "chocolate",
       "candy"
     ]
+  },
+  "routing": {
+    "none": "The supplied source identity is sufficient; no useful clarification is needed.",
+    "brand": "A literal brand name is present but not yet resolved or extracted.",
+    "type": "The generic product noun is supplied but needs interpretation.",
+    "amount": "An explicit amount or unit needs interpretation.",
+    "flavour": "A named flavour in supplied text needs interpretation.",
+    "formulation": "A named product line, formulation or processing detail needs interpretation.",
+    "pack": "An explicit pack count needs interpretation.",
+    "container": "An explicit container needs interpretation.",
+    "missing_from_source": "A material identifying detail is absent; do not pay a model to invent it.",
+    "other": "Another supplied identity detail needs interpretation; remain uncertain if no supported field applies."
   }
 }

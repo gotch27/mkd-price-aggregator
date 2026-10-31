@@ -1,4 +1,4 @@
-import { planCounterparts, phase } from "./matching-preparation";
+import { phase } from "./matching-preparation";
 import { identityCatalog } from "./identity-catalog";
 import { matchingSnapshot } from "./matching-results";
 import type { CategoryResult } from "@/nextsignal/domain/task-results";
@@ -154,10 +154,6 @@ export async function productTask(task: TaskExecution) {
           "Matching rules changed. Review a new matching task to continue; saved results are retained.",
         );
       await phase("planning");
-      await planCounterparts(
-        task,
-        items.flatMap((i) => (i.store_product_id ? [i.store_product_id] : [])),
-      );
     }
     for (const item of items) {
       await checkpoint(task.options.use_ai);

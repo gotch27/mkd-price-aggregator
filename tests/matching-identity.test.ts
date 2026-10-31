@@ -8,6 +8,7 @@ import {
   identityDifferences,
   unambiguousGroups,
   identityFields,
+  identityInputKey,
 } from "@/nextsignal/domain/matching-identity";
 import {
   inputFingerprint,
@@ -15,6 +16,7 @@ import {
   type Candidate,
 } from "@/nextsignal/domain/matching";
 import { normalizeName } from "@/nextsignal/domain/normalize";
+import { validateClarification } from "@/nextsignal/domain/clarification";
 const catalog = identityCatalogSchema.parse(catalogData);
 function product(
   name: string,
@@ -235,4 +237,95 @@ it("prepares the source-reviewed Activia, Capri-Sun and Zott regression identiti
     expect(Object.values(x.facts).map((f) => f.value)).toContain(flavour);
     expect(identityDifferences(x, y, catalog)).toEqual([]);
   }
+});
+it("preserves literal evidence and rejects generic source descriptions as containers", () => {
+  const p = product("Zottis CHOKO 250ml negaziran sok");
+  const result = validateClarification(
+    p,
+    [
+      { field: "flavour", value: "CHOKO", quote: p.name, source: "name" },
+      { field: "form", value: "negaziran sok", quote: p.name, source: "name" },
+    ],
+    ["flavour", "form"],
+    rules,
+    catalog,
+  );
+  expect(result.facts.flavour).toMatchObject({
+    value: "chocolate",
+    literal: "CHOKO",
+    status: "known",
+  });
+  expect(result.facts.form).toBeUndefined();
+  expect(result.rejected[0].reason).toContain("recognized value");
+  expect(
+    validateClarification(
+      p,
+      [{ field: "flavour", value: "chocolate", quote: p.name, source: "name" }],
+      ["flavour"],
+      rules,
+      catalog,
+    ).rejected[0].reason,
+  ).toContain("exact source fragment");
+});
+it("preserves unknown text as uncertainty instead of an invented semantic conflict", () => {
+  const a = product("Zottis chocolate 250ml", "kam", "dairy"),
+    b = product("Zottis choko 250ml", "spar", "dairy");
+  for (const p of [a, b])
+    p.facts.flavour = {
+      value: p === a ? "chocolate" : "choko",
+      quote: p.name,
+      source: "name",
+      method: "qwen",
+    };
+  expect(
+    identityDifferences(prepare(a), prepare(b), catalog).filter((v) =>
+      v.startsWith("flavour:"),
+    ),
+  ).toEqual([]);
+  b.facts.variant = {
+    value: "Zottis choko",
+    quote: b.name,
+    source: "name",
+    method: "qwen",
+  };
+  expect(prepare(b).facts.variant?.status).toBe("unrecognized");
+  expect(
+    identityGaps(prepare(a), prepare(b), catalog).some((v) =>
+      v.startsWith("Unrecognized"),
+    ),
+  ).toBe(true);
+});
+it("blocks one-sided multivitamin milk and toast cheese formulations even with otherwise equal facts", () => {
+  for (const [a, b] of [
+    ["МЛЕКО АЛПСКО МУЛТИВИТ. 2.8% 1Л ТРАЈНО", "АЛПСКО!!! МЛЕКО 2.8% 1Л."],
+    ["MEGLE 150GR EMENTALER", "МЕГЛЕ КАШКАВАЛ ТОСТ ЕМЕНТАЛЕР 150Г"],
+  ]) {
+    const left = product(a, "kam", "dairy"),
+      right = product(b, "zur", "dairy");
+    const x = prepare(left),
+      y = prepare(right);
+    expect(
+      a.includes("МУЛТИВИТ") ? x.facts.variant?.value : y.facts.range?.value,
+    ).toBe(a.includes("МУЛТИВИТ") ? "multivitamin" : "toast");
+    expect(identityGaps(x, y, catalog).length).toBeGreaterThan(0);
+  }
+});
+it("invalidates preparation only for dictionary aliases relevant to the actual product text", () => {
+  const p = product("Heba water 1.5l sparkling");
+  const first = identityInputKey(p, catalog, rules);
+  expect(
+    identityInputKey(p, catalog, {
+      ...rules,
+      brands: [
+        ...rules.brands,
+        { canonical: "unrelated", aliases: ["unrelated brand"] },
+      ],
+    }),
+  ).toBe(first);
+  expect(
+    identityInputKey(p, catalog, {
+      ...rules,
+      brands: [...rules.brands, { canonical: "heba", aliases: ["heba"] }],
+    }),
+  ).not.toBe(first);
 });

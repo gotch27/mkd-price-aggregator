@@ -10,7 +10,7 @@ const catalogs = new AsyncLocalStorage<CatalogRow[]>();
 export async function readCatalog(c: Pick<PoolClient, "query">) {
   return (
     await c.query<CatalogRow>(
-      `SELECT b.slug,a.normalized_name AS name,a.retailer FROM brands b JOIN brand_aliases a ON a.brand_id=b.id ORDER BY b.slug,a.normalized_name`,
+      `SELECT b.slug,a.normalized_name AS name,a.retailer FROM brands b JOIN brand_aliases a ON a.brand_id=b.id WHERE b.active ORDER BY b.slug,a.normalized_name`,
     )
   ).rows;
 }
@@ -47,6 +47,8 @@ export function rulesFromCatalog(
   return {
     ...settings.matching.local,
     ...language,
-    brands: [...brands].map(([canonical, aliases]) => ({ canonical, aliases })),
+    brands: [...brands].flatMap(([canonical, aliases]) =>
+      aliases.length ? [{ canonical, aliases }] : [],
+    ),
   };
 }

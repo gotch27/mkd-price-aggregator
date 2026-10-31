@@ -147,6 +147,7 @@ for (const path of [
   "/api/tasks/categories?retailer=kam&source_id=",
   "/api/review/categories?status=needs_review&search=&availability=available&page=1&size=1",
   "/api/review/agent-sessions",
+  "/api/review/brand-sessions",
 ]) {
   assert.equal((await fetch(new URL(path, base))).status, 401, path);
   const response: Response = await fetch(new URL(path, base), {
@@ -159,6 +160,7 @@ for (const path of [
   "/api/brands",
   "/api/tasks",
   "/api/review/agent-sessions",
+  "/api/review/brand-sessions",
 ]) {
   const response: Response = await fetch(new URL(path, base), {
     method: "POST",

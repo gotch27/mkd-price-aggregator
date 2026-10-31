@@ -258,9 +258,7 @@ it("matching continuation runs retain their initial campaign and its shared allo
     [run.id, campaign.id],
   );
   const continuation = await createRun("match", null, null, run.id);
-  expect((await campaignForRun(continuation.id, null)).id).toBe(
-    campaign.id,
-  );
+  expect((await campaignForRun(continuation.id, null)).id).toBe(campaign.id);
   expect(
     (
       await pool.query(
@@ -409,7 +407,7 @@ it("rejects a clarification with altered source quotes", async () => {
                 facts: [
                   {
                     field: "brand",
-                    value: "invented",
+                    literal: "invented",
                     quote: "not in source",
                     source: "name",
                   },
@@ -661,21 +659,23 @@ it.each([
     label: "count embedded in another number",
     name: "BABYLINO SENSITIVE SIZE 6 13-18KG 12/1",
     fields: ["pack"],
-    facts: [{ field: "pack", value: "2", quote: "12/1", source: "name" }],
+    facts: [{ field: "pack", literal: "2", quote: "12/1", source: "name" }],
   },
   {
     label: "invented model value",
     name: "MAICA C9834",
     fields: ["model"],
-    facts: [{ field: "model", value: "C9835", quote: "C9834", source: "name" }],
+    facts: [
+      { field: "model", literal: "C9835", quote: "C9834", source: "name" },
+    ],
   },
   {
     label: "quantity paired with a different unit",
     name: "Coca-Cola Original 330 ml can",
     fields: ["quantity", "unit"],
     facts: [
-      { field: "quantity", value: "330", quote: "330 ml", source: "name" },
-      { field: "unit", value: "l", quote: "Cola", source: "name" },
+      { field: "quantity", literal: "330", quote: "330 ml", source: "name" },
+      { field: "unit", literal: "l", quote: "Cola", source: "name" },
     ],
   },
 ])(

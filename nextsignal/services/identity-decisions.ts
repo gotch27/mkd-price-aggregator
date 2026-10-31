@@ -17,6 +17,7 @@ export type PairProof = {
   method: "rules" | "decision";
   prompt_key: string | null;
 };
+export type PairAnswer = ChoiceAnswer & { clarification?: ChoiceAnswer | null };
 export const pairInput = (p: StoreProduct) =>
   hash(identityRequest(p, identityCatalog));
 export function pairKey(a: StoreProduct, b: StoreProduct) {
@@ -47,7 +48,7 @@ export async function comparePairs(
 ) {
   const output = new Map<
     string,
-    { answer: ChoiceAnswer; result: GatewayResult }
+    { answer: PairAnswer; result: GatewayResult }
   >();
   const pending: {
     target: StoreProduct;
@@ -60,7 +61,7 @@ export async function comparePairs(
   for (const target of targets) {
     const prepared = pairKey(query, target);
     const cached = (
-      await pool.query<{ answer: ChoiceAnswer; receipt: GatewayResult }>(
+      await pool.query<{ answer: PairAnswer; receipt: GatewayResult }>(
         "SELECT answer,receipt FROM matching_pair_answers WHERE key=$1",
         [prepared.key],
       )
@@ -107,7 +108,8 @@ export async function comparePairs(
     await transaction(async (c) => {
       for (let n = 0; n < answers.length; n++) {
         const prepared = batch[n],
-          { answer, result } = answers[n];
+          { answer: choice, result, clarification } = answers[n];
+        const answer: PairAnswer = { ...choice, clarification };
         await c.query(
           `INSERT INTO matching_pair_answers(key,left_id,right_id,left_input,right_input,model,prompt_key,answer,receipt) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT DO NOTHING`,
           [

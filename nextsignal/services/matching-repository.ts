@@ -1,4 +1,5 @@
 import type { PairProof } from "./identity-decisions";
+import { classificationSource } from "@/nextsignal/domain/classification-source";
 import { pairInput } from "./identity-decisions";
 import {
   withBrandCatalog,
@@ -650,6 +651,16 @@ export async function saveClassification(
     classified_family: classification.family,
   });
   const saved = await transaction(async (c) => {
+    await c.query(
+      "INSERT INTO classification_source_snapshots(store_product_id,input_key,source,model,prompt_key) VALUES($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING",
+      [
+        product.id,
+        classification.key,
+        classificationSource(product),
+        classification.model,
+        classification.prompt_key,
+      ],
+    );
     await c.query(
       `INSERT INTO store_product_classifications(store_product_id,input_key,family,selected_family,probability,confidence,probabilities,acceptance_threshold,model,prompt_key,generation_id)
       VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) ON CONFLICT DO NOTHING`,

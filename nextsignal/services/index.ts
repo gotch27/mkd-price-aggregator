@@ -1,4 +1,6 @@
 import * as brands from "./brands";
+import * as brandReview from "./brand-review";
+import * as brandFacts from "./brand-facts";
 import * as tasks from "./tasks";
 import * as taskResults from "./task-results";
 import * as taskSettings from "./task-settings";
@@ -20,6 +22,8 @@ import { withLock } from "./database";
 import { withLogContext } from "@/nextsignal/adapters/log-context";
 export const services = {
   brands,
+  brandReview,
+  brandFacts,
   tasks,
   taskResults,
   taskSettings,

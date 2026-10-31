@@ -264,6 +264,11 @@ export function BrandsManager({
                     <TableRow key={brand.id}>
                       <TableCell className="font-medium">
                         {brand.name}
+                        {!brand.active && (
+                          <span className="ml-2 text-xs text-muted-foreground">
+                            Retired
+                          </span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <div className="max-w-lg text-sm text-muted-foreground">

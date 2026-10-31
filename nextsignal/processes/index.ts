@@ -1,4 +1,5 @@
 import * as brandApi from "./api/brands";
+import * as brandReviewApi from "./api/brand-review";
 import { taskJob } from "./distributed/tasks";
 import { executeRun } from "./business/catalog";
 import { retailerProcesses } from "./business/retrieve";
@@ -10,6 +11,7 @@ import * as agentCategoryApi from "./api/agent-category-review";
 import * as api from "./api/operations";
 export const processes = [
   ...Object.values(brandApi),
+  ...Object.values(brandReviewApi),
   ...retailerProcesses,
   executeRun,
   taskJob,

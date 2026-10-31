@@ -2,7 +2,7 @@
 import { useCallback, useRef, useState, type FormEvent } from "react";
 import { Link2, Store, Layers3, CircleAlert } from "lucide-react";
 import { toast } from "sonner";
-import { CategoryReview } from "./_components/dashboard/category-review";
+import { Review } from "./_components/dashboard/review";
 import {
   SidebarProvider,
   SidebarInset,
@@ -421,7 +421,7 @@ export default function Dashboard({
                 <Overview summary={overview.summary} />
               )}
               {nav.screen === "review" && (
-                <CategoryReview
+                <Review
                   pageSize={pageSize}
                   debounceMs={debounceMs}
                   update={categoryReviewUpdate}

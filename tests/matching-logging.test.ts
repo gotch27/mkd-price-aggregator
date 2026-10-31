@@ -402,7 +402,7 @@ it("records malformed decisions and unsupported clarifications as warnings after
                 facts: [
                   {
                     field: "brand",
-                    value: "Invented",
+                    literal: "Invented",
                     quote: label,
                     source: "name",
                   },
@@ -417,7 +417,7 @@ it("records malformed decisions and unsupported clarifications as warnings after
     ),
   );
   await expect(clarify(campaign, product, ["brand"])).rejects.toThrow(
-    "supporting quote",
+    "exact source fragment",
   );
   expect((await events("gateway.clarification.rejected"))[0]).toMatchObject({
     level: "warn",
@@ -447,13 +447,13 @@ it("logs rejected clarification fields while retaining independently supported f
                 facts: [
                   {
                     field: "brand",
-                    value: "НУТЕЛА",
+                    literal: "НУТЕЛА",
                     quote: "НУТЕЛА",
                     source: "name",
                   },
                   {
                     field: "model",
-                    value: "Invented",
+                    literal: "Invented",
                     quote: "КРЕМ",
                     source: "name",
                   },
@@ -479,7 +479,10 @@ it("logs rejected clarification fields while retaining independently supported f
       store_product_id: product.id,
       retained_fields: ["brand"],
       rejected_fields: [
-        { field: "model", reason: expect.stringContaining("supporting quote") },
+        {
+          field: "model",
+          reason: expect.stringContaining("exact source fragment"),
+        },
       ],
     },
   });

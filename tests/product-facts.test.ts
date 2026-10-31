@@ -1,3 +1,4 @@
+import { identityCatalog } from "@/nextsignal/services/identity-catalog";
 import { referenceMatchingRules } from "./helpers/reference-matching-rules";
 import { expect, it } from "vitest";
 import { settings } from "@/nextsignal/config";
@@ -137,6 +138,7 @@ it("retains good clarification fields when another field is unsupported", () => 
     ],
     ["brand", "model"],
     referenceMatchingRules,
+    identityCatalog,
   );
   expect(result.facts.brand?.value).toBe("nutella");
   expect(result.facts.brand?.quote).toBe("НУТЕЛА");
@@ -155,7 +157,7 @@ it("validates amount and unit atomically without discarding unrelated good evide
     },
     {
       field: "quantity" as const,
-      value: "0.4",
+      value: "0,4",
       quote: "0,4 kg",
       source: "name" as const,
     },
@@ -171,6 +173,7 @@ it("validates amount and unit atomically without discarding unrelated good evide
     valid,
     ["brand", "quantity", "unit"],
     referenceMatchingRules,
+    identityCatalog,
   );
   expect(result.facts.quantity?.value).toBe("400");
   expect(result.facts.unit?.value).toBe("g");
@@ -179,6 +182,7 @@ it("validates amount and unit atomically without discarding unrelated good evide
     [...valid.slice(0, 2), { ...valid[2], value: "l" }],
     ["brand", "quantity", "unit"],
     referenceMatchingRules,
+    identityCatalog,
   );
   expect(Object.keys(invalid.facts)).toEqual(["brand"]);
 });
@@ -200,6 +204,7 @@ it("rejects duplicate facts, invented counts and borrowed or translated quotes",
     ],
     ["brand", "pack", "variant"],
     referenceMatchingRules,
+    identityCatalog,
   );
   expect(result.facts).toEqual({});
 });
@@ -356,6 +361,7 @@ it("rejects AI pack guesses based only on a number in product dimensions", () =>
     [{ field: "pack", value: "35", quote: "35Х26ЦМ", source: "name" }],
     ["pack"],
     referenceMatchingRules,
+    identityCatalog,
   );
   expect(result.facts.pack).toBeUndefined();
   expect(result.rejected[0].reason).toContain("explicit count");
@@ -366,6 +372,7 @@ it("rejects AI pack guesses based only on a number in product dimensions", () =>
       [{ field: "pack", value: "38", quote: "38/1", source: "name" }],
       ["pack"],
       referenceMatchingRules,
+      identityCatalog,
     ).facts.pack?.value,
   ).toBe("38");
 });
@@ -385,6 +392,7 @@ it.each([
       ],
       ["quantity", "unit"],
       referenceMatchingRules,
+      identityCatalog,
     );
     expect(result.facts.quantity).toBeUndefined();
     expect(result.facts.unit).toBeUndefined();

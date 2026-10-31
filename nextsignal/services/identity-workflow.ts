@@ -3,11 +3,14 @@ import {
   identityDifferences,
   identityGaps,
   unambiguousGroups,
+  identityFields,
+  type IdentityRoute,
 } from "@/nextsignal/domain/matching-identity";
 import type {
   StoreProduct,
   Candidate,
   Comparison,
+  FactName,
 } from "@/nextsignal/domain/matching";
 import { matchingConfig, taskContext, checkpoint } from "./task-context";
 import * as repository from "./matching-repository";
@@ -15,6 +18,7 @@ import {
   prepareForMatching,
   phase,
   needsIdentityInterpretation,
+  allocateCounterpart,
 } from "./matching-preparation";
 import { identityCatalog } from "./identity-catalog";
 import { comparePairs, pairInput, type PairProof } from "./identity-decisions";
@@ -54,86 +58,153 @@ export async function matchIdentityProduct(
         currentMembers.some((p) => p.retailer === m.retailer),
       ),
   );
-  if (
+  const separated = await repository.manuallySeparatedCandidates(
+    query,
+    candidates,
+  );
+  const eligible = (c: Candidate) =>
     ai &&
-    candidates.some(
-      (c) =>
-        !identityDifferences(query, c.product, identityCatalog).length &&
-        !freeProof(query, c.product),
-    )
-  )
+    c.members.every(
+      (m) =>
+        m.availability === "available" &&
+        m.classified_family != null &&
+        matchingConfig().ai_categories.includes(m.classified_family),
+    );
+  const targets = candidates.filter(
+    (c) =>
+      !separated.has(c.product.group_id) &&
+      !identityDifferences(query, c.product, identityCatalog).length &&
+      !freeProof(query, c.product) &&
+      eligible(c),
+  );
+  await phase("comparing", query.id);
+  const inputs = new Map(
+    targets.map((c) => [
+      c.product.id,
+      [pairInput(query), pairInput(c.product)],
+    ]),
+  );
+  const answers = await comparePairs(
+    campaign,
+    query,
+    targets.map((c) => c.product),
+  );
+  const useful = targets
+    .filter((c) => {
+      const a = answers.get(c.product.id)?.answer;
+      return (
+        a &&
+        a.clarification?.choice !== "missing_from_source" &&
+        (a.choice === "insufficient" ||
+          (a.choice === "same" &&
+            a.probabilities.same >= matchingConfig().threshold))
+      );
+    })
+    .sort(
+      (a, b) =>
+        answers.get(b.product.id)!.answer.probabilities.same -
+          answers.get(a.product.id)!.answer.probabilities.same ||
+        b.score - a.score ||
+        a.product.id.localeCompare(b.product.id),
+    );
+  const routeFields = (route: string | undefined): FactName[] | undefined => {
+    const fields: Partial<Record<IdentityRoute, FactName[]>> = {
+      brand: ["brand"],
+      type: ["type"],
+      amount: ["quantity", "unit"],
+      flavour: ["flavour"],
+      formulation: ["variant", "range", "processing"],
+      pack: ["pack"],
+      container: ["form"],
+    };
+    return fields[route as IdentityRoute];
+  };
+  const cap = taskContext()
+    ? Math.min(
+        taskContext()!.task.policy.counterparts_per_product,
+        taskContext()!.live.policy.counterparts_per_product,
+      )
+    : matchingConfig().identity.counterparts_per_product;
+  const promising = useful.slice(0, cap);
+  const peers = promising.flatMap((c) => c.members);
+  const requested = promising.flatMap(
+    (c) =>
+      routeFields(answers.get(c.product.id)?.answer.clarification?.choice) ??
+      identityFields(query, identityCatalog, c.members),
+  );
+  if (promising.length)
     query = (
-      await prepareForMatching(
-        query,
+      await prepareForMatching(query, campaign, true, false, peers, [
+        ...new Set(requested),
+      ])
+    ).product;
+  const limitedGroups = new Set<string>();
+  let fresh = 0;
+  for (const candidate of useful) {
+    if (identityDifferences(query, candidate.product, identityCatalog).length)
+      continue;
+    const fields = routeFields(
+      answers.get(candidate.product.id)?.answer.clarification?.choice,
+    );
+    for (const member of candidate.members) {
+      if (!(await needsIdentityInterpretation(member, [query], fields)))
+        continue;
+      if (fresh >= cap || !(await allocateCounterpart(query.id, member.id))) {
+        limitedGroups.add(candidate.product.group_id);
+        limited = true;
+        continue;
+      }
+      fresh++;
+      const p = await prepareForMatching(
+        member,
         campaign,
         true,
-        false,
-        candidates.flatMap((c) => c.members),
-      )
-    ).product;
-  const preparedCandidates: Candidate[] = [];
-  const limitedGroups = new Set<string>();
-  let interpreted = 0;
-  for (const candidate of candidates) {
-    const conflicting = identityDifferences(
-      query,
-      candidate.product,
-      identityCatalog,
-    );
-    let members = await repository.groupMembers(candidate.product.group_id);
-    if (
-      !conflicting.length &&
-      ai &&
-      members.every(
-        (m) =>
-          m.availability === "available" &&
-          m.classified_family != null &&
-          matchingConfig().ai_categories.includes(m.classified_family),
-      )
-    ) {
-      const cap = taskContext()
-        ? Math.min(
-            taskContext()!.task.policy.counterparts_per_product,
-            taskContext()!.live.policy.counterparts_per_product,
-          )
-        : matchingConfig().identity.counterparts_per_product;
-      const preparedMembers: StoreProduct[] = [];
-      for (const m of members) {
-        const needed = await needsIdentityInterpretation(m, [query]);
-        const allow = !needed || interpreted++ < cap;
-        if (needed && !allow) {
-          limited = true;
-          limitedGroups.add(candidate.product.group_id);
-        }
-        const prepared = await prepareForMatching(m, campaign, allow, true, [
-          query,
-        ]);
-        limited ||= prepared.limited;
-        if (prepared.limited) limitedGroups.add(candidate.product.group_id);
-        preparedMembers.push(prepared.product);
+        true,
+        [query],
+        fields,
+      );
+      if (p.limited) {
+        limitedGroups.add(candidate.product.group_id);
+        limited = true;
       }
-      members = preparedMembers;
     }
+  }
+  query = await repository.getProduct(query.id);
+  const own = await repository.groupMembers(query.group_id);
+  const preparedCandidates: Candidate[] = [];
+  for (const candidate of candidates) {
+    const members = await repository.groupMembers(candidate.product.group_id);
     const representative =
       members.find((m) => m.id === candidate.product.id) ?? candidate.product;
-    const group =
-      (await repository.getProduct(representative.id)).group_version ?? 0;
     preparedCandidates.push({
       ...candidate,
       product: representative,
       members,
-      group_version: group,
+      group_version:
+        (await repository.getProduct(representative.id)).group_version ?? 0,
     });
   }
-  // Refresh the snapshots after preparation wrote facts; no network transaction is held.
-  query = await repository.getProduct(query.id);
-  const own = await repository.groupMembers(query.group_id);
-  const separated = await repository.manuallySeparatedCandidates(
-    query,
-    preparedCandidates,
-  );
+  const changed = preparedCandidates.filter((c) => {
+    const old = inputs.get(c.product.id);
+    return (
+      old &&
+      eligible(c) &&
+      !identityDifferences(query, c.product, identityCatalog).length &&
+      !freeProof(query, c.product) &&
+      (old[0] !== pairInput(query) || old[1] !== pairInput(c.product))
+    );
+  });
+  // One reconsideration after validated interpretation. Never recurse into Qwen.
+  if (changed.length) {
+    await phase("comparing", query.id);
+    for (const [id, response] of await comparePairs(
+      campaign,
+      query,
+      changed.map((c) => c.product),
+    ))
+      answers.set(id, response);
+  }
   const proofs = new Map<string, PairProof>();
-  const targets = new Map<string, StoreProduct>();
   for (const candidate of preparedCandidates) {
     const conflicts = identityDifferences(
       query,
@@ -141,6 +212,7 @@ export async function matchIdentityProduct(
       identityCatalog,
     );
     const gaps = identityGaps(query, candidate.product, identityCatalog);
+    const response = answers.get(candidate.product.id);
     const base = {
       candidate,
       method: "rules" as const,
@@ -159,14 +231,6 @@ export async function matchIdentityProduct(
         outcome: "different",
         reason: conflicts.join("; "),
       });
-    else if (gaps.length)
-      comparisons.push({
-        ...base,
-        outcome: "needs_info",
-        reason: limitedGroups.has(candidate.product.group_id)
-          ? `Counterpart interpretation allowance reached; ${gaps.join("; ")}`
-          : gaps.join("; "),
-      });
     else if (freeProof(query, candidate.product)) {
       comparisons.push({
         ...base,
@@ -183,58 +247,44 @@ export async function matchIdentityProduct(
         method: "rules",
         prompt_key: null,
       });
-    } else if (
-      ai &&
-      candidate.members.every(
-        (m) =>
-          m.availability === "available" &&
-          m.classified_family != null &&
-          matchingConfig().ai_categories.includes(m.classified_family),
-      )
-    )
-      targets.set(candidate.product.id, candidate.product);
-    else
+    } else if (response) {
+      const { answer, result } = response;
+      const accepted =
+        !gaps.length &&
+        answer.choice === "same" &&
+        answer.probabilities.same >= matchingConfig().threshold;
+      comparisons.push({
+        candidate,
+        outcome: accepted ? "matched" : "needs_info",
+        method: "decision",
+        probability: answer.probabilities.same,
+        confidence: answer.confidence,
+        prompt_key: result.prompt_key,
+        reason: accepted
+          ? "Decision and supported identity facts agree"
+          : gaps.length
+            ? `${limitedGroups.has(candidate.product.group_id) ? "Counterpart interpretation allowance reached; " : answer.clarification?.choice === "missing_from_source" ? "A required detail is absent from the source; " : ""}${gaps.join("; ")}`
+            : answer.choice === "same"
+              ? `Same-product probability is below the required ${matchingConfig().threshold}`
+              : "The decision model could not establish the same exact product",
+      });
+      if (accepted)
+        proofs.set(pairId(query.id, candidate.product.id), {
+          a: query.id,
+          b: candidate.product.id,
+          left_input: pairInput(query),
+          right_input: pairInput(candidate.product),
+          probability: answer.probabilities.same,
+          method: "decision",
+          prompt_key: result.prompt_key,
+        });
+    } else
       comparisons.push({
         ...base,
         outcome: "needs_info",
-        reason: "This category is not selected for AI matching",
-      });
-  }
-  await phase("comparing", query.id);
-  const answers = await comparePairs(
-    campaign,
-    query,
-    [...targets.values()].sort((a, b) => a.id.localeCompare(b.id)),
-  );
-  for (const candidate of preparedCandidates) {
-    const response = answers.get(candidate.product.id);
-    if (!response) continue;
-    const { answer, result } = response;
-    const accepted =
-      answer.choice === "same" &&
-      answer.probabilities.same >= matchingConfig().threshold;
-    comparisons.push({
-      candidate,
-      outcome: accepted ? "matched" : "needs_info",
-      reason: accepted
-        ? "Decision and supported identity facts agree"
-        : answer.choice === "same"
-          ? `Same-product probability is below the required ${matchingConfig().threshold}`
-          : "The decision model could not establish the same exact product",
-      method: "decision",
-      probability: answer.probabilities.same,
-      confidence: answer.confidence,
-      prompt_key: result.prompt_key,
-    });
-    if (accepted)
-      proofs.set(pairId(query.id, candidate.product.id), {
-        a: query.id,
-        b: candidate.product.id,
-        left_input: pairInput(query),
-        right_input: pairInput(candidate.product),
-        probability: answer.probabilities.same,
-        method: "decision",
-        prompt_key: result.prompt_key,
+        reason: gaps.length
+          ? gaps.join("; ")
+          : "This category is not selected for AI matching",
       });
   }
   const positive = comparisons.filter((c) => c.outcome === "matched");

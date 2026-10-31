@@ -1,5 +1,8 @@
 import { identityCatalog } from "./identity-catalog";
-import { identityRequest } from "@/nextsignal/domain/matching-identity";
+import {
+  identityRequest,
+  identityGaps,
+} from "@/nextsignal/domain/matching-identity";
 import type { PoolClient } from "pg";
 import { matchingRules } from "./brand-catalog";
 import {
@@ -18,7 +21,7 @@ import { logEvent, withLogContext } from "@/nextsignal/adapters/log-context";
 import { z } from "zod";
 import { settings } from "@/nextsignal/config";
 import { hash, normalizeName } from "@/nextsignal/domain/normalize";
-import { decodeLegacyMacedonian } from "@/nextsignal/domain/name-encoding";
+import { classificationSource } from "@/nextsignal/domain/classification-source";
 import {
   factNames,
   families,
@@ -725,18 +728,7 @@ export async function classificationRequest(
   // Category freshness follows the same source facts and prompt, rather than
   // presentation improvements. Provider response caching still hashes the full
   // actual payload in request(), including every readable field.
-  const {
-    readable_description: _description,
-    readable_category: _category,
-    source_text_warnings: _warnings,
-    ...identitySource
-  } = source;
-  const identityState = {
-    product: {
-      ...identitySource,
-      readable_name: decodeLegacyMacedonian(product.name),
-    },
-  };
+  const identityState = classificationSource(product);
   const questions: Questions = {
     family: {
       type: "choice",
@@ -744,17 +736,38 @@ export async function classificationRequest(
       criteria: matchingPrompts.categories,
     },
   };
+  const previous = product.classification_key
+    ? (
+        await (c ?? pool).query<{
+          source: unknown;
+          model: string;
+          prompt_key: string;
+        }>(
+          "SELECT source,model,prompt_key FROM classification_source_snapshots WHERE store_product_id=$1 AND input_key=$2",
+          [product.id, product.classification_key],
+        )
+      ).rows[0]
+    : null;
+  const savedKey =
+    previous &&
+    hash(previous.source) === hash(identityState) &&
+    previous.model === matchingConfig().gateway.decision_model &&
+    previous.prompt_key === prompt.key
+      ? product.classification_key
+      : null;
   return {
     state,
     questions,
     prompt,
-    key: hash([
-      matchingConfig().gateway.base_url,
-      matchingConfig().gateway.decision_model,
-      identityState,
-      questions,
-      prompt.key,
-    ]),
+    key:
+      savedKey ??
+      hash([
+        matchingConfig().gateway.base_url,
+        matchingConfig().gateway.decision_model,
+        identityState,
+        questions,
+        prompt.key,
+      ]),
   };
 }
 export async function classify(campaign: Campaign, product: StoreProduct) {
@@ -809,7 +822,7 @@ export async function compare(
     all.map((p) => p.family),
   );
   const questions: Questions = {};
-  for (let i = 0; i < candidates.length; i++)
+  for (let i = 0; i < candidates.length; i++) {
     questions[`candidate_${i}`] = {
       type: "choice",
       instructions: matchingPrompts.question.replaceAll(
@@ -818,6 +831,13 @@ export async function compare(
       ),
       criteria: matchingPrompts.answers,
     };
+    if (identityGaps(query, candidates[i].product, identityCatalog).length)
+      questions[`detail_${i}`] = {
+        type: "choice",
+        instructions: `For candidate_${i}, choose the most important identity detail whose supplied source text could usefully be interpreted. Choose missing_from_source if a material distinction is not supplied. Choose none if the supplied identity evidence is already sufficient. A missing database brand ID is not missing source information.`,
+        criteria: identityCatalog.routing,
+      };
+  }
   const result = await withAvailableProducts(
     all.map((p) => p.id),
     query.id,
@@ -869,6 +889,7 @@ export async function compare(
   return candidates.map((candidate, i) => ({
     candidate,
     answer: result.answers[`candidate_${i}`],
+    clarification: result.answers[`detail_${i}`] ?? null,
     result,
   }));
 }
@@ -879,7 +900,7 @@ export const clarificationSchema = z
       z
         .object({
           field: z.enum(factNames),
-          value: z.string().min(1),
+          literal: z.string().min(1),
           quote: z.string().min(1),
           source: z.enum(["name", "description", "category", "gtin"]),
         })
@@ -1002,9 +1023,10 @@ async function clarifyScoped(
   }
   const { facts, rejected } = validateClarification(
     product,
-    parsed.facts,
+    parsed.facts.map(({ literal, ...fact }) => ({ ...fact, value: literal })),
     allowed,
     await matchingRules(undefined, product.retailer),
+    identityCatalog,
   );
   if (rejected.length) {
     await logEvent(

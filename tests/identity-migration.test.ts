@@ -64,3 +64,49 @@ it("adds preparation state without changing saved permissions, budgets, product 
   }
 });
 afterAll(() => pool.end());
+it("adds brand review and source freshness metadata without authorizing work or changing category decisions", async () => {
+  const c = await pool.connect(),
+    schema = "brand_migration_" + randomUUID().replaceAll("-", "");
+  try {
+    await c.query("BEGIN");
+    await c.query(`CREATE SCHEMA ${schema}`);
+    await c.query(`SET LOCAL search_path TO ${schema},public`);
+    await c.query(`CREATE TABLE brands(id uuid PRIMARY KEY,slug text);CREATE TABLE brand_edits(id uuid);
+      CREATE TABLE store_products(id uuid PRIMARY KEY,retailer text,name text,description text,category text,gtin text,manual_facts jsonb,classification_key text);
+      CREATE TABLE store_product_classifications(id uuid,store_product_id uuid,input_key text,model text,prompt_key text,created_at timestamptz);
+      CREATE TABLE task_executions(id uuid PRIMARY KEY);`);
+    const p = randomUUID();
+    await c.query(
+      "INSERT INTO store_products VALUES($1,'kam','Original name',NULL,NULL,NULL,'{}','preserved-key')",
+      [p],
+    );
+    await c.query(
+      "INSERT INTO store_product_classifications VALUES($1,$2,'preserved-key','current-model','current-prompt',now())",
+      [randomUUID(), p],
+    );
+    await c.query(await readFile("migrations/044_brand_review.sql", "utf8"));
+    expect(
+      (await c.query("SELECT classification_key FROM store_products")).rows[0]
+        .classification_key,
+    ).toBe("preserved-key");
+    expect(
+      (await c.query("SELECT * FROM classification_source_snapshots")).rows[0],
+    ).toMatchObject({
+      input_key: "preserved-key",
+      source: { retailer: "kam", name: "Original name", manual_facts: {} },
+      model: "current-model",
+    });
+    for (const table of [
+      "task_executions",
+      "brand_review_sessions",
+      "brand_fact_refresh",
+      "matching_primary_preparations",
+    ])
+      expect(
+        (await c.query(`SELECT count(*)::int n FROM ${table}`)).rows[0].n,
+      ).toBe(0);
+  } finally {
+    await c.query("ROLLBACK");
+    c.release();
+  }
+});

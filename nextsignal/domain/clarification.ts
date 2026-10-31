@@ -13,6 +13,8 @@ import {
   type ProductInput,
 } from "@/nextsignal/domain/matching";
 import type { LocalMatchingRules } from "@/nextsignal/domain/local-matching";
+import type { IdentityCatalog } from "./matching-identity";
+import { identityValue } from "./identity-values";
 
 type ExtractedFact = {
   field: FactName;
@@ -25,6 +27,7 @@ export function validateClarification(
   entries: ExtractedFact[],
   allowed: readonly string[],
   rules: LocalMatchingRules,
+  catalog: IdentityCatalog,
 ) {
   const facts: Facts = {},
     rejected: { field: FactName; reason: string }[] = [];
@@ -45,6 +48,7 @@ export function validateClarification(
       quote: entry.quote,
       source: entry.source,
       method: "qwen",
+      literal: entry.value,
     };
     if (
       !factNames.includes(entry.field) ||
@@ -59,6 +63,13 @@ export function validateClarification(
     }
     if (!supportedFact(product, fact)) {
       reject(entry.field, "Clarification contains unsupported evidence");
+      continue;
+    }
+    if (!entry.quote.includes(entry.value)) {
+      reject(
+        entry.field,
+        "Clarification literal is not an exact source fragment",
+      );
       continue;
     }
     if (["quantity", "pack", "fat", "alcohol", "size"].includes(entry.field)) {
@@ -108,6 +119,36 @@ export function validateClarification(
         continue;
       }
       fact.value = canonicalFactValue(entry.field, entry.value, rules);
+      const normalized = identityValue(
+        entry.field,
+        entry.value,
+        catalog,
+        rules,
+      );
+      if (
+        ["form", "carbonation", "type"].includes(entry.field) &&
+        normalized.status !== "known"
+      ) {
+        reject(
+          entry.field,
+          "Source fragment does not establish a recognized value for this field",
+        );
+        continue;
+      }
+      if (
+        [
+          "form",
+          "carbonation",
+          "type",
+          "flavour",
+          "variant",
+          "range",
+          "brand",
+        ].includes(entry.field)
+      ) {
+        fact.value = normalized.value;
+        fact.status = normalized.status;
+      }
     }
     facts[entry.field] = fact;
   }

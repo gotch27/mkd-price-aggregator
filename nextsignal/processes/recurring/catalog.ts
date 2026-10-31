@@ -22,6 +22,7 @@ export const catalogTick = recurringProcess<void, AppServices>({
         await ctx.services.catalog.seedRetailers();
         // Settings reads fail closed. Startup is never a grant to the old backlog.
         await ctx.services.taskSettings.readSettings();
+        await ctx.services.brandFacts.refreshBatch();
         await ctx.services.tasks.scheduleTasks(new Date());
         await ctx.services.tasks.automaticTasks();
         await dispatchTasks(ctx);
