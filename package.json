@@ -24,7 +24,9 @@
     "backup:smoke": "tsx scripts/backup-smoke.ts",
     "run": "tsx scripts/run.ts",
     "matching:sample": "tsx scripts/matching-sample.ts",
-    "matching:compare-models": "node scripts/matching-evaluate.mjs --compare-models"
+    "matching:compare-models": "node scripts/matching-evaluate.mjs --compare-models",
+    "matching:identity-sample": "tsx scripts/identity-sample.ts",
+    "matching:identity-evaluate": "node scripts/identity-evaluate.mjs"
   },
   "dependencies": {
     "@gotch/nextsignal": "0.1.0-alpha.2",

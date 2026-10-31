@@ -1,3 +1,8 @@
+import {
+  prepareIdentity,
+  identityDifferences,
+} from "@/nextsignal/domain/matching-identity";
+import { identityCatalog } from "./identity-catalog";
 import { readCatalog, rulesFromCatalog } from "./brand-catalog";
 import type { PoolClient } from "pg";
 import { settings } from "@/nextsignal/config";
@@ -58,10 +63,11 @@ export async function readGroup(
   const limited = rows.length > limits.group_member_limit;
   const catalog = await readCatalog(c);
   const all = rows.slice(0, limits.group_member_limit).map((r) => ({
-    ...refreshProductFacts(
+    ...prepareIdentity(
       { ...r, group_version: root.matching_version },
       rulesFromCatalog(catalog, r.retailer),
       settings.matching.category_mappings,
+      identityCatalog,
     ),
     indexed: r.indexed,
     listing_id: r.listing_id,
@@ -160,7 +166,11 @@ export function knownConflict(members: Member[]) {
     return "A source product has conflicting descriptions. Resolve those before connecting it.";
   for (let i = 0; i < members.length; i++)
     for (let j = i + 1; j < members.length; j++) {
-      const conflicts = differences(members[i], members[j]);
+      const conflicts = identityDifferences(
+        members[i],
+        members[j],
+        identityCatalog,
+      );
       if (conflicts.length)
         return `Known product details disagree: ${conflicts.join("; ")}`;
     }

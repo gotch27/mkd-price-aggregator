@@ -1,3 +1,4 @@
+import { matchingResults } from "./matching-results";
 import type { PoolClient } from "pg";
 import type { StoreProduct } from "@/nextsignal/domain/matching";
 import type {
@@ -119,10 +120,16 @@ const projection = `SELECT ti.id,coalesce(sp.group_id,ti.group_id) AS product_id
 
 export async function taskResults(
   input: TaskResultsQuery,
-): Promise<TaskResultsPage | null> {
+): Promise<
+  | TaskResultsPage
+  | import("@/nextsignal/domain/matching-results").MatchingResultsPage
+  | null
+> {
+  const matching = await matchingResults(input);
+  if (matching) return matching;
   const task = (
     await pool.query(
-      `SELECT t.id,t.state,t.reason,t.retry_at,t.options,t.processed,coalesce(u.spending_usd,0)::text AS spending_usd,coalesce(u.requests,0)::int AS requests
+      `SELECT t.id,t.kind,t.state,t.reason,t.retry_at,t.options,t.processed,coalesce(u.spending_usd,0)::text AS spending_usd,coalesce(u.requests,0)::int AS requests
     FROM task_executions t LEFT JOIN LATERAL(SELECT sum(cost_usd) spending_usd,count(*) requests FROM ai_usage WHERE task_id=t.id) u ON true WHERE t.id=$1 AND t.kind IN ('categorize','llm_review')`,
       [input.id],
     )
@@ -166,6 +173,7 @@ export async function taskResults(
     result.rows.filter((r) => r.member_id).map((r) => r.member_id),
   );
   return {
+    kind: task.kind,
     task: {
       id: task.id,
       state: task.state,

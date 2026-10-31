@@ -29,6 +29,7 @@ export function loadPromptCatalog(config: PromptSettings) {
   const reviewCategories = z
     .record(z.enum(families), z.string().min(1))
     .parse(JSON.parse(reviewCategoriesFile.content));
+  const identityRules = read(settings.matching.identity.profiles_file);
   const agentReview = read(settings.agent_review.instructions_file);
   const classification = read(config.classification),
     comparison = read(config.comparison),
@@ -73,6 +74,9 @@ export function loadPromptCatalog(config: PromptSettings) {
     ];
     const files = [
       ...text,
+      ...(["comparison", "clarification"].includes(operation)
+        ? [identityRules]
+        : []),
       ...(operation === "llm_review"
         ? [reviewCategoriesFile]
         : operation === "classification"

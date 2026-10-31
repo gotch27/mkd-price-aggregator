@@ -1,3 +1,5 @@
+import { identityCatalog } from "./identity-catalog";
+import { identityRequest } from "@/nextsignal/domain/matching-identity";
 import type { PoolClient } from "pg";
 import { matchingRules } from "./brand-catalog";
 import {
@@ -824,11 +826,22 @@ export async function compare(
         campaign,
         {
           comparison_instructions: prompt.instructions,
+          identity_requirements: identityCatalog.profiles
+            .filter((profile) =>
+              all.some((p) =>
+                profile.types.includes(p.facts.type?.value ?? ""),
+              ),
+            )
+            .map(({ id, required, identity_any }) => ({
+              profile: id,
+              required,
+              identity_any,
+            })),
           query: query.id,
           products: Object.fromEntries(
             [...new Map(all.map((p) => [p.id, p])).values()].map((p) => [
               p.id,
-              requestProduct(p),
+              identityRequest(p, identityCatalog),
             ]),
           ),
           candidates: Object.fromEntries(
@@ -916,7 +929,10 @@ export function clarificationMessages(
       role: "system",
       content: `${matchingPrompts.bundle("clarification", [product.retailer], [product.family]).instructions}\nRequested fields: ${allowed.join(", ")}.`,
     },
-    { role: "user", content: JSON.stringify(requestProduct(product)) },
+    {
+      role: "user",
+      content: JSON.stringify(identityRequest(product, identityCatalog)),
+    },
   ];
 }
 async function clarifyScoped(
@@ -927,7 +943,27 @@ async function clarifyScoped(
   const allowed = fields.filter((f) =>
     factNames.includes(f as (typeof factNames)[number]),
   );
-  const schema = z.toJSONSchema(clarificationSchema);
+  const boundedSchema = clarificationSchema.extend({
+    facts: z.array(
+      clarificationSchema.shape.facts.element.extend({
+        field: z.enum(
+          allowed as [
+            (typeof factNames)[number],
+            ...(typeof factNames)[number][],
+          ],
+        ),
+      }),
+    ),
+    missing: z.array(
+      z.enum(
+        allowed as [
+          (typeof factNames)[number],
+          ...(typeof factNames)[number][],
+        ],
+      ),
+    ),
+  });
+  const schema = z.toJSONSchema(boundedSchema);
   delete schema.$schema;
   const result = await request(
     campaign,

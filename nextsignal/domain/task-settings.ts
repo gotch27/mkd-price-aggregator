@@ -59,6 +59,8 @@ export const operationalSchema = z
     default_product_limit: z.number().int().min(1).max(100000),
     candidate_limit: z.number().int().min(1).max(20),
     candidate_batch_size: z.number().int().min(1).max(5),
+    counterpart_limit: z.number().int().min(0).max(100000),
+    counterparts_per_product: z.number().int().min(0).max(20),
     batch_size: z.number().int().min(1).max(50),
     parallel_imports: z.number().int().min(1).max(9),
     per_store_downloads: z.number().int().min(1).max(9),
@@ -97,8 +99,18 @@ export const taskCommandSchema = z
     max_cost_usd: money,
     recheck: z.boolean(),
     idempotency_key: z.uuid(),
+    counterpart_limit: z.number().int().min(0).max(100000).optional(),
+    recheck_task_id: z.uuid().optional(),
   })
   .superRefine((v, ctx) => {
+    if (
+      v.kind !== "match" &&
+      (v.counterpart_limit !== undefined || v.recheck_task_id !== undefined)
+    )
+      ctx.addIssue({
+        code: "custom",
+        message: "Matching options require a matching task",
+      });
     if (["categorize", "llm_review"].includes(v.kind) && !v.use_ai)
       ctx.addIssue({
         code: "custom",

@@ -18,6 +18,7 @@ it("loads only relevant store/category prompts and archives complete source cont
     "stores/kam.md",
     "stores/spar.md",
     "families/dairy.md",
+    "matching-identity.json",
     "matching-answers.json",
     "matching-question.md",
   ]);

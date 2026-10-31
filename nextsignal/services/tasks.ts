@@ -1,3 +1,4 @@
+import { identityCatalog } from "./identity-catalog";
 import { randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
 import { settings } from "@/nextsignal/config";
@@ -41,8 +42,11 @@ export async function createTask(
 ) {
   if (input.kind === "llm_review" && origin !== "manual")
     throw new TaskConflict("LLM review must be explicitly started.");
-  const options = taskCommandSchema.parse(input),
-    saved = await readSettings();
+  const saved = await readSettings();
+  const options = taskCommandSchema.parse(input);
+  if (options.kind === "match")
+    options.counterpart_limit =
+      options.counterpart_limit ?? saved.policy.counterpart_limit;
   return transaction((c) => insertTask(c, options, actor, saved, origin));
 }
 async function insertTask(
@@ -93,6 +97,31 @@ async function insertTask(
     ).rowCount
   )
     throw new TaskConflict("The catalog is not active in the selected stores.");
+  if (
+    options.kind === "match" &&
+    options.counterpart_limit! > saved.policy.counterpart_limit
+  )
+    throw new TaskConflict(
+      "Counterpart allowance exceeds the saved matching limit",
+    );
+  if (options.recheck_task_id) {
+    const previous = (
+      await c.query<TaskExecution>(
+        "SELECT * FROM task_executions WHERE id=$1 AND kind='match' AND created_by=$2",
+        [options.recheck_task_id, actor],
+      )
+    ).rows[0];
+    if (
+      !previous ||
+      !["completed", "failed"].includes(previous.state) ||
+      !options.recheck ||
+      options.retailers.some((r) => !previous.options.retailers.includes(r)) ||
+      options.source_id !== previous.options.source_id
+    )
+      throw new TaskConflict(
+        "Recheck must retain a finished matching task's scope and select only its unresolved products",
+      );
+  }
   await assertImportScopeAvailable(c, options);
   const result = (
     await c.query<TaskExecution>(
@@ -123,6 +152,13 @@ async function insertTask(
         "This task request was already used with different options.",
       );
     return existing;
+  }
+  if (options.kind === "match") {
+    result.checkpoint = { identity_version: hash(identityCatalog) };
+    await c.query("UPDATE task_executions SET checkpoint=$2 WHERE id=$1", [
+      result.id,
+      result.checkpoint,
+    ]);
   }
   await logEvent("info", "tasks.authorized", "Task authorized", {
     task_id: result.id,

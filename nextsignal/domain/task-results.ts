@@ -25,6 +25,7 @@ export type TaskResultsQuery = {
   outcome: string;
 };
 export type TaskResultsPage = {
+  kind: "categorize" | "llm_review";
   task: {
     id: string;
     state: string;
@@ -60,3 +61,5 @@ export type TaskResultsPage = {
   total: number;
   total_pages: number;
 };
+
+export type AnyTaskResultsPage = TaskResultsPage | import("./matching-results").MatchingResultsPage;

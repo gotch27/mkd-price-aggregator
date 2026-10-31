@@ -44,9 +44,21 @@ export const typeVocabulary = [
   "bath-wash",
   "dog-food",
   "iced-tea",
+  "water",
+  "protein-drink",
+  "soft-drink",
+  "carbonated-drink",
+  "butter",
+  "cream",
 ] as const;
 
 const typeAliases: Record<string, string[]> = {
+  water: ["water", "voda", "mineralna voda"],
+  "protein-drink": ["protein drink", "proteinski napitok", "protein napitok"],
+  "soft-drink": ["soft drink", "bezalkoholen pijalok", "pijalak", "pijalok"],
+  "carbonated-drink": ["carbonated drink", "gaziran sok"],
+  butter: ["butter", "puter"],
+  cream: ["cream", "pavlaka"],
   granola: ["granola"],
   wafer: ["wafer", "wafers", "napolitanki"],
   "bath-wash": ["bath wash", "bath foam", "kupka"],
@@ -297,6 +309,7 @@ export function descriptiveFacts(
 }
 
 export const factLabels: Record<FactName, string> = {
+  carbonation: "carbonation",
   brand: "brand",
   type: "product type",
   variant: "variant",

@@ -1,9 +1,18 @@
+import type { PairProof } from "./identity-decisions";
+import { pairInput } from "./identity-decisions";
 import {
   withBrandCatalog,
   matchingRules,
   readCatalog,
   rulesFromCatalog,
 } from "./brand-catalog";
+import {
+  prepareIdentity,
+  identityGroupProblem,
+  identityGaps,
+  identityDifferences,
+} from "@/nextsignal/domain/matching-identity";
+import { identityCatalog } from "./identity-catalog";
 import { grantChangedProducts } from "./task-automation";
 import {
   availableProductSql,
@@ -33,7 +42,6 @@ import {
   prepareFacts,
   inputFingerprint,
   localKey,
-  groupProblem,
   requestProduct,
   refreshProductFacts,
   type StoreProduct,
@@ -74,10 +82,11 @@ const active = `EXISTS(SELECT 1 FROM store_product_sources ss JOIN sources s ON 
 const productSelect = `SELECT sp.*,sp.version::int AS version,p.matching_version::int AS group_version,
  (SELECT availability FROM store_product_availability WHERE store_product_id=sp.id) AS availability FROM store_products sp JOIN products p ON p.id=sp.group_id`;
 const currentFacts = async (product: StoreProduct) =>
-  refreshProductFacts(
+  prepareIdentity(
     product,
     await matchingRules(pool, product.retailer),
     matchingConfig().category_mappings,
+    identityCatalog,
   );
 
 type IndexChanges = {
@@ -546,7 +555,9 @@ export async function findCandidates(
         CASE WHEN sp.family=$7 AND sp.family<>'unknown' THEN 'Related category' END,
         CASE WHEN sp.facts->'quantity'->>'value'=$9 AND sp.facts->'unit'->>'value'=$10 THEN 'Same stated amount' END,'Similar product name'],NULL) AS reasons
     FROM store_products sp JOIN products p ON p.id=sp.group_id AND NOT p.matching_conflict
-    WHERE sp.retailer<>$2 AND sp.group_id<>$3 AND NOT sp.ambiguous AND NOT sp.branch_conflict AND ${availableProductSql("sp")}
+    WHERE sp.retailer<>$2 AND sp.group_id<>$3
+      AND NOT EXISTS(SELECT 1 FROM store_products occupied JOIN store_products proposed_member ON proposed_member.group_id=sp.group_id AND proposed_member.retailer=occupied.retailer WHERE occupied.group_id=$3 AND occupied.id<>proposed_member.id)
+      AND NOT sp.ambiguous AND NOT sp.branch_conflict AND ${availableProductSql("sp")}
       AND ($16='all' OR ($16='rules' AND (($4::text IS NOT NULL AND sp.gtin=$4) OR ($5::text IS NOT NULL AND sp.local_key=$5)))
         OR ($16='ai' AND sp.classified_family=ANY($17::text[]) AND NOT EXISTS(
           SELECT 1 FROM store_products gm WHERE gm.group_id=sp.group_id
@@ -562,7 +573,8 @@ export async function findCandidates(
       CASE WHEN facts->'quantity'->>'value'=$9 AND facts->'unit'->>'value'=$10 THEN $14::float ELSE 0 END+
       CASE WHEN family=$7 AND family<>'unknown' THEN $15::float ELSE 0 END AS score,
       row_number() OVER(PARTITION BY group_id ORDER BY name_score DESC,id) AS position FROM candidates
-  ) SELECT * FROM ranked WHERE position=1 ORDER BY score DESC,id LIMIT $8`,
+  ), diverse AS (SELECT *,row_number() OVER(PARTITION BY retailer ORDER BY score DESC,id) AS chain_position FROM ranked WHERE position=1)
+  SELECT * FROM diverse ORDER BY (chain_position=1) DESC,score DESC,id LIMIT $8`,
         [
           query.normalized_name,
           query.retailer,
@@ -849,6 +861,7 @@ export async function recordResult(
   inputKey: string,
   fallbackReason: string,
   fallbackOutcome: Outcome = "no_candidates",
+  proofs?: PairProof[],
 ) {
   let details: Record<string, unknown> = {
     campaign_id: work.campaign_id,
@@ -947,12 +960,16 @@ export async function recordResult(
         ? "Existing product group needs attention"
         : [...humanLinks.values()].includes("different")
           ? "These products were manually marked as different"
-          : groupProblem(
+          : identityGroupProblem(
               await withBrandCatalog(
                 () => Promise.all(members.map(currentFacts)),
                 c,
               ),
-              (a, b) => humanLinks.get(pairKey(a, b)) === "same",
+              identityCatalog,
+              (a, b) =>
+                humanLinks.get(pairKey(a, b)) === "same" ||
+                members.find((m) => m.id === a)?.group_id ===
+                  members.find((m) => m.id === b)?.group_id,
             )
       : null;
     const aiGroups = new Set(
@@ -978,21 +995,74 @@ export async function recordResult(
     if (proposed.length && !problem) {
       // Detect a competing item before the first proposal wins by processing
       // order. This is source-identity validation, not within-chain AI matching.
-      const competing = (
-        await c.query(
-          `SELECT 1 FROM store_products sp JOIN store_products member ON member.id=ANY($1::uuid[])
-        WHERE sp.retailer=member.retailer AND sp.id<>ALL($1::uuid[]) AND ${active}
-          AND ((member.local_key IS NOT NULL AND sp.local_key=member.local_key)
-            OR (member.gtin IS NOT NULL AND sp.gtin=member.gtin) OR sp.normalized_name=member.normalized_name
-            OR (member.facts->'brand'->>'value' IS NOT NULL AND sp.facts->'brand'->>'value'=member.facts->'brand'->>'value'
-              AND (SELECT jsonb_object_agg(key,value->'value') FROM jsonb_each(sp.facts))=
-                  (SELECT jsonb_object_agg(key,value->'value') FROM jsonb_each(member.facts)))) LIMIT 1`,
-          [members.map((m) => m.id)],
+      const possibleCompetitors = (
+        await c.query<StoreProduct>(
+          `${productSelect}
+        WHERE sp.id<>ALL($1::uuid[]) AND ${availableProductSql("sp")}
+        AND EXISTS(SELECT 1 FROM store_products member WHERE member.id=ANY($1::uuid[]) AND member.retailer=sp.retailer
+          AND ((member.local_key IS NOT NULL AND sp.local_key=member.local_key) OR (member.gtin IS NOT NULL AND sp.gtin=member.gtin)
+            OR sp.normalized_name=member.normalized_name OR (member.facts->'brand'->>'value'=sp.facts->'brand'->>'value' AND member.facts->'quantity'->>'value'=sp.facts->'quantity'->>'value' AND member.facts->'unit'->>'value'=sp.facts->'unit'->>'value')))
+        LIMIT $2`,
+          [
+            members.map((m) => m.id),
+            matchingConfig().manual.group_member_limit + 1,
+          ],
         )
-      ).rowCount;
+      ).rows;
+      const comparableMembers = await withBrandCatalog(
+        () => Promise.all(members.map(currentFacts)),
+        c,
+      );
+      const preparedCompetitors = await withBrandCatalog(
+        () => Promise.all(possibleCompetitors.map(currentFacts)),
+        c,
+      );
+      const competing =
+        possibleCompetitors.length >
+          matchingConfig().manual.group_member_limit ||
+        preparedCompetitors.some((other) =>
+          comparableMembers.some(
+            (member) =>
+              other.retailer === member.retailer &&
+              !identityDifferences(member, other, identityCatalog).length &&
+              !identityGaps(member, other, identityCatalog).length,
+          ),
+        );
       if (competing)
         problem =
           "Competing distinct products from the same store need attention";
+    }
+    if (proofs && proposed.length && !problem) {
+      const preparedMembers = await withBrandCatalog(
+        () => Promise.all(members.map(currentFacts)),
+        c,
+      );
+      for (let i = 0; i < preparedMembers.length; i++)
+        for (let j = i + 1; j < preparedMembers.length; j++) {
+          const a = preparedMembers[i],
+            b = preparedMembers[j];
+          if (
+            a.group_id === b.group_id ||
+            humanLinks.get(pairKey(a.id, b.id)) === "same"
+          )
+            continue;
+          const proof = proofs.find(
+            (p) =>
+              (p.a === a.id && p.b === b.id) || (p.a === b.id && p.b === a.id),
+          );
+          if (
+            !proof ||
+            (proof.method === "decision" &&
+              proof.probability < matchingConfig().threshold) ||
+            (proof.a === a.id
+              ? proof.left_input !== pairInput(a) ||
+                proof.right_input !== pairInput(b)
+              : proof.left_input !== pairInput(b) ||
+                proof.right_input !== pairInput(a))
+          )
+            problem =
+              "A required group relationship changed or is not verified";
+        }
     }
     const matched = proposed.length > 0 && !stale && !problem;
     let target = current.group_id;
@@ -1044,8 +1114,8 @@ export async function recordResult(
           ? "needs_info"
           : (comparison?.outcome ?? fallbackOutcome);
       await c.query(
-        `INSERT INTO store_match_decisions(store_product_id,candidate_id,campaign_id,group_id,outcome,reason,input_key,source_version,evidence,model,probability,confidence,prompt_version,prompt_key)
-        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
+        `INSERT INTO store_match_decisions(store_product_id,candidate_id,campaign_id,group_id,outcome,reason,input_key,source_version,evidence,model,probability,confidence,prompt_version,prompt_key,task_id)
+        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
         [
           query.id,
           comparison?.candidate.product.id ?? null,
@@ -1073,6 +1143,7 @@ export async function recordResult(
           comparison?.confidence ?? null,
           matchingConfig().prompt_version,
           comparison?.prompt_key ?? null,
+          taskContext()?.task.id ?? null,
         ],
       );
     }

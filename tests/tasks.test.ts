@@ -545,6 +545,8 @@ it("recovers the existing paid categorization results by exact task and generati
     category: "",
     outcome: "",
   }))!;
+  if (restored.kind === "match" || before.kind === "match")
+    throw new Error("Expected category results");
   expect(
     restored.rows.map((r) => [
       r.name,

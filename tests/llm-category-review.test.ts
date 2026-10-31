@@ -180,6 +180,8 @@ it("runs a bounded Qwen review, persists LLM provenance and original scores, and
     category: "",
     outcome: "",
   });
+  if (!results || results.kind === "match")
+    throw new Error("Expected category results");
   expect(results?.rows[0].source).toBe("llm");
   expect(results?.rows[0].outcome).toBe("assigned");
   expect(results?.rows[0].model).toBe(

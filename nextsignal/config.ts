@@ -168,6 +168,11 @@ export const configSchema = object({
     freshness_hours: integer,
   }),
   matching: object({
+    identity: object({
+      profiles_file: z.string().min(1),
+      counterpart_limit: numeric(z.number().int().min(0).max(100000)),
+      counterparts_per_product: numeric(z.number().int().min(0).max(20)),
+    }),
     ai_categories: z.preprocess(
       (v) => (typeof v === "string" ? JSON.parse(v) : v),
       z
@@ -197,7 +202,17 @@ export const configSchema = object({
       search_min_length: integer,
       max_note_length: integer,
     }),
-    evaluation: object({ sample_per_store: integer, holdout_divisor: integer }),
+    evaluation: object({
+      sample_per_store: integer,
+      holdout_divisor: integer,
+      identity_anchors_per_family: integer,
+      identity_controls: integer,
+      identity_paid_budget_usd: numeric(z.number().min(0).max(0.25)),
+      identity_seed: z.string().min(1),
+      identity_dataset_path: z.string().min(1),
+      identity_development_path: z.string().min(1),
+      identity_report_path: z.string().min(1),
+    }),
     candidate_batch_size: integer,
     category_threshold: numeric(z.number().min(0).max(1)),
     lease_seconds: integer,

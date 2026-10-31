@@ -134,6 +134,13 @@ const resultQuery = pages.extend({
   category: z.union([z.literal(""), z.enum(families)]),
   outcome: z.enum([
     "",
+    "connected",
+    "already_connected",
+    "ambiguous_store",
+    "different",
+    "no_candidates",
+    "needs_info",
+    "stale",
     "assigned",
     "needs_review",
     "reviewed",
@@ -153,7 +160,7 @@ export const taskResultsRead = apiProcess<
   async handle(ctx, input) {
     const query = resultQuery.parse(input);
     const result = await ctx.services.taskResults.taskResults(query);
-    return result ? value(result) : notFound("Categorization task not found");
+    return result ? value(result) : notFound("Task results not found");
   },
 });
 export const taskStart = apiProcess<TaskCommand, unknown, AppServices>({

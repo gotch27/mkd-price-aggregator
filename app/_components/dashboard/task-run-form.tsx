@@ -60,6 +60,7 @@ export function RunForm({
     [ai, setAi] = useState(false),
     [categories, setCategories] = useState<string[]>([]),
     [cost, setCost] = useState(view.policy.task_budget_usd),
+    [counterparts, setCounterparts] = useState(view.policy.counterpart_limit),
     [recheck, setRecheck] = useState(false);
   const [scopeCounts, setScopeCounts] = useState<{
     counts: { family: string; count: number }[];
@@ -120,6 +121,10 @@ export function RunForm({
     view.policy[operation(kind)] === "off" ||
     !retailers.length ||
     (scope === "catalog" && !source) ||
+    (kind === "match" &&
+      (!Number.isSafeInteger(counterparts) ||
+        counterparts < 0 ||
+        counterparts > view.policy.counterpart_limit)) ||
     (usesAi &&
       (!view.policy.ai_enabled ||
         !view.key_ready ||
@@ -145,6 +150,7 @@ export function RunForm({
           : [],
       max_cost_usd: usesAi ? cost : 0,
       recheck: kind === "llm_review" ? false : recheck,
+      ...(kind === "match" ? { counterpart_limit: counterparts } : {}),
       idempotency_key: crypto.randomUUID(),
     };
     const action =
@@ -181,7 +187,7 @@ export function RunForm({
       body,
       title: `${taskLabels[kind]}?`,
       scope: `${retailers.map(storeName).join(", ")}${scope === "catalog" ? ` · ${text(catalogs.rows.find((c) => c.id === source)?.name)}` : ""}`,
-      effect: `${action} ${products ? `Limit: ${all ? "all pending products (explicit selection)" : `${limit} unique store products`}.` : ""} ${usesAi ? `AI allowed up to $${cost.toFixed(2)} total and the shared initial/monthly allowances. ${kind === "match" ? `Use saved categories only: ${categories.join(", ")}. Uncategorized products stay waiting.` : ""}` : kind === "import" ? importEffect : "Code only; zero AI calls."} ${products ? (recheck ? "Include already checked products." : "Process waiting products only.") : ""} Reviewed settings revision ${view.revision}.`,
+      effect: `${action} ${products ? `Limit: ${all ? "all pending products (explicit selection)" : `${limit} unique store products`}.` : ""} ${usesAi ? `AI allowed up to $${cost.toFixed(2)} total and the shared initial/monthly allowances. ${kind === "match" ? `Use saved categories only: ${categories.join(", ")}. Uncategorized products stay waiting. Up to ${counterparts} extra counterpart products may be interpreted, with up to ${view.policy.counterparts_per_product} per selected product; all calls share this spending allowance.` : ""}` : kind === "import" ? importEffect : "Code only; zero AI calls."} ${products ? (recheck ? "Include already checked products." : "Process waiting products only.") : ""} Reviewed settings revision ${view.revision}.`,
       submitLabel: "Start task",
       successMessage:
         "Task accepted. Its scope and allowance are saved. Follow progress in Run Tasks.",
@@ -390,6 +396,26 @@ export function RunForm({
                   <FieldDescription>
                     AI matching uses saved categories only. Products without a
                     category stay waiting for the categorization task.
+                  </FieldDescription>
+                </Field>
+              )}
+              {kind === "match" && ai && (
+                <Field>
+                  <FieldLabel htmlFor="task-counterparts">
+                    Maximum extra counterpart interpretations
+                  </FieldLabel>
+                  <Input
+                    id="task-counterparts"
+                    type="number"
+                    min={0}
+                    max={view.policy.counterpart_limit}
+                    value={counterparts}
+                    onChange={(e) => setCounterparts(e.target.valueAsNumber)}
+                  />
+                  <FieldDescription>
+                    Interpret needed facts from products in other stores. Saved
+                    interpretations are reused. All AI calls share the task
+                    spending limit.
                   </FieldDescription>
                 </Field>
               )}

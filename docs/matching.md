@@ -27,27 +27,16 @@ For Coca-Cola Original 330 ml in a can, the intended group has one KAM entry, on
 
 ```mermaid
 flowchart TD
-  A[Complete store catalog received] --> B[Replace current branch prices]
-  B --> C{Did product information change?}
-  C -->|Only price or availability| D[Keep the saved connection]
-  C -->|New or changed description| E[Save a store-product revision and pending work]
-  E --> P{Task or automatic change authorized?}
-  P -->|No| W[Wait for reviewed work]
-  P -->|Categorization| G[Reuse category result or ask Decider]
-  P -->|Matching| F[Read saved category and supported facts]
-  G --> S[Save category and review scores]
-  F --> H[Code checks exact signatures and barcodes in every category]
-  H -->|Supported match| L[Check every member of the proposed group]
-  H -->|No code match| I{Category selected for AI matching?}
-  I -->|No| N[Keep separate and save the reason]
-  I -->|Yes| J[Find up to 20 groups from other stores]
-  J --> K[Decider compares five candidates at a time]
-  K -->|Same probability at least 75% and enough facts| L
-  K -->|Useful source detail needs interpretation| Q[Qwen clarifies once, then compare again]
-  Q --> K
-  K -->|Still unsure| N
-  L -->|Compatible, one product per store| M[Save the shared group and decision]
-  L -->|Conflict or missing detail| N[Keep separate and save the reason]
+ A[Reviewed matching task or authorized new change] --> B[Read saved categories and prepare source facts]
+ B --> C[Retrieve up to 20 cross-store groups]
+ C --> D[Reuse proofs and reject supported differences]
+ D --> E[Interpret needed facts on either side within task limits]
+ E --> F[Code proof or Decider questions in batches of five]
+ F --> G[Hold ambiguous stores and verify every new group relationship]
+ G --> H[Recheck live sources and commit compatible groups]
+ G --> I[Keep unresolved products with specific reasons]
+ H --> J[Saved matching task results]
+ I --> J
 ```
 
 Unavailable products stay outside categorization and matching. If an unchanged product becomes available again, it reuses saved results; any still-pending category or matching work may run only under the applicable task/automation permission. Availability changes do not create another descriptive product revision.
@@ -69,7 +58,7 @@ Categories control which products may use paid comparisons; code-based matching 
 
 Rules read explicit amounts, units, pack counts, barcodes, reviewed brands, variants, containers and selected family details. Quantities use exact decimal arithmetic. Diaper suitability weights are not package weights. Produce needs stated type, variety and sale unit; known grade/origin conflicts prevent connection. Unknown or unsupported distinctions remain unknown.
 
-`nextsignal/domain/product-facts.ts` keeps reviewed comparable values separate from original evidence: for example, НУТЕЛА/Nutela/Nutella share a brand value while their source quotes remain unchanged. Generic product type, product range, flavour/fragrance, whole/ground processing and cosmetic shade have separate fields. Name rules take precedence over misleading ingredient/category words, such as apple-scented dishwashing liquid. The reviewed type vocabulary is intentionally conservative; an unrecognized free-text type cannot establish a match or prove a type conflict by itself. Supporting more families requires further evaluation.
+`nextsignal/domain/product-facts.ts` keeps reviewed comparable values separate from original evidence: for example, НУТЕЛА/Nutela/Nutella share a brand value while their source quotes remain unchanged. Generic product type, product range, flavour/fragrance, whole/ground processing and cosmetic shade have separate fields. Name rules take precedence over misleading ingredient/category words, such as apple-scented dishwashing liquid. Matching-specific product identity profiles recognize the validated soft-drink/dairy types and their distinguishing facts. Unrecognized free-text types cannot prove a conflict. Other families retain conservative checks pending evaluation. See [the current identity workflow](matching-identity.md).
 
 `nextsignal/domain/clarification.ts` validates each requested AI fact independently. Unsupported fields are logged and discarded while good fields survive. Amount and unit are validated as one source-supported fact and converted together. Canonicalization happens after literal source validation. Derived facts refresh only for work being processed; candidate/group checks use the same pure rules without mutating records during reads. Changed request inputs and relevant prompt contents invalidate affected request caches without resetting completed work.
 
@@ -77,7 +66,7 @@ Candidate retrieval searches other chains through indexed names, reviewed brands
 
 For selected categories, Perplexity Decider V1.2 answers a separate typed choice question for each of five candidate groups: **same**, **different**, or **not enough information**. SPAR and Vero can both answer “same” for KAM. An AI “same” requires probability at least **0.75**, sufficient supported identity facts, no explicit differences, and full-group compatibility. Provider confidence is a separate field. Missing information never becomes a proven permanent difference. Both thresholds are editable operational settings; any acceptance still requires source-supported facts and full-group validation.
 
-An authorized categorization task uses Decider for unique store products without reusable results, with an initial 0.80 category acceptance threshold and saved alternative scores. Saved unchanged classifications are reused. AI matching uses saved categories: manual tasks capture their own selection and automatic matching uses the selection in operational settings. Uncategorized products wait for categorization rather than triggering it implicitly. Other labels remain unmatched unless code establishes a safe connection. Qwen3.7 Flash is limited to one targeted clarification round where source text contains a useful answer. Its strict output includes a source field and exact quote for every fact. Code verifies allowed fields, source identifiers, literal quotes and numeric conversions. It does not repeatedly ask models to guess omitted information. Instructions live in external prompt files; only relevant store/category guides enter each request, and their source snapshots are preserved by hash.
+An authorized categorization task uses Decider for unique store products without reusable results, with an initial 0.80 category acceptance threshold and saved alternative scores. Saved unchanged classifications are reused. AI matching uses saved categories: manual tasks capture their own selection and automatic matching uses the selection in operational settings. Uncategorized products wait for categorization rather than triggering it implicitly. Other labels remain unmatched unless code establishes a safe connection. Qwen3.7 Flash performs targeted source interpretation on either side, with durable product/profile/requested-field caching and the reviewed counterpart limits. Its strict output includes a source field and exact quote for every fact. Code verifies allowed fields, source identifiers, literal quotes and numeric conversions. It does not repeatedly ask models to guess omitted information. Instructions live in external prompt files; only relevant store/category guides enter each request, and their source snapshots are preserved by hash.
 
 The final short transaction checks work ownership, active sources, product/group versions, every pair of group members and chain uniqueness. It can create a group, enlarge it, or merge compatible existing groups. Conflicts remain separate. Slow HTTP requests never hold database transactions open.
 

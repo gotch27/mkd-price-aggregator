@@ -101,6 +101,9 @@ function TaskProgress({ task }: { task: Run }) {
       {task.kind === "match" && (
         <p className="text-xs text-muted-foreground">
           {task.connected} connected · {task.unresolved} unresolved
+          {task.checkpoint?.matching_phase
+            ? ` · ${String(task.checkpoint.matching_phase).replaceAll("_", " ")}`
+            : ""}
         </p>
       )}
       {["categorize", "llm_review"].includes(task.kind) && (
@@ -403,10 +406,11 @@ export function Tasks({
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-wrap gap-2">
-                            {["categorize", "llm_review"].includes(
+                            {["categorize", "llm_review", "match"].includes(
                               task.kind,
                             ) && (
                               <TaskResults
+                                kind={task.kind}
                                 id={task.id}
                                 updatedAt={task.updated_at}
                                 pageSize={pageSize}
@@ -415,6 +419,47 @@ export function Tasks({
                                 onCategoryChanged={() => void load()}
                               />
                             )}
+                            {task.kind === "match" &&
+                              ["completed", "failed"].includes(task.state) &&
+                              task.unresolved > 0 && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  disabled={
+                                    view.policy.paused ||
+                                    view.policy.matching === "off" ||
+                                    (task.options.use_ai &&
+                                      (!view.policy.ai_enabled ||
+                                        !view.key_ready))
+                                  }
+                                  onClick={() =>
+                                    onReview({
+                                      endpoint: "/api/tasks",
+                                      body: {
+                                        ...task.options,
+                                        revision: view.revision,
+                                        recheck: true,
+                                        recheck_task_id: task.id,
+                                        counterpart_limit:
+                                          view.policy.counterpart_limit,
+                                        max_cost_usd: Math.min(
+                                          task.options.max_cost_usd,
+                                          view.policy.task_budget_usd,
+                                        ),
+                                        idempotency_key: crypto.randomUUID(),
+                                      },
+                                      title: "Recheck unresolved products?",
+                                      scope: `Only unresolved products from this matching task; up to ${task.options.product_limit ?? task.selected} products`,
+                                      effect: `Saved results stay in history. New task allowance: $${Math.min(task.options.max_cost_usd, view.policy.task_budget_usd).toFixed(2)}; up to ${view.policy.counterpart_limit} extra counterpart interpretations. No other pending products are added.`,
+                                      submitLabel: "Start recheck",
+                                      successMessage:
+                                        "Unresolved products queued for a new reviewed matching task.",
+                                    })
+                                  }
+                                >
+                                  Recheck unresolved products
+                                </Button>
+                              )}
                             {task.state === "completed" &&
                               task.deferred > 0 && (
                                 <Button

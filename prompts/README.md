@@ -36,3 +36,5 @@ The list is intentionally empty until the owner chooses the labels. No labels
 means classification plus code-only matching, not permission to compare all
 categories. Code-based matching remains available for every category, subject
 to saved manual separations and complete-group checks.
+
+`matching-identity.json` defines versioned matching-only product profiles and reviewed type/flavour/formulation aliases. It is archived with comparison and clarification prompts, and does not participate in classification prompt keys.

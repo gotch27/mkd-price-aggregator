@@ -1,4 +1,5 @@
 "use client";
+import { MatchingTaskResults } from "./matching-task-results";
 import { useEffect, useRef, useState } from "react";
 import {
   ListChecks,
@@ -63,7 +64,7 @@ const categoryName = (id: string | null) =>
     : "Not saved";
 const percent = (value: number) =>
   `${(value * 100).toLocaleString("en-GB", { maximumFractionDigits: 2 })}%`;
-export function TaskResults({
+function CategoryTaskResults({
   id,
   updatedAt,
   pageSize,
@@ -514,5 +515,15 @@ export function TaskResults({
         </div>
       </SheetContent>
     </Sheet>
+  );
+}
+
+export function TaskResults(
+  props: Parameters<typeof CategoryTaskResults>[0] & { kind?: string },
+) {
+  return props.kind === "match" ? (
+    <MatchingTaskResults {...props} />
+  ) : (
+    <CategoryTaskResults {...props} />
   );
 }

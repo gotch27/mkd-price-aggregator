@@ -1,0 +1,330 @@
+{
+  "version": "identity-v1",
+  "profiles": [
+    {
+      "id": "water",
+      "types": [
+        "water"
+      ],
+      "required": [
+        "brand",
+        "type",
+        "quantity",
+        "unit",
+        "carbonation"
+      ],
+      "identity_any": [],
+      "type_aliases": [
+        "voda",
+        "water",
+        "mineralna voda"
+      ]
+    },
+    {
+      "id": "juice",
+      "types": [
+        "juice",
+        "soft-drink"
+      ],
+      "required": [
+        "brand",
+        "type",
+        "quantity",
+        "unit"
+      ],
+      "identity_any": [
+        "flavour",
+        "range"
+      ],
+      "type_aliases": [
+        "ovoshen sok",
+        "fruit juice",
+        "nectar",
+        "nektar",
+        "sok",
+        "sokche",
+        "juice",
+        "dzhus",
+        "pijalak",
+        "pijalok"
+      ]
+    },
+    {
+      "id": "carbonated",
+      "types": [
+        "cola",
+        "carbonated-drink"
+      ],
+      "required": [
+        "brand",
+        "type",
+        "quantity",
+        "unit"
+      ],
+      "identity_any": [
+        "flavour",
+        "range",
+        "variant"
+      ],
+      "type_aliases": [
+        "gaziran sok",
+        "gazirani sokovi",
+        "carbonated drink",
+        "gaziran pijalok",
+        "gaziran pijalak",
+        "gaziran napitok",
+        "lemonade",
+        "limonada"
+      ]
+    },
+    {
+      "id": "protein-drink",
+      "types": [
+        "protein-drink"
+      ],
+      "required": [
+        "brand",
+        "type",
+        "quantity",
+        "unit"
+      ],
+      "identity_any": [
+        "flavour",
+        "range",
+        "variant"
+      ],
+      "type_aliases": [
+        "proteinski napitok",
+        "proteinski napitoci",
+        "protein napitok",
+        "protein drink",
+        "protein shake",
+        "protein shejk"
+      ]
+    },
+    {
+      "id": "milk",
+      "types": [
+        "milk"
+      ],
+      "required": [
+        "brand",
+        "type",
+        "quantity",
+        "unit",
+        "fat"
+      ],
+      "identity_any": [],
+      "type_aliases": [
+        "mleko",
+        "milk"
+      ]
+    },
+    {
+      "id": "yogurt",
+      "types": [
+        "yogurt"
+      ],
+      "required": [
+        "brand",
+        "type",
+        "quantity",
+        "unit"
+      ],
+      "identity_any": [
+        "flavour",
+        "range",
+        "variant",
+        "fat"
+      ],
+      "type_aliases": [
+        "jogurt",
+        "yogurt",
+        "joghurt",
+        "kiselo mleko"
+      ]
+    },
+    {
+      "id": "other-dairy",
+      "types": [
+        "cheese",
+        "butter",
+        "cream"
+      ],
+      "required": [
+        "brand",
+        "type",
+        "quantity",
+        "unit"
+      ],
+      "identity_any": [],
+      "type_aliases": [
+        "sirenje",
+        "kashkaval",
+        "cheese",
+        "puter",
+        "butter",
+        "pavlaka",
+        "cream"
+      ]
+    }
+  ],
+  "aliases": {
+    "flavour": {
+      "orange": [
+        "portokal",
+        "portokali",
+        "orange",
+        "oranzh",
+        "oranz",
+        "oran`"
+      ],
+      "apple": [
+        "jabolko",
+        "jabolka",
+        "apple"
+      ],
+      "strawberry": [
+        "jagoda",
+        "jagodi",
+        "strawberry"
+      ],
+      "raspberry": [
+        "malina",
+        "raspberry"
+      ],
+      "blackcurrant": [
+        "ribizla",
+        "blackcurrant",
+        "crna ribizla"
+      ],
+      "blueberry": [
+        "borovnica",
+        "blueberry"
+      ],
+      "lemon": [
+        "limon",
+        "lemon"
+      ],
+      "peach": [
+        "praska",
+        "peach"
+      ],
+      "shokata": [
+        "shokata"
+      ],
+      "tropical": [
+        "tropikal",
+        "tropical"
+      ],
+      "grape": [
+        "grozje",
+        "grape"
+      ],
+      "cookies-and-cream": [
+        "kukis krem",
+        "kukis i krem",
+        "kukis end krem",
+        "cookies cream",
+        "cookies and cream"
+      ],
+      "chocolate": [
+        "chokolado",
+        "chokolada",
+        "chocolate"
+      ],
+      "vanilla": [
+        "vanila",
+        "vanilla"
+      ],
+      "mixed-fruit": [
+        "multivitamin",
+        "multivitaminski",
+        "mesano ovosje"
+      ],
+      "mystic-dragon": [
+        "mistik dragon",
+        "mystic dragon"
+      ]
+    },
+    "variant": {
+      "zero": [
+        "zero",
+        "zero sugar",
+        "bez shekjer",
+        "sugar free"
+      ],
+      "original": [
+        "original",
+        "original taste",
+        "klasik",
+        "classic"
+      ],
+      "plain": [
+        "natur",
+        "natural",
+        "natura",
+        "plain",
+        "priroden"
+      ],
+      "lactose-free": [
+        "bez laktoza",
+        "bezlaktozno",
+        "lactose free"
+      ]
+    },
+    "carbonation": {
+      "still": [
+        "negazirana",
+        "negazirano",
+        "negaziran",
+        "still",
+        "non carbonated"
+      ],
+      "sparkling": [
+        "gazirana",
+        "gazirano",
+        "gaziran",
+        "sparkling",
+        "carbonated",
+        "gazirani",
+        "gazirano"
+      ]
+    },
+    "range": {
+      "mystic-dragon": [
+        "mistik dragon",
+        "mystic dragon"
+      ],
+      "shokata": [
+        "shokata"
+      ],
+      "tropical": [
+        "tropical",
+        "tropikal"
+      ],
+      "meal": [
+        "obrok"
+      ]
+    }
+  },
+  "type_parents": {
+    "juice": "soft-drink",
+    "carbonated-drink": "soft-drink",
+    "cola": "carbonated-drink"
+  },
+  "forbidden_type_contexts": {
+    "soft_drinks": [
+      "apple",
+      "pear",
+      "tomato"
+    ],
+    "dairy": [
+      "apple",
+      "pear",
+      "tomato",
+      "chocolate",
+      "candy"
+    ]
+  }
+}

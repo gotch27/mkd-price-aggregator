@@ -798,6 +798,16 @@ export function TaskSettingsForm({
                     min: 1,
                     max: saved.worker_limits.max_downloads,
                   })}
+                  {numeric(
+                    "counterpart_limit",
+                    "Extra counterpart interpretations per task",
+                    { min: 0, max: 100000 },
+                  )}
+                  {numeric(
+                    "counterparts_per_product",
+                    "Counterparts interpreted per selected product",
+                    { min: 0, max: 20 },
+                  )}
                   {numeric("candidate_limit", "Candidate groups per product", {
                     min: 1,
                     max: 20,

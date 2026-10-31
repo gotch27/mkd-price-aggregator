@@ -59,6 +59,7 @@ export const factNames = [
   "flavour",
   "processing",
   "shade",
+  "carbonation",
 ] as const;
 export type FactName = (typeof factNames)[number];
 export type Fact = {

@@ -1,9 +1,13 @@
+import { planCounterparts, phase } from "./matching-preparation";
+import { identityCatalog } from "./identity-catalog";
+import { matchingSnapshot } from "./matching-results";
 import type { CategoryResult } from "@/nextsignal/domain/task-results";
 import { reviewCategory } from "./llm-category-review";
 import { randomUUID } from "node:crypto";
 import { settings } from "@/nextsignal/config";
 import {
   GatewayCoolingDown,
+  TaskPaused,
   type TaskExecution,
 } from "@/nextsignal/domain/task-settings";
 import { hash } from "@/nextsignal/domain/normalize";
@@ -66,6 +70,7 @@ async function selectItems(task: TaskExecution) {
       AND ($4::boolean OR ${task.kind === "llm_review" ? "true" : `sp.${stageFlag}`})
       ${task.kind === "llm_review" ? `AND sp.manual_family IS NULL AND EXISTS(SELECT 1 FROM store_product_classifications model WHERE model.store_product_id=sp.id AND model.input_key=sp.classification_key AND model.acceptance_threshold=sp.classification_threshold AND model.family='unknown')` : ""}
       AND ($5=false OR sp.classified_family=ANY($6::text[]))
+      AND ($15::uuid IS NULL OR EXISTS(SELECT 1 FROM task_items previous WHERE previous.task_id=$15 AND previous.store_product_id=sp.id AND previous.state IN ('unresolved','deferred')))
       AND ($7::text='manual' OR ${notHeldProductSql("$8", "$3")})
       AND ($7::text='manual' OR ($8='categorize' AND sp.manual_family IS NULL AND ($14 OR w.auto_category_epoch=$9)) OR ($8='match' AND w.auto_match_epoch=$10 AND (NOT $5 OR w.auto_ai_epoch=$11)))
     ORDER BY sp.id LIMIT $13`,
@@ -84,6 +89,7 @@ async function selectItems(task: TaskExecution) {
         task.created_at,
         limit,
         taskContext()!.live.category_backlog_active,
+        task.options.recheck_task_id ?? null,
       ],
     )
   ).rows;
@@ -142,6 +148,17 @@ export async function productTask(task: TaskExecution) {
           products: items.length,
         },
       );
+    if (task.kind === "match") {
+      if (task.checkpoint.identity_version !== hash(identityCatalog))
+        throw new TaskPaused(
+          "Matching rules changed. Review a new matching task to continue; saved results are retained.",
+        );
+      await phase("planning");
+      await planCounterparts(
+        task,
+        items.flatMap((i) => (i.store_product_id ? [i.store_product_id] : [])),
+      );
+    }
     for (const item of items) {
       await checkpoint(task.options.use_ai);
       const id = item.store_product_id;
@@ -297,6 +314,7 @@ export async function productTask(task: TaskExecution) {
         current?.classification_key ?? null,
       );
     }
+    if (task.kind === "match") await phase("checkpoint");
     const row = (
       await pool.query(
         `SELECT selected,processed,unresolved,
@@ -382,7 +400,10 @@ async function finishItem(
   llmResult?: CategoryResult,
 ) {
   await transaction(async (c) => {
-    let snapshot =
+    let snapshot:
+      | CategoryResult
+      | import("@/nextsignal/domain/matching-results").MatchingResult
+      | null =
       llmResult ??
       (task.kind === "categorize" || task.kind === "llm_review"
         ? await categorySnapshot(
@@ -391,7 +412,9 @@ async function finishItem(
             classificationKey,
             reason,
           )
-        : null);
+        : task.kind === "match"
+          ? await matchingSnapshot(c, task, item.store_product_id, reason)
+          : null);
     if (skipped) {
       if (snapshot) snapshot = { ...snapshot, outcome: "skipped", reason };
       withoutResult = false;
@@ -399,15 +422,18 @@ async function finishItem(
     if (deferred && snapshot)
       snapshot = {
         ...snapshot,
-        source: task.kind === "llm_review" ? "llm" : snapshot.source,
+        ...("source" in snapshot
+          ? { source: task.kind === "llm_review" ? "llm" : snapshot.source }
+          : {}),
         outcome: "deferred",
         reason,
       };
     if (snapshot) {
-      withoutResult =
-        snapshot.outcome === "no_category" ||
-        snapshot.outcome === "deferred" ||
-        (task.kind === "llm_review" && snapshot.outcome !== "assigned");
+      if (task.kind !== "match")
+        withoutResult =
+          snapshot.outcome === "no_category" ||
+          snapshot.outcome === "deferred" ||
+          (task.kind === "llm_review" && snapshot.outcome !== "assigned");
       reason = snapshot.reason;
     }
     const changed = await c.query(

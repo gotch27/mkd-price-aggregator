@@ -178,7 +178,14 @@
     ],
     "evaluation": {
       "sample_per_store": 10,
-      "holdout_divisor": 3
+      "holdout_divisor": 3,
+      "identity_anchors_per_family": 30,
+      "identity_controls": 30,
+      "identity_paid_budget_usd": 0.25,
+      "identity_seed": "identity-2026-10-31-v1",
+      "identity_dataset_path": ".data/identity-evaluation/dataset.json",
+      "identity_development_path": ".data/matching-investigation/2026-10-31/task-snapshot.json",
+      "identity_report_path": ".data/identity-evaluation/report.json"
     },
     "candidate_weights": {
       "barcode": 10,
@@ -231,6 +238,11 @@
         "unknown": "families/unknown.md"
       },
       "comparison_question": "matching-question.md"
+    },
+    "identity": {
+      "profiles_file": "matching-identity.json",
+      "counterpart_limit": 50,
+      "counterparts_per_product": 5
     }
   },
   "logging": {
@@ -402,7 +414,9 @@
       "candidate_batch_size": 5,
       "batch_size": 50,
       "parallel_imports": 2,
-      "per_store_downloads": 2
+      "per_store_downloads": 2,
+      "counterpart_limit": 50,
+      "counterparts_per_product": 5
     }
   },
   "maintenance": {
