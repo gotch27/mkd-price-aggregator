@@ -144,7 +144,7 @@ export function AgentCategoryReview({
           ),
           tool(
             "start_category_review",
-            `Start only when the user asks for category review. Saves a fixed list of available products needing review. Defaults to ${config.limits.default_products} products and the page's store/search filters. Never start another session to continue a backlog without a new user instruction. Existing human choices cannot be changed.`,
+            `Start only when the user asks for category review. Saves a fixed list of available products needing review. Defaults to ${config.limits.default_products} products and the page's store/search filters. Previously skipped products with unchanged source information and classification are excluded by default. Include them only when the user explicitly requests another attempt. Never start another session to continue a backlog without a new user instruction. Existing human choices cannot be changed.`,
             schema({
               request_id: {
                 type: "string",
@@ -163,6 +163,11 @@ export function AgentCategoryReview({
                   "Omit to use the page filter; all explicitly selects all stores.",
               },
               search: { type: "string" },
+              include_previously_skipped: {
+                type: "boolean",
+                description:
+                  "Set true only when the user explicitly asks to retry earlier skips. Skipped products remain available for human review. Changed product information or a new classification makes a product eligible again automatically.",
+              },
               agent_name: {
                 type: "string",
                 description: "Self-reported name, e.g. Codex.",
@@ -182,6 +187,9 @@ export function AgentCategoryReview({
                   limit: i.limit ?? config.limits.default_products,
                   retailer: retailer === "all" ? undefined : retailer,
                   search: i.search ?? current.current.search,
+                  include_previously_skipped:
+                    i.include_previously_skipped ??
+                    config.limits.default_include_previously_skipped,
                   agent_name: i.agent_name ?? "",
                   agent_model: i.agent_model ?? "",
                 },

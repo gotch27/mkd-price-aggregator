@@ -108,7 +108,7 @@ async function seed(count = 3) {
   }
   return ids;
 }
-function start(limit = 50) {
+function start(limit = 50, include_previously_skipped?: boolean) {
   return startSession(
     {
       request_id: randomUUID(),
@@ -116,6 +116,9 @@ function start(limit = 50) {
       search: "",
       agent_name: "Codex",
       agent_model: "self-reported-test-model",
+      ...(include_previously_skipped === undefined
+        ? {}
+        : { include_previously_skipped }),
     },
     actor,
   );
@@ -130,6 +133,25 @@ const decision = (
   category,
   reason: "The supplied name identifies chocolate.",
 });
+const skip = (
+  p: AgentReviewBatch["products"][number],
+): AgentReviewDecision => ({
+  ...decision(p),
+  action: "skip",
+  category: null,
+  reason: "Source information remains unclear.",
+});
+async function skipBatch(session_id: string, account = actor) {
+  const batch = await readBatch(session_id, account);
+  return submitBatch(
+    {
+      id: session_id,
+      request_id: randomUUID(),
+      decisions: batch.products.map(skip),
+    },
+    account,
+  );
+}
 async function human(id: string, category = "other_food") {
   const p = await getProduct(id),
     view = (await readCategory(p.group_id, id))!;
@@ -152,6 +174,7 @@ it("does nothing on reads, exposes instructions and all labels, and works with A
   expect(context.session).toBeNull();
   expect(context.limits).toMatchObject({
     default_products: 50,
+    default_include_previously_skipped: false,
     batch_size: 20,
     max_products: 500,
   });
@@ -166,6 +189,151 @@ it("does nothing on reads, exposes instructions and all labels, and works with A
     ).rows[0].count,
   ).toBe(0);
   expect(fetch).not.toHaveBeenCalled();
+});
+it("excludes earlier skips before applying the session limit, including historical sessions", async () => {
+  const ids = await seed(5);
+  const first = await start(2);
+  await skipBatch(first.id);
+  // Existing sessions are marked as having included skips by migration 042.
+  // Their already-persisted review items are sufficient; no product backfill.
+  await pool.query(
+    "UPDATE agent_category_sessions SET include_previously_skipped=true WHERE id=$1",
+    [first.id],
+  );
+  await acknowledgeSession(first.id, actor);
+  const next = await start(3);
+  expect(next).toMatchObject({ total: 3, include_previously_skipped: false });
+  expect((await readBatch(next.id, actor)).products.map((p) => p.id)).toEqual(
+    ids.slice(2),
+  );
+  expect((await readSession(first.id, actor)).skipped).toBe(2);
+  expect(fetch).not.toHaveBeenCalled();
+});
+it("completes empty when only skipped products remain and keeps them in human review", async () => {
+  await seed(2);
+  const first = await start();
+  await skipBatch(first.id);
+  await pool.query(
+    "UPDATE store_product_sources SET price=price+1,retrieved_at=now()",
+  );
+  // Group/version metadata is not new categorization evidence.
+  await pool.query("UPDATE store_products SET version=version+1");
+  const next = await start();
+  expect(next).toMatchObject({ state: "completed", total: 0 });
+  expect((await readBatch(next.id, actor)).products).toEqual([]);
+  const queue = await readQueue({
+    status: "needs_review",
+    search: "",
+    availability: "available",
+    page: 1,
+    size: 10,
+  });
+  expect(queue.total).toBe(2);
+  expect(queue.rows.every((p) => p.classification.state === "uncertain")).toBe(
+    true,
+  );
+  expect(fetch).not.toHaveBeenCalled();
+});
+it("allows explicitly requested retries and persists and logs their selection policy", async () => {
+  await seed(2);
+  const first = await start();
+  await skipBatch(first.id);
+  const info = vi.fn(),
+    debug = vi.fn(),
+    warn = vi.fn(),
+    error = vi.fn();
+  const retry = await withLogContext(
+    { logger: { info, debug, warn, error } },
+    () => start(2, true),
+  );
+  expect(retry).toMatchObject({ total: 2, include_previously_skipped: true });
+  expect((await readSession(retry.id, actor)).include_previously_skipped).toBe(
+    true,
+  );
+  expect(info.mock.calls[0][0]).toMatchObject({
+    data: {
+      event: "products.agent_review.started",
+      include_previously_skipped: true,
+      total: 2,
+    },
+  });
+  const batch = await readBatch(retry.id, actor);
+  await submitBatch(
+    {
+      id: retry.id,
+      request_id: randomUUID(),
+      decisions: batch.products.map((p) => decision(p)),
+    },
+    actor,
+  );
+  expect((await readSession(retry.id, actor)).saved).toBe(2);
+});
+it("shares skip history across accounts and does not recycle skips when a stopped session is replaced", async () => {
+  const ids = await seed(3);
+  const first = await start();
+  const batch = await readBatch(first.id, actor);
+  await submitBatch(
+    {
+      id: first.id,
+      request_id: randomUUID(),
+      decisions: [skip(batch.products[0])],
+    },
+    actor,
+  );
+  await stopSession(first.id, actor);
+  const next = await startSession(
+    {
+      request_id: randomUUID(),
+      limit: 3,
+      search: "",
+      agent_name: "Other agent",
+      agent_model: "",
+    },
+    "another-account",
+  );
+  expect(
+    (await readBatch(next.id, "another-account")).products.map((p) => p.id),
+  ).toEqual(ids.slice(1));
+});
+it("reconsiders skipped products after useful source changes and a new classification", async () => {
+  const [id] = await seed(1);
+  const first = await start();
+  await skipBatch(first.id);
+  await pool.query(
+    "UPDATE store_products SET description='Milk chocolate with hazelnuts',version=version+1 WHERE id=$1",
+    [id],
+  );
+  const p = await getProduct(id);
+  await saveClassification(p, {
+    key: (await classificationRequest(p)).key,
+    family: "unknown",
+    hints: [],
+    selected: "other_food",
+    probabilities: { other_food: 0.75, personal_care: 0.25 },
+    model: "mock-decider",
+    prompt_key: "agent-review-test",
+    confidence: 0.99,
+    generation_id: "changed-source",
+  });
+  const next = await start();
+  expect(next.total).toBe(1);
+  expect((await readBatch(next.id, actor)).products[0].id).toBe(id);
+});
+it("does not treat rejected stale submissions as confirmed skips", async () => {
+  await seed(1);
+  const first = await start(),
+    batch = await readBatch(first.id, actor);
+  await pool.query("UPDATE store_products SET version=version+1");
+  const result = await submitBatch(
+    {
+      id: first.id,
+      request_id: randomUUID(),
+      decisions: [skip(batch.products[0])],
+    },
+    actor,
+  );
+  expect(result.results[0].state).toBe("rejected");
+  expect((await start()).total).toBe(1);
 });
 it("freezes 50 products, reads 20 at a time, and never expands the session", async () => {
   await seed(53);
@@ -553,6 +721,17 @@ it("requires authenticated same-origin API calls and rejects forged source and i
         new Request(url, {
           method: "POST",
           headers,
+          body: JSON.stringify({ ...body, include_previously_skipped: "true" }),
+        }),
+      )
+    ).status,
+  ).toBe(400);
+  expect(
+    (
+      await POST(
+        new Request(url, {
+          method: "POST",
+          headers,
           body: JSON.stringify(body),
         }),
       )
@@ -634,6 +813,63 @@ it("migrates existing human choices without changing their category or audit att
         )
       ).rows[0].count,
     ).toBe(0);
+  } finally {
+    await client.query("ROLLBACK");
+    client.release();
+  }
+});
+
+it("migrates the original skip records without changing membership, decisions, or source evidence", async () => {
+  const client = await pool.connect();
+  const schema = `agent_skip_migration_${randomUUID().replaceAll("-", "")}`;
+  try {
+    await client.query("BEGIN");
+    await client.query(`CREATE SCHEMA ${schema}`);
+    await client.query(`SET LOCAL search_path TO ${schema}, public`);
+    await client.query(`
+      CREATE TABLE agent_category_sessions(id uuid PRIMARY KEY,state text);
+      CREATE TABLE agent_category_items(session_id uuid,store_product_id uuid,state text,review_item jsonb);
+    `);
+    const session = randomUUID(),
+      product = randomUUID();
+    const item = {
+      name: "Original name",
+      classification: { classification_id: randomUUID() },
+    };
+    await client.query(
+      "INSERT INTO agent_category_sessions VALUES($1,'completed')",
+      [session],
+    );
+    await client.query(
+      "INSERT INTO agent_category_items VALUES($1,$2,'skipped',$3)",
+      [session, product, item],
+    );
+    await client.query(
+      await readFile("migrations/042_agent_review_skips.sql", "utf8"),
+    );
+    expect(
+      (await client.query("SELECT * FROM agent_category_sessions")).rows,
+    ).toEqual([
+      { id: session, state: "completed", include_previously_skipped: true },
+    ]);
+    expect(
+      (await client.query("SELECT * FROM agent_category_items")).rows,
+    ).toEqual([
+      {
+        session_id: session,
+        store_product_id: product,
+        state: "skipped",
+        review_item: item,
+      },
+    ]);
+    expect(
+      (
+        await client.query(
+          "SELECT indexdef FROM pg_indexes WHERE schemaname=$1 AND indexname='agent_category_items_skipped_product'",
+          [schema],
+        )
+      ).rows[0].indexdef,
+    ).toContain("WHERE (state = 'skipped'::text)");
   } finally {
     await client.query("ROLLBACK");
     client.release();

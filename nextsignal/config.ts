@@ -49,6 +49,7 @@ export const configSchema = object({
   }),
   agent_review: object({
     default_products: integer,
+    default_include_previously_skipped: bool,
     max_products: integer,
     batch_size: integer,
     results_page_size: integer,

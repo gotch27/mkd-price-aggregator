@@ -20,6 +20,12 @@ Submit at most the configured batch size, using the exact IDs and snapshots from
 the batch. Supply a stable request_id when retrying a submission. Check its saved,
 skipped and rejected results before requesting another batch. A stale product or
 human correction must not be overwritten. Skips remain in the human review queue.
+New sessions exclude unchanged products skipped in any earlier agent session,
+including sessions from before this rule was added. Do not enable
+include_previously_skipped unless the user explicitly asks to retry those products.
+New source information or a new decision-model classification makes a product
+eligible again. If no eligible products remain, report that outcome; do not
+silently include earlier skips or increase the scope.
 
 Use only these product records. Do not search the web, use images, call Vercel, run
 imports or matching, or change settings. Finish by reporting saved choices,

@@ -7,6 +7,7 @@ export type AgentReviewStart = {
   search: string;
   agent_name: string;
   agent_model: string;
+  include_previously_skipped?: boolean;
 };
 export type AgentReviewDecision = {
   member_id: string;
@@ -37,6 +38,7 @@ export type AgentReviewSession = {
   retailer: string | null;
   search: string;
   product_limit: number;
+  include_previously_skipped: boolean;
   created_at: string;
   updated_at: string;
   acknowledged_at: string | null;
@@ -51,6 +53,7 @@ export type AgentReviewSession = {
 export type AgentReviewContext = {
   limits: {
     default_products: number;
+    default_include_previously_skipped: boolean;
     max_products: number;
     batch_size: number;
     results_page_size: number;

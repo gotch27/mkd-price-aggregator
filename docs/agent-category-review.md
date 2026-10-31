@@ -15,6 +15,13 @@ The browser must support WebMCP. Without it, the normal human review UI still wo
 - `start_category_review`: a deliberately requested, fixed list of available
   products needing review. Default 50 products; maximum 500. Store/search filters
   default to the visible page; `retailer: "all"` explicitly selects all stores.
+  Previously skipped products are excluded by default while their source name,
+  description, store category, supported facts and saved classification are
+  unchanged. This includes skips saved before this behavior was added, across
+  all agent sessions/accounts. Set `include_previously_skipped: true` only for a
+  user-requested retry; the effective selection is saved with the session and
+  included in its start log. An empty selection completes with zero products;
+  it never fills the session with earlier skips automatically.
 - `get_category_review_batch`: up to 20 unfinished products, readable and original
   source text, supported facts, store guidance and original decision-model scores.
 - `submit_category_review_batch`: immediate Agent choices or skips, each with the
@@ -51,7 +58,11 @@ replaces a reviewed category. Historical human choices are preserved by migratio
 
 Session membership is fixed at creation. Scope cannot expand during pagination,
 retries or reloads. Skips and rejected/stale items count as processed in that
-session; skipped products remain in Needs review for a later deliberate review.
+session; skipped products remain in Needs review for human review or an explicit
+agent retry. Price-only changes, added branch copies, session dismissal, and
+restarts do not clear the saved skips. New source information or a new saved
+classification can make them eligible again. Rejected items and unfinished items
+in stopped sessions are eligible again, because neither is a confirmed skip.
 Products already assigned by the model, human/agent choices, uncategorized products
 and unavailable products are outside the initial session selection.
 

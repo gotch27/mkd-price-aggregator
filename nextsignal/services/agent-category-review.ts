@@ -26,6 +26,7 @@ import type {
 export class AgentReviewConflict extends Error {}
 type SessionRow = Omit<AgentReviewStart, "limit"> & {
   product_limit: number;
+  include_previously_skipped: boolean;
   created_at: string;
   updated_at: string;
   acknowledged_at: string | null;
@@ -98,6 +99,7 @@ export async function readSession(
     retailer: row.retailer ?? null,
     search: row.search,
     product_limit: row.product_limit,
+    include_previously_skipped: row.include_previously_skipped,
     created_at: row.created_at,
     updated_at: row.updated_at,
     acknowledged_at: row.acknowledged_at,
@@ -122,6 +124,8 @@ export async function readContext(actor: string): Promise<AgentReviewContext> {
   return {
     limits: {
       default_products: settings.agent_review.default_products,
+      default_include_previously_skipped:
+        settings.agent_review.default_include_previously_skipped,
       max_products: settings.agent_review.max_products,
       batch_size: settings.agent_review.batch_size,
       results_page_size: settings.agent_review.results_page_size,
@@ -146,6 +150,9 @@ export async function startSession(input: AgentReviewStart, actor: string) {
       "Choose a product limit within the configured session allowance.",
     );
   const key = hash(input);
+  const includeSkipped =
+    input.include_previously_skipped ??
+    settings.agent_review.default_include_previously_skipped;
   const id = await transaction(async (c) => {
     await c.query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))", [
       `agent-category-session:${actor}`,
@@ -179,6 +186,9 @@ export async function startSession(input: AgentReviewStart, actor: string) {
           (t) => `%${t.replace(/[\\%_]/g, "\\$&")}%`,
         )
       : [];
+    // Compare categorization evidence, not the product version/group: price and
+    // membership changes must not recycle skips. Existing review items contain
+    // these inputs, so old skips work without rewriting any product history.
     const rows = (
       await c.query(
         `SELECT sp.id,sp.group_id AS product_id,sp.retailer,sp.name,sp.description,sp.category AS source_category,sp.facts
@@ -187,8 +197,17 @@ export async function startSession(input: AgentReviewStart, actor: string) {
       WHERE m.family='unknown' AND sp.manual_family IS NULL AND ${availableProductSql("sp")}
       AND NOT EXISTS(SELECT 1 FROM store_product_redirects r WHERE r.from_id=sp.id)
       AND ($1::text IS NULL OR sp.retailer=$1) AND (cardinality($2::text[])=0 OR sp.normalized_name ILIKE ANY($2))
+      AND ($4::boolean OR NOT EXISTS(
+        SELECT 1 FROM agent_category_items skipped
+        WHERE skipped.store_product_id=sp.id AND skipped.state='skipped'
+          AND skipped.review_item#>>'{classification,classification_id}'=m.id::text
+          AND skipped.review_item->>'name'=sp.name
+          AND (skipped.review_item->>'description') IS NOT DISTINCT FROM sp.description
+          AND (skipped.review_item->>'source_category') IS NOT DISTINCT FROM sp.category
+          AND skipped.review_item->'supported_facts'=sp.facts
+      ))
       ORDER BY (m.selected_family='unknown'),m.probability DESC,sp.name,sp.id LIMIT $3`,
-        [input.retailer ?? null, terms, input.limit],
+        [input.retailer ?? null, terms, input.limit, includeSkipped],
       )
     ).rows;
     const views = await classificationViews(
@@ -198,8 +217,8 @@ export async function startSession(input: AgentReviewStart, actor: string) {
     const selected = rows.filter((r) => views.get(r.id)?.state === "uncertain");
     const session = (
       await c.query(
-        `INSERT INTO agent_category_sessions(actor,request_id,request_key,agent_name,agent_model,retailer,search,product_limit,state)
-      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id`,
+        `INSERT INTO agent_category_sessions(actor,request_id,request_key,agent_name,agent_model,retailer,search,product_limit,state,include_previously_skipped)
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id`,
         [
           actor,
           input.request_id,
@@ -210,6 +229,7 @@ export async function startSession(input: AgentReviewStart, actor: string) {
           input.search,
           input.limit,
           selected.length ? "active" : "completed",
+          includeSkipped,
         ],
       )
     ).rows[0].id as string;
@@ -252,6 +272,7 @@ export async function startSession(input: AgentReviewStart, actor: string) {
       total: session.total,
       limit: input.limit,
       retailer: input.retailer,
+      include_previously_skipped: session.include_previously_skipped,
     },
   );
   return session;

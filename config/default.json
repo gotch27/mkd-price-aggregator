@@ -367,6 +367,7 @@
   },
   "agent_review": {
     "default_products": 50,
+    "default_include_previously_skipped": false,
     "max_products": 500,
     "batch_size": 20,
     "results_page_size": 10,

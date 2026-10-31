@@ -31,6 +31,7 @@ const startSchema = z.strictObject({
   search: z.string().max(settings.product_details.value_max_length),
   agent_name: z.string().max(settings.product_details.value_max_length),
   agent_model: z.string().max(settings.product_details.value_max_length),
+  include_previously_skipped: z.boolean().optional(),
 });
 const submitSchema = idSchema.extend({
   request_id: z.uuid(),
