@@ -428,6 +428,7 @@ it("filters generic terms and never restores a stop word as a fallback", async (
   await publish("spar", "[AMPON @ENSKI PVC 400ML");
   await publish("vero", "ЖЕНСКИ ЧОРАПИ");
   await publish("kam", "ЛЕБ ВИНО СЛАДОЛЕД");
+  await publish("ramstore", "ТЕЧЕН САПУН КРЕМА ПЕШКИР 50 ЦМ");
   await publish("zito", "ШАМПОН Zaffiro 400МЛ");
   const session = await start();
   expect(session.results.map((g) => g.term)).toEqual(["zaffiro"]);
