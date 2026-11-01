@@ -1,5 +1,5 @@
 {
-  "version": "brand-review-v1",
+  "version": "brand-review-v2-generic-filter",
   "stop_words": [
     "sok",
     "sokche",
@@ -50,7 +50,6 @@
     "classic",
     "fresh",
     "frut",
-    "fresh",
     "paket",
     "gr",
     "g",
@@ -75,6 +74,25 @@
     "tost",
     "emmentaler",
     "ementaler",
-    "obrok"
+    "obrok",
+    "zhenski",
+    "detski",
+    "pvc",
+    "sladoled",
+    "vino",
+    "mashki",
+    "chashi",
+    "chorapi",
+    "igrachka",
+    "leb",
+    "shampon",
+    "boja",
+    "patiki",
+    "sad",
+    "chetka",
+    "chinija",
+    "detergent",
+    "chips",
+    "kolor"
   ]
 }

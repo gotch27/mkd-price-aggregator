@@ -72,12 +72,11 @@ export async function reviewCandidates(c: PoolClient, input: BrandReviewStart) {
         words[0],
         words.slice(0, 2).join(" "),
         words.at(-1),
-        ...(!words.length ? [all.at(-1)] : []),
       ].filter((v): v is string => !!v),
     );
     for (const term of terms) {
       const quote = quoteFor(p.name, p.retailer, term);
-      if (!quote) continue;
+      if (!quote || term.split(" ").every((word) => stop.has(word))) continue;
       const group = groups.get(term) ?? {
         term,
         examples: [],

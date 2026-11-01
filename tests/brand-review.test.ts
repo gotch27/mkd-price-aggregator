@@ -423,3 +423,14 @@ it("keeps a store-scoped alias from silently matching canonical spellings in oth
       .rows[0].brand_id,
   ).toBeNull();
 });
+
+it("filters generic terms and never restores a stop word as a fallback", async () => {
+  await publish("spar", "[AMPON @ENSKI PVC 400ML");
+  await publish("vero", "ЖЕНСКИ ЧОРАПИ");
+  await publish("kam", "ЛЕБ ВИНО СЛАДОЛЕД");
+  await publish("zito", "ШАМПОН Zaffiro 400МЛ");
+  const session = await start();
+  expect(session.results.map((g) => g.term)).toEqual(["zaffiro"]);
+  expect(session.results[0].examples[0].quote).toBe("Zaffiro");
+  expect(fetch).not.toHaveBeenCalled();
+});
